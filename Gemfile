@@ -1,9 +1,11 @@
 source "http://rubygems.org"
 
 gem 'resque'
+gem 'vagrant'
+# fix: StructLayout.c:363:9: error: lvalue required as left operand of assignment
+# in 0.6.3 version
+gem 'ffi', '1.1.5'
 
-# Add dependencies to develop your gem here.
-# Include everything needed to run rake, tests, features, etc.
 group :development do
   gem "shoulda", ">= 0"
   gem "bundler"
