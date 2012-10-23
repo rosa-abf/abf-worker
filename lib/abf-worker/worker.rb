@@ -1,7 +1,7 @@
 module AbfWorker
   class Worker
 
-    def self.run
+    def run
       puts "Hello world"
     end
 

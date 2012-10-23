@@ -4,6 +4,6 @@ require 'abf-worker'
 namespace :abf_worker do
   desc "Run worker"
   task :run do
-    AbfWorker::Worker.run
+    AbfWorker::Worker.new.run
   end
 end
