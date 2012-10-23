@@ -2,7 +2,6 @@
 *.rbc
 .bundle
 .config
-coverage
 InstalledFiles
 lib/bundler/man
 pkg
@@ -16,3 +15,7 @@ tmp
 .yardoc
 _yardoc
 doc/
+
+# rcov generated
+coverage
+coverage.data
