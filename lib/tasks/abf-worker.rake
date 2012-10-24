@@ -1,7 +1,6 @@
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../../lib'
 require 'abf-worker'
 require 'resque/tasks'
-require 'vagrant'
 
 namespace :abf_worker do
   desc 'Add test data'
@@ -14,18 +13,17 @@ namespace :abf_worker do
   desc 'Init VM'
   task :init do
     vm_config = YAML.load_file(File.dirname(__FILE__).to_s + '/../../config/vm.yml')
-    env = Vagrant::Environment.new
     vm_config['virtual_machines'].each do |config|
       name, path = config['name'], config['path']
       puts 'Adding and initializing VM...'
       puts "- name: #{name}"
       puts "- path: #{path}"
       puts '-- adding VM...'
-      env.cli 'box', 'add', name, path
+      system "vagrant box add #{name} #{path}"
       puts '-- creating VM...'
-      env.cli 'up', name
+      system "vagrant up #{name}"
       puts '-- halt VM...'
-      env.cli 'halt', name
+      system "vagrant halt #{name}"
       puts 'Done.'
     end
   end
