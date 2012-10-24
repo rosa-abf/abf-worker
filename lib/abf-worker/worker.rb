@@ -4,27 +4,29 @@ module AbfWorker
     @queue = :worker
 
     def self.perform(os, arch, script_path)
-      find_or_create_vagrant_file os, arch
-      env = Vagrant::Environment.new({:vagrantfile_name => 'rosa_64'})
+      vm_name = "#{os}_#{arch}_#{Process.getpgid(Process.ppid())}"
+      find_or_create_vagrant_file vm_name, os, arch
+      env = Vagrant::Environment.new(:vagrantfile_name => "vagrantfiles/#{vm_name}")
 
-      #puts 'Start to run vagrant-init...'
-      #env.cli 'init', "test#{build_id}"
-      #puts 'Finished running vagrant-init'
+      puts 'Enter sandbox mode'
+      env.cli 'sandbox', 'on', vm_name
 
-      #env.
-      #env.cli 'up', "rosa_64"
       puts 'Start to run vagrant-up...'
-#      env.cli 'up', "lucid32_#{build_id}"
+      env.cli 'up', vm_name
       puts 'Finished running vagrant-up'
 
+      puts 'Rollback actions'
+      env.cli 'sandbox', 'rollback', vm_name
+
+      puts 'Exit sandbox mode'
+      env.cli 'sandbox', 'off', vm_name      
+
       puts 'Start to run vagrant-halt...'
-#      env.cli 'halt', "lucid32_#{build_id}"
+      env.cli 'halt', vm_name
       puts 'Finished running vagrant-halt'
     end
 
-    def self.find_or_create_vagrant_file(os, arch)
-      worker_id = Process.getpgid(Process.ppid())
-      vm_name = "#{os}_#{arch}_#{worker_id}"
+    def self.find_or_create_vagrant_file(vm_name, os, arch)
       vagrantfile_name = File.dirname(__FILE__).to_s
       vagrantfile_name << '/../../vagrantfiles/'
       vagrantfile_name << vm_name
