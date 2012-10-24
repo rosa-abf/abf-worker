@@ -8,18 +8,21 @@ module AbfWorker
       find_or_create_vagrant_file vm_name, os, arch
       env = Vagrant::Environment.new(:vagrantfile_name => "vagrantfiles/#{vm_name}")
 
-#      puts 'Enter sandbox mode'
-#      env.cli 'sandbox', 'on', vm_name
-
       puts 'Start to run vagrant-up...'
       env.cli 'up', vm_name
       puts 'Finished running vagrant-up'
 
-#      puts 'Rollback actions'
-#      env.cli 'sandbox', 'rollback', vm_name
+      # VM should be exist before using sandbox
+      puts 'Enter sandbox mode'
+#      env.cli 'sandbox', 'on', vm_name
+      Sahara::Session.on(vm_name, env)
 
-#      puts 'Exit sandbox mode'
-#      env.cli 'sandbox', 'off', vm_name      
+      # TODO: run script
+
+      # machine state should be (Running, Paused or Stuck)
+      puts 'Rollback actions'
+#      env.cli 'sandbox', 'rollback', vm_name
+      Sahara::Session.rollback(vm_name, env)
 
       puts 'Start to run vagrant-halt...'
       env.cli 'halt', vm_name
@@ -53,7 +56,8 @@ module AbfWorker
     def self.clean
       files = []
       worker_id = get_worker_id
-      path = Dir.pwd.to_s << '/vagrantfiles'
+      path = File.dirname(__FILE__).to_s
+      path << '/../../vagrantfiles'
       Dir.new(path).entries.each do |n|
         if File.file?(path + "/#{n}") && n =~ /#{worker_id}/
           files << n
@@ -64,8 +68,13 @@ module AbfWorker
         env = Vagrant::Environment.new(:vagrantfile_name => "vagrantfiles/#{f}")
         puts 'Halt VM...'
         env.cli 'halt', '-f'
+
+        puts 'Exit sandbox mode'
+        Sahara::Session.off(vm_name, env)
+        
         puts 'Destroy VM...'
         env.cli 'destroy', '-f'
+
 
         File.delete(path + "/" + f)
       end
