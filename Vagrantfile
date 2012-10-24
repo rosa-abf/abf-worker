@@ -9,14 +9,14 @@ Vagrant::Config.run do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   #config.vm.box = "base"
 
-  config.vm.define :test1 do |vm_config|
-    vm_config.vm.box = "test1"
-    vm_config.vm.forward_port 80, 8080
+  config.vm.define :lucid32_1 do |vm_config|
+    vm_config.vm.box = "lucid32_1"
+    #vm_config.vm.forward_port 80, 8080
   end
 
-  config.vm.define :test2 do |vm_config|
-    vm_config.vm.box = "test2"
-    vm_config.vm.forward_port 3306, 3306
+  config.vm.define :lucid32_2 do |vm_config|
+    vm_config.vm.box = "lucid32_2"
+    #vm_config.vm.forward_port 3306, 3306
   end
 
   # The url from where the 'config.vm.box' box will be fetched if it

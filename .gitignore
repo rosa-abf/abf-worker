@@ -19,3 +19,5 @@ doc/
 # rcov generated
 coverage
 coverage.data
+
+.vagrant

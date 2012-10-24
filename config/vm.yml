@@ -1,0 +1,5 @@
+virtual_machines:
+  - name: lucid32_1
+    path: /home/avokhmin/workspace/warpc/lucid32.box
+  - name: lucid32_2
+    path: /home/avokhmin/workspace/warpc/lucid32_2.box
