@@ -70,8 +70,8 @@ module AbfWorker
         env.cli 'halt', '-f'
 
         puts 'Exit sandbox mode'
-        Sahara::Session.off(vm_name, env)
-        
+        Sahara::Session.off(f, env)
+
         puts 'Destroy VM...'
         env.cli 'destroy', '-f'
 
