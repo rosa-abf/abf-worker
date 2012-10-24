@@ -6,8 +6,7 @@ namespace :abf_worker do
   desc 'Add test data'
   task :test_data do
     script_path = '/home/avokhmin/workspace/warpc/test_script.sh'
-    build_id = 1
-    Resque.enqueue(AbfWorker::Worker, build_id, script_path)
+    Resque.enqueue(AbfWorker::Worker, 'rosa', 64, script_path)
   end
 
   desc 'Init VM'
@@ -20,10 +19,6 @@ namespace :abf_worker do
       puts "- path: #{path}"
       puts '-- adding VM...'
       system "vagrant box add #{name} #{path}"
-      puts '-- creating VM...'
-      system "vagrant up #{name}"
-      puts '-- halt VM...'
-      system "vagrant halt #{name}"
       puts 'Done.'
     end
   end
