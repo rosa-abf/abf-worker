@@ -10,13 +10,34 @@ module AbfWorker
       @script_path = script_path
       @worker_id = Process.getpgid(Process.ppid)
       @vm_name = "#{@os}_#{@arch}_#{@worker_id}"
+    end
+
+    def self.initialize_vagrant_env
+      vagrantfile = "#{VAGRANTFILES_FOLDER}/#{@vm_name}"
+      unless File.exist?(vagrantfile)
+        begin
+          file = File.open(vagrantfile, "w")
+          str = "
+            Vagrant::Config.run do |config|
+              config.vm.share_folder('v-root', '/vagrant', '.', :extra => 'dmode=770,fmode=770')
+              config.vm.define :#{@vm_name} do |vm_config|
+                vm_config.vm.box = '#{@os}_#{@arch}'
+              end
+            end"
+          file.write(str) 
+        rescue IOError => e
+          #some error occur, dir not writable etc.
+        ensure
+          file.close unless file.nil?
+        end
+      end
       @vagrant_env = Vagrant::Environment.
         new(:vagrantfile_name => "#{VAGRANTFILES_FOLDER}/#{@vm_name}")
     end
 
     def self.perform(os, arch, script_path)
       self.initialize os, arch, script_path
-      find_or_create_vagrant_file
+      self.initialize_vagrant_env
 
       puts 'Start to run vagrant-up...'
       @vagrant_env.cli 'up', @vm_name
@@ -37,27 +58,6 @@ module AbfWorker
       puts 'Finished running vagrant-halt'
     rescue Resque::TermException
       clean
-    end
-
-    def self.find_or_create_vagrant_file
-      vagrantfile = "#{VAGRANTFILES_FOLDER}/#{@vm_name}"
-      unless File.exist?(vagrantfile)
-        begin
-          file = File.open(vagrantfile, "w")
-          str = "
-            Vagrant::Config.run do |config|
-              config.vm.share_folder('v-root', '/vagrant', '.', :extra => 'dmode=770,fmode=770')
-              config.vm.define :#{@vm_name} do |vm_config|
-                vm_config.vm.box = '#{@os}_#{@arch}'
-              end
-            end"
-          file.write(str) 
-        rescue IOError => e
-          #some error occur, dir not writable etc.
-        ensure
-          file.close unless file.nil?
-        end
-      end
     end
 
     def self.clean
