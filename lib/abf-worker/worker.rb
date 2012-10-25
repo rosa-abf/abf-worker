@@ -1,47 +1,54 @@
 require 'vagrant'
 module AbfWorker
   class Worker
+    VAGRANTFILES_FOLDER = File.dirname(__FILE__).to_s << '/../../vagrantfiles'
     @queue = :worker
 
+    def self.initialize(os, arch, script_path)
+      @os = os
+      @arch = arch
+      @script_path = script_path
+      @worker_id = Process.getpgid(Process.ppid)
+      @vm_name = "#{@os}_#{@arch}_#{@worker_id}"
+      @vagrant_env = Vagrant::Environment.
+        new(:vagrantfile_name => "#{VAGRANTFILES_FOLDER}/#{@vm_name}")
+    end
+
     def self.perform(os, arch, script_path)
-      vm_name = "#{os}_#{arch}_#{get_worker_id}"
-      find_or_create_vagrant_file vm_name, os, arch
-      env = Vagrant::Environment.new(:vagrantfile_name => "vagrantfiles/#{vm_name}")
+      self.initialize os, arch, script_path
+      find_or_create_vagrant_file
 
       puts 'Start to run vagrant-up...'
-      env.cli 'up', vm_name
+      @vagrant_env.cli 'up', @vm_name
       puts 'Finished running vagrant-up'
 
       # VM should be exist before using sandbox
       puts 'Enter sandbox mode'
-#      env.cli 'sandbox', 'on', vm_name
-      Sahara::Session.on(vm_name, env)
+      Sahara::Session.on(@vm_name, @vagrant_env)
 
       # TODO: run script
 
       # machine state should be (Running, Paused or Stuck)
       puts 'Rollback actions'
-#      env.cli 'sandbox', 'rollback', vm_name
-      Sahara::Session.rollback(vm_name, env)
+      Sahara::Session.rollback(@vm_name, @vagrant_env)
 
       puts 'Start to run vagrant-halt...'
-      env.cli 'halt', vm_name
+      @vagrant_env.cli 'halt', @vm_name
       puts 'Finished running vagrant-halt'
     rescue Resque::TermException
       clean
     end
 
-    def self.find_or_create_vagrant_file(vm_name, os, arch)
-      vagrantfile_name = File.dirname(__FILE__).to_s
-      vagrantfile_name << '/../../vagrantfiles/'
-      vagrantfile_name << vm_name
-      unless File.exist?(vagrantfile_name)
+    def self.find_or_create_vagrant_file
+      vagrantfile = "#{VAGRANTFILES_FOLDER}/#{@vm_name}"
+      unless File.exist?(vagrantfile)
         begin
-          file = File.open(vagrantfile_name, "w")
+          file = File.open(vagrantfile, "w")
           str = "
             Vagrant::Config.run do |config|
-              config.vm.define :#{vm_name} do |vm_config|
-                vm_config.vm.box = '#{os}_#{arch}'
+              config.vm.share_folder('v-root', '/vagrant', '.', :extra => 'dmode=770,fmode=770')
+              config.vm.define :#{@vm_name} do |vm_config|
+                vm_config.vm.box = '#{@os}_#{@arch}'
               end
             end"
           file.write(str) 
@@ -55,17 +62,14 @@ module AbfWorker
 
     def self.clean
       files = []
-      worker_id = get_worker_id
-      path = File.dirname(__FILE__).to_s
-      path << '/../../vagrantfiles'
-      Dir.new(path).entries.each do |n|
-        if File.file?(path + "/#{n}") && n =~ /#{worker_id}/
-          files << n
+      Dir.new(VAGRANTFILES_FOLDER).entries.each do |f|
+        if File.file?(path + "/#{f}") && f =~ /#{@worker_id}/
+          files << f
         end
       end
-      puts files.inspect
       files.each do |f|
-        env = Vagrant::Environment.new(:vagrantfile_name => "vagrantfiles/#{f}")
+        env = Vagrant::Environment.
+          new(:vagrantfile_name => "#{VAGRANTFILES_FOLDER}/#{f}")
         puts 'Halt VM...'
         env.cli 'halt', '-f'
 
@@ -78,10 +82,6 @@ module AbfWorker
 
         File.delete(path + "/" + f)
       end
-    end
-
-    def self.get_worker_id
-      Process.getpgid(Process.ppid())
     end
 
   end
