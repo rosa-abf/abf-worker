@@ -3,7 +3,7 @@ source "http://rubygems.org"
 gem 'resque'
 #gem 'vagrant', '1.0.5'
 gem 'vagrant', :git => 'git://github.com/avokhmin/vagrant.git',
-  :branch => 'master'
+  :branch => 'abf-worker'
 gem 'sahara', :git => 'git://github.com/avokhmin/sahara.git',
   :branch => 'update-to-vagrant-1.1.0'
 

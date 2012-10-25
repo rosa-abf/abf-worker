@@ -24,7 +24,7 @@ module AbfWorker
           file = File.open(vagrantfile, 'w')
           str = "
             Vagrant::Config.run do |config|
-              config.vm.share_folder('v-root', '/vagrant', '.', :extra => 'dmode=770,fmode=770')
+              config.vm.share_folder('v-root', nil, nil)
               config.vm.define :#{@vm_name} do |vm_config|
                 vm_config.vm.box = '#{@os}_#{@arch}'
               end
@@ -69,7 +69,7 @@ module AbfWorker
     def self.run_script
       puts 'Run scripts...'
       # TODO: run script
-      commands = ['ls -l','ls -l /vagrant']
+      commands = ['ls -l','ls -l /vagrant', 'touch /vagrant/from_vb.txt']
 
       #env = Vagrant::Environment.new(:cwd => VMDIR)
       communicator = @vagrant_env.vms[@vm_name.to_sym].communicate
@@ -122,7 +122,7 @@ module AbfWorker
       end
       files.each do |f|
         env = Vagrant::Environment.
-          new(:vagrantfile_name => "vagrantfiles/#{f}")
+          new(:vagrantfile_name => "vagrantfiles/#{f}", :ui => false)
         puts 'Halt VM...'
         env.cli 'halt', '-f'
 
@@ -130,8 +130,7 @@ module AbfWorker
         Sahara::Session.off(f, env)
 
         puts 'Destroy VM...'
-        env.cli 'destroy', '-f'
-
+        env.cli 'destroy', '--force'
 
         File.delete(VAGRANTFILES_FOLDER + "/#{f}")
       end
