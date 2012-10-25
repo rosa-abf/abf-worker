@@ -1,4 +1,6 @@
 require 'vagrant'
+require 'sahara'
+require 'sahara/command/vagrant'
 require 'net/ssh'
 
 module AbfWorker
@@ -13,16 +15,6 @@ module AbfWorker
       @script_path = script_path
       @worker_id = ''#Process.getpgid(Process.ppid)
       @vm_name = "#{@os}_#{@arch}_#{@worker_id}"
-
-      #$stdout = File.new("logs/#{@vm_name}.log", 'w')
-      #$stdout.sync = true
-
-#      puts = Logger.new @vm_name
-#      puts.outputters = Outputter.stdout
-#      puts.level = Log4r::INFO
-#      file = FileOutputter.new("fileOutputter#{@vm_name}",
-#        :filename => "logs/#{@vm_name}.log", :trunc => false)
-#      puts.add(file)
     end
 
     def self.initialize_vagrant_env
@@ -46,6 +38,13 @@ module AbfWorker
       end
       @vagrant_env = Vagrant::Environment.
         new(:vagrantfile_name => "vagrantfiles/#{@vm_name}")
+#      logger_name = "#{@vm_name}-#{Process.ppid}"
+#      Log4r::Logger.each do |k, v|
+#        if k =~ /vagrant/
+#          v.outputters << Log4r::FileOutputter.
+#            new(logger_name, :filename =>  "logs/#{logger_name}.log")
+#        end
+#      end
     end
 
     def self.perform(os, arch, script_path)
@@ -59,6 +58,12 @@ module AbfWorker
     rescue Exception => e
       puts e.message
       rollback_and_halt_vm
+    ensure
+#      Log4r::Logger.each do |k, v|
+#        if k =~ /vagrant/
+#          v.outputters = []
+#        end
+#      end
     end
 
     def self.run_script
@@ -67,10 +72,15 @@ module AbfWorker
       commands = ['ls -l','ls -l /vagrant']
 
       #env = Vagrant::Environment.new(:cwd => VMDIR)
+      communicator = @vagrant_env.vms[@vm_name.to_sym].communicate
+      if communicator.ready?
+        commands.each{ |c| communicator.execute c }
+      end
+
 #      commands.each{ |c| @vagrant_env.cli 'ssh', @vm_name, '-c', c }
-      @vagrant_env.vms[@vm_name.to_sym].ssh.exec do |ssh|
-        commands.each{ |c| ssh.exec! c }
-        ssh.close
+#      @vagrant_env.vms[@vm_name.to_sym].ssh.exec do |ssh|
+#        commands.each{ |c| ssh.exec! c }
+#        ssh.close
 #        commands.each do |c|
 #          if (rc = ssh_command(ssh.session,c)) != 0
 #            puts "ERROR: #{c}"
@@ -79,7 +89,7 @@ module AbfWorker
 #            exit(rc)                                    
 #          end
 #        end
-      end
+#      end
     end
 
     def self.start_vm

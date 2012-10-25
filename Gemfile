@@ -1,10 +1,11 @@
 source "http://rubygems.org"
 
 gem 'resque'
-gem 'vagrant', '1.0.5'
+#gem 'vagrant', '1.0.5'
+gem 'vagrant', :git => 'git://github.com/avokhmin/vagrant.git',
+  :branch => 'master'
 gem 'sahara', :git => 'git://github.com/avokhmin/sahara.git',
-  :branch => 'pass-vagrant_env-to-initialize'
-
+  :branch => 'update-to-vagrant-1.1.0'
 
 group :development do
   gem "shoulda", ">= 0"
