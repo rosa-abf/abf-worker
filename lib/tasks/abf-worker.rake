@@ -23,4 +23,9 @@ namespace :abf_worker do
     end
   end
 
+  desc "Destroy VM's"
+  task :destroy_vms do
+    AbfWorker::Worker.clean true
+  end
+
 end

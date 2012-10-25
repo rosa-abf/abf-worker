@@ -1,6 +1,9 @@
 require 'vagrant'
+require 'net/ssh'
+
 module AbfWorker
   class Worker
+
     VAGRANTFILES_FOLDER = File.dirname(__FILE__).to_s << '/../../vagrantfiles'
     @queue = :worker
 
@@ -8,15 +11,25 @@ module AbfWorker
       @os = os
       @arch = arch
       @script_path = script_path
-      @worker_id = Process.getpgid(Process.ppid)
+      @worker_id = ''#Process.getpgid(Process.ppid)
       @vm_name = "#{@os}_#{@arch}_#{@worker_id}"
+
+      #$stdout = File.new("logs/#{@vm_name}.log", 'w')
+      #$stdout.sync = true
+
+#      puts = Logger.new @vm_name
+#      puts.outputters = Outputter.stdout
+#      puts.level = Log4r::INFO
+#      file = FileOutputter.new("fileOutputter#{@vm_name}",
+#        :filename => "logs/#{@vm_name}.log", :trunc => false)
+#      puts.add(file)
     end
 
     def self.initialize_vagrant_env
       vagrantfile = "#{VAGRANTFILES_FOLDER}/#{@vm_name}"
       unless File.exist?(vagrantfile)
         begin
-          file = File.open(vagrantfile, "w")
+          file = File.open(vagrantfile, 'w')
           str = "
             Vagrant::Config.run do |config|
               config.vm.share_folder('v-root', '/vagrant', '.', :extra => 'dmode=770,fmode=770')
@@ -26,19 +39,50 @@ module AbfWorker
             end"
           file.write(str) 
         rescue IOError => e
-          #some error occur, dir not writable etc.
+          puts e.message
         ensure
           file.close unless file.nil?
         end
       end
       @vagrant_env = Vagrant::Environment.
-        new(:vagrantfile_name => "#{VAGRANTFILES_FOLDER}/#{@vm_name}")
+        new(:vagrantfile_name => "vagrantfiles/#{@vm_name}")
     end
 
     def self.perform(os, arch, script_path)
-      self.initialize os, arch, script_path
-      self.initialize_vagrant_env
+      initialize os, arch, script_path
+      initialize_vagrant_env
+      start_vm
+      run_script
+      rollback_and_halt_vm
+    rescue Resque::TermException
+      clean
+    rescue Exception => e
+      puts e.message
+      rollback_and_halt_vm
+    end
 
+    def self.run_script
+      puts 'Run scripts...'
+      # TODO: run script
+      commands = ['ls -l','ls -l /vagrant']
+
+      #env = Vagrant::Environment.new(:cwd => VMDIR)
+#      commands.each{ |c| @vagrant_env.cli 'ssh', @vm_name, '-c', c }
+      @vagrant_env.vms[@vm_name.to_sym].ssh.exec do |ssh|
+        commands.each{ |c| ssh.exec! c }
+        ssh.close
+#        commands.each do |c|
+#          if (rc = ssh_command(ssh.session,c)) != 0
+#            puts "ERROR: #{c}"
+#            puts "RC: #{rc}"
+#            ssh.session.close
+#            exit(rc)                                    
+#          end
+#        end
+      end
+    end
+
+    def self.start_vm
       puts 'Start to run vagrant-up...'
       @vagrant_env.cli 'up', @vm_name
       puts 'Finished running vagrant-up'
@@ -46,9 +90,9 @@ module AbfWorker
       # VM should be exist before using sandbox
       puts 'Enter sandbox mode'
       Sahara::Session.on(@vm_name, @vagrant_env)
+    end
 
-      # TODO: run script
-
+    def self.rollback_and_halt_vm
       # machine state should be (Running, Paused or Stuck)
       puts 'Rollback actions'
       Sahara::Session.rollback(@vm_name, @vagrant_env)
@@ -56,20 +100,19 @@ module AbfWorker
       puts 'Start to run vagrant-halt...'
       @vagrant_env.cli 'halt', @vm_name
       puts 'Finished running vagrant-halt'
-    rescue Resque::TermException
-      clean
     end
 
-    def self.clean
+    def self.clean(destroy_all = false)
       files = []
       Dir.new(VAGRANTFILES_FOLDER).entries.each do |f|
-        if File.file?(path + "/#{f}") && f =~ /#{@worker_id}/
+        if File.file?(VAGRANTFILES_FOLDER + "/#{f}") &&
+            (f =~ /#{@worker_id}/ || destroy_all) && !(f =~ /^\./)
           files << f
         end
       end
       files.each do |f|
         env = Vagrant::Environment.
-          new(:vagrantfile_name => "#{VAGRANTFILES_FOLDER}/#{f}")
+          new(:vagrantfile_name => "vagrantfiles/#{f}")
         puts 'Halt VM...'
         env.cli 'halt', '-f'
 
@@ -80,9 +123,27 @@ module AbfWorker
         env.cli 'destroy', '-f'
 
 
-        File.delete(path + "/" + f)
+        File.delete(VAGRANTFILES_FOLDER + "/#{f}")
       end
     end
+
+
+    def self.ssh_command(session, cmd)
+      session.open_channel do |channel|
+        channel.exec(cmd) do |ch, success|                                                  
+          ch.on_data do |ch2, data|
+            puts "STDOUT: #{data}"                                                  
+          end
+          ch.on_extended_data do |ch2, type, data|                                          
+            puts "STDERR: #{data}"                                                  
+          end
+          ch.on_request "exit-status" do |ch2, data|                                        
+            return data.read_long                                                           
+          end                                                                               
+        end                                                                                 
+      end
+      session.loop                                                                          
+    end 
 
   end
 end
