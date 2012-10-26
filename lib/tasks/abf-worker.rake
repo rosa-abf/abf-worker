@@ -4,9 +4,9 @@ require 'resque/tasks'
 
 namespace :abf_worker do
   desc 'Add test data'
-  task :test_data do
+  task :test_script do
     script_path = '/home/avokhmin/workspace/warpc/test_script.sh'
-    Resque.enqueue(AbfWorker::Worker, 15, 'rosa', 64, script_path)
+    Resque.enqueue(AbfWorker::ScriptWorker, 15, 'rosa', 64, script_path)
   end
 
   desc 'Init VM'
@@ -25,7 +25,7 @@ namespace :abf_worker do
 
   desc "Destroy VM's"
   task :destroy_vms do
-    AbfWorker::Worker.clean true
+    AbfWorker::BaseWorker.clean true
   end
 
 end
