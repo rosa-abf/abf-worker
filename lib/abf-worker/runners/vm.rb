@@ -11,8 +11,8 @@ module AbfWorker
             str = "
               Vagrant::Config.run do |config|
                 config.vm.share_folder('v-root', nil, nil)
-                config.vm.define :#{@vm_name} do |vm_config|
-                  vm_config.vm.box = '#{@os}_#{@arch}'
+                config.vm.define '#{@vm_name}' do |vm_config|
+                  vm_config.vm.box = '#{@os}.#{@arch}'
                 end
               end"
             file.write(str) 

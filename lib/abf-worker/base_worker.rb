@@ -10,6 +10,13 @@ module AbfWorker
     include Log4r
     extend Runners::Vm
 
+    def self.initialize(build_id, os, arch)
+      @build_id = build_id
+      @os = os
+      @arch = arch
+      @worker_id = ''#Process.ppid
+      @vm_name = "#{@os}.#{@arch}_#{@worker_id}"
+    end
 
     def self.init_logger(logger_name = nil)
       @logger = Log4r::Logger.new logger_name, ALL

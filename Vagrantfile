@@ -9,14 +9,12 @@ Vagrant::Config.run do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   #config.vm.box = "base"
 
-  config.vm.define :rosa_64 do |vm_config|
-    vm_config.vm.box = "rosa_64"
-    #vm_config.vm.forward_port 80, 8080
+  config.vm.define 'rosa.64' do |vm_config|
+    vm_config.vm.box = "rosa.64"
   end
 
-  config.vm.define :rosa_32 do |vm_config|
-    vm_config.vm.box = "rosa_32"
-    #vm_config.vm.forward_port 3306, 3306
+  config.vm.define 'rosa.32' do |vm_config|
+    vm_config.vm.box = "rosa.32"
   end
 
   # The url from where the 'config.vm.box' box will be fetched if it

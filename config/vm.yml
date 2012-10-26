@@ -1,5 +1,5 @@
 virtual_machines:
-  - name: rosa_64
+  - name: rosa.64
     path: /home/avokhmin/workspace/warpc/lucid32.box
-  - name: rosa_32
+  - name: rosa.32
     path: /home/avokhmin/workspace/warpc/lucid32_2.box

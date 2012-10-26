@@ -8,12 +8,8 @@ module AbfWorker
     @queue = :script_worker
 
     def self.initialize(build_id, os, arch, script_path)
-      @build_id = build_id
-      @os = os
-      @arch = arch
+      super(build_id, os, arch)
       @script_path = script_path
-      @worker_id = ''#Process.ppid
-      @vm_name = "#{@os}_#{@arch}_#{@worker_id}"
     end
 
     def self.perform(build_id, os, arch, script_path)
