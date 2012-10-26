@@ -9,7 +9,8 @@ module AbfWorker
     VAGRANTFILES_FOLDER = File.dirname(__FILE__).to_s << '/../../vagrantfiles'
     @queue = :worker
 
-    def self.initialize(os, arch, script_path)
+    def self.initialize(build_id, os, arch, script_path)
+      @build_id = build_id
       @os = os
       @arch = arch
       @script_path = script_path
@@ -71,25 +72,10 @@ module AbfWorker
       # TODO: run script
       commands = ['ls -l','ls -l /vagrant', 'touch /vagrant/from_vb.txt']
 
-      #env = Vagrant::Environment.new(:cwd => VMDIR)
       communicator = @vagrant_env.vms[@vm_name.to_sym].communicate
       if communicator.ready?
         commands.each{ |c| communicator.execute c }
       end
-
-#      commands.each{ |c| @vagrant_env.cli 'ssh', @vm_name, '-c', c }
-#      @vagrant_env.vms[@vm_name.to_sym].ssh.exec do |ssh|
-#        commands.each{ |c| ssh.exec! c }
-#        ssh.close
-#        commands.each do |c|
-#          if (rc = ssh_command(ssh.session,c)) != 0
-#            puts "ERROR: #{c}"
-#            puts "RC: #{rc}"
-#            ssh.session.close
-#            exit(rc)                                    
-#          end
-#        end
-#      end
     end
 
     def self.start_vm

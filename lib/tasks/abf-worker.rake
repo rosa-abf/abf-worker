@@ -6,7 +6,7 @@ namespace :abf_worker do
   desc 'Add test data'
   task :test_data do
     script_path = '/home/avokhmin/workspace/warpc/test_script.sh'
-    Resque.enqueue(AbfWorker::Worker, 'rosa', 64, script_path)
+    Resque.enqueue(AbfWorker::Worker, 15, 'rosa', 64, script_path)
   end
 
   desc 'Init VM'
