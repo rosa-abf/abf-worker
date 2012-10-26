@@ -8,6 +8,8 @@ module AbfWorker
         if communicator.ready?
           prepare_script communicator
           logger.info '==> Run script...'
+
+          commands = []
           command = {
             'lst' => @lst,
             'externalarch' => @externalarch,
@@ -16,25 +18,26 @@ module AbfWorker
             'SRCPATH' => @srcpath,
             'branch' => @branch
           }.map{ |k, v| "#{k}=#{v}" }.join(' ')
-          command << ' /home/vagrant/script/script.sh'
+          command << ' /home/vagrant/script.sh'
+          commands << command
 
-          communicator.execute command do |channel, data|
-            if channel == :stdout
-              logger.info "==== STDOUT:"
-            else
-              logger.info "==== STDERR:"
+          commands.each do |c|
+            communicator.execute command, {:sudo => true} do |channel, data|
+              if channel == :stdout
+                logger.info "==== STDOUT:"
+              else
+                logger.info "==== STDERR:"
+              end
+              logger.info data 
             end
-            logger.info data 
           end
         end
       end
 
       def prepare_script(communicator)
         logger.info '==> Prepare script...'
-        # Create folder for script
-        communicator.execute 'mkdir /home/vagrant/script'
         # Upload script from server into the VM
-        communicator.upload(BUILD_ISO_SCRIPT, '/home/vagrant/script/script.sh')
+        communicator.upload(BUILD_ISO_SCRIPT, '/home/vagrant/script.sh')
       end
 
     end
