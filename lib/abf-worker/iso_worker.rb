@@ -1,9 +1,9 @@
 require 'abf-worker/base_worker'
-require 'abf-worker/runners/script'
+require 'abf-worker/runners/iso'
 
 module AbfWorker
   class IsoWorker < BaseWorker
-    extend Runners::Script
+    extend Runners::Iso
 
     @queue = :iso_worker
 
@@ -26,8 +26,8 @@ module AbfWorker
       @branch = branch
     end
 
-    def self.perform(build_id, os, arch, script_path)
-      initialize build_id, os, arch, script_path
+    def self.perform(build_id, lst, externalarch, productname, repo, srcpath, branch)
+      initialize build_id, lst, externalarch, productname, repo, srcpath, branch
       initialize_vagrant_env
       start_vm
       run_script
