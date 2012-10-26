@@ -4,9 +4,11 @@ require 'vagrant'
 require 'sahara'
 require 'sahara/command/vagrant'
 require 'net/ssh'
+require 'log4r'
 
 module AbfWorker
   class Worker
+    include Log4r
     extend VmRunner
     extend ScriptRunner
 
@@ -19,6 +21,12 @@ module AbfWorker
       @script_path = script_path
       @worker_id = ''#Process.ppid
       @vm_name = "#{@os}_#{@arch}_#{@worker_id}"
+
+      logger_name = "abfworker::build-worker-#{@build_id}"
+      @logger = Log4r::Logger.new logger_name, ALL
+      @logger.outputters << Log4r::Outputter.stdout
+      @logger.outputters << Log4r::FileOutputter.
+        new(logger_name, :filename =>  "logs/build-#{@build_id}")
     end
 
     def self.perform(build_id, os, arch, script_path)
@@ -30,14 +38,8 @@ module AbfWorker
     rescue Resque::TermException
       clean
     rescue Exception => e
-      puts e.message
+      @logger.error e.message
       rollback_and_halt_vm
-    ensure
-#      Log4r::Logger.each do |k, v|
-#        if k =~ /vagrant/
-#          v.outputters = []
-#        end
-#      end
     end
 
   end

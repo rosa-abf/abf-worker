@@ -16,42 +16,34 @@ module AbfWorker
             end"
           file.write(str) 
         rescue IOError => e
-          puts e.message
+          @logger.error e.message
         ensure
           file.close unless file.nil?
         end
       end
       @vagrant_env = Vagrant::Environment.
         new(:vagrantfile_name => "vagrantfiles/#{@vm_name}")
-#      logger_name = "#{@vm_name}-#{Process.ppid}"
-#      Log4r::Logger.each do |k, v|
-#        if k =~ /vagrant/
-#          v.outputters << Log4r::FileOutputter.
-#            new(logger_name, :filename =>  "logs/#{logger_name}.log")
-#        end
-#      end
     end
 
 
 
     def start_vm
-      puts 'Start to run vagrant-up...'
+      @logger.info '==> Up VM...'
       @vagrant_env.cli 'up', @vm_name
-      puts 'Finished running vagrant-up'
 
       # VM should be exist before using sandbox
-      puts 'Enter sandbox mode'
+      @logger.info '==> Enable save mode...'
       Sahara::Session.on(@vm_name, @vagrant_env)
     end
 
     def rollback_and_halt_vm
       # machine state should be (Running, Paused or Stuck)
-      puts 'Rollback actions'
+      @logger.info '==> Rollback activity'
       Sahara::Session.rollback(@vm_name, @vagrant_env)
 
-      puts 'Start to run vagrant-halt...'
+      @logger.info '==> Halt VM...'
       @vagrant_env.cli 'halt', @vm_name
-      puts 'Finished running vagrant-halt'
+      @logger.info '==> Done.'
     end
 
     def clean(destroy_all = false)
@@ -65,13 +57,13 @@ module AbfWorker
       files.each do |f|
         env = Vagrant::Environment.
           new(:vagrantfile_name => "vagrantfiles/#{f}", :ui => false)
-        puts 'Halt VM...'
+        @logger.info '==> Halt VM...'
         env.cli 'halt', '-f'
 
-        puts 'Exit sandbox mode'
+        @logger.info '==> Disable save mode...'
         Sahara::Session.off(f, env)
 
-        puts 'Destroy VM...'
+        @logger.info '==> Destroy VM...'
         env.cli 'destroy', '--force'
 
         File.delete(VAGRANTFILES_FOLDER + "/#{f}")
