@@ -17,7 +17,7 @@ module AbfWorker
       @os = os
       @arch = arch
       @script_path = script_path
-      @worker_id = ''#Process.getpgid(Process.ppid)
+      @worker_id = ''#Process.ppid
       @vm_name = "#{@os}_#{@arch}_#{@worker_id}"
     end
 
