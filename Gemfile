@@ -8,7 +8,6 @@ gem 'sahara', :git => 'git://github.com/avokhmin/sahara.git',
 gem 'log4r', '1.1.10'
 
 group :development do
-  gem "shoulda", ">= 0"
-  gem "bundler"
-  gem "jeweler", "~> 1.8.4"
+  gem 'veewee', '0.3.1', :git => 'git://github.com/avokhmin/veewee.git',
+    :branch => 'rosa-linux'
 end
