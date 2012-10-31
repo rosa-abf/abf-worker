@@ -23,11 +23,6 @@ module AbfWorker
 
           commands.each do |c|
             communicator.execute command, {:sudo => true} do |channel, data|
-              if channel == :stdout
-                logger.info "==== STDOUT:"
-              else
-                logger.info "==== STDERR:"
-              end
               logger.info data 
             end
           end
