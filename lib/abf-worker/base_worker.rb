@@ -4,6 +4,7 @@ require 'sahara'
 require 'sahara/command/vagrant'
 require 'net/ssh'
 require 'log4r'
+require 'resque/status_server'
 
 module AbfWorker
   class BaseWorker
