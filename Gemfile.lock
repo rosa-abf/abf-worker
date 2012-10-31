@@ -25,7 +25,7 @@ GIT
 
 GIT
   remote: git://github.com/avokhmin/veewee.git
-  revision: 83acef43e7a65e2963309fd73e86b33f1847ae8e
+  revision: 687e7eb2a0d89accf91b0e545ede9550ec786df2
   branch: rosa-linux
   specs:
     veewee (0.3.1)

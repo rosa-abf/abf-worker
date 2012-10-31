@@ -14,20 +14,6 @@ require 'rake'
 
 Dir[File.join(File.dirname(__FILE__),'lib/tasks/*.rake')].each { |f| load f }
 
-require 'jeweler'
-Jeweler::Tasks.new do |gem|
-  # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
-  gem.name = "abf-worker"
-  gem.homepage = "http://github.com/avokhmin/abf-worker"
-  gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
-  gem.email = "avokhmin@gmail.com"
-  gem.authors = ["Vokhmin Alexey V"]
-  # dependencies defined in Gemfile
-end
-Jeweler::RubygemsDotOrgTasks.new
-
 require 'rake/testtask'
 Rake::TestTask.new(:test) do |test|
   test.libs << 'lib' << 'test'

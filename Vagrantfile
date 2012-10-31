@@ -9,6 +9,10 @@ Vagrant::Config.run do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   #config.vm.box = "base"
 
+  config.vm.define 'ROSA.2012.LTS.i586' do |vm_config|
+    vm_config.vm.box = "ROSA.2012.LTS.i586"
+  end
+
   config.vm.define 'rosa.64' do |vm_config|
     vm_config.vm.box = "rosa.64"
   end

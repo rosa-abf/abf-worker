@@ -5,7 +5,7 @@ require 'resque/tasks'
 namespace :abf_worker do
   desc 'Add test data for Script worker'
   task :test_script do
-    script_path = '/home/avokhmin/workspace/warpc/test_script.sh'
+    script_path = Dir.pwd << '/scripts/test_script.sh'
     Resque.enqueue(AbfWorker::ScriptWorker, 15, 'rosa', 64, script_path)
   end
 
