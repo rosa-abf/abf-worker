@@ -43,10 +43,6 @@ module AbfWorker
         Sahara::Session.rollback(@vm_name, @vagrant_env)
 
         logger.info '==> Halt VM...'
-        communicator = @vagrant_env.vms[@vm_name.to_sym].communicate
-        if communicator.ready?
-          communicator.execute 'shutdown -h now', {:sudo => true}
-        end
         @vagrant_env.cli 'halt', @vm_name
         logger.info '==> Done.'
       end
