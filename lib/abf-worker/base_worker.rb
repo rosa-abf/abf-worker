@@ -4,7 +4,6 @@ require 'sahara'
 require 'sahara/command/vagrant'
 require 'net/ssh'
 require 'log4r'
-require 'resque/status_server'
 
 module AbfWorker
   class BaseWorker
@@ -15,7 +14,7 @@ module AbfWorker
       @build_id = build_id
       @os = os
       @arch = arch
-      @worker_id = ''#Process.ppid
+      @worker_id = Process.ppid
       @vm_name = "#{@os}.#{@arch}_#{@worker_id}"
     end
 

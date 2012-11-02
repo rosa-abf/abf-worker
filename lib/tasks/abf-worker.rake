@@ -3,15 +3,9 @@ require 'abf-worker'
 require 'resque/tasks'
 
 namespace :abf_worker do
-  desc 'Add test data for Script worker'
-  task :test_script do
-    script_path = Dir.pwd << '/scripts/test_script.sh'
-    Resque.enqueue(AbfWorker::ScriptWorker, 15, 'rosa', 64, script_path)
-  end
-
   desc 'Add test data for ISO worker'
   task :test_iso do
-    build_id = 15
+    build_id = 16
     lst = 'kde'
     externalarch = 'i586'
     productname = 'ROSA.2012.LTS'

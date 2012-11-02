@@ -10,7 +10,7 @@ module AbfWorker
           prepare_script communicator
           logger.info '==> Run script...'
 
-          commands = ['mkdir /tmp/iso']
+          commands = []
           command = {
             'lst' => @lst,
             'externalarch' => @externalarch,
