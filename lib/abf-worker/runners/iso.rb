@@ -28,7 +28,10 @@ module AbfWorker
             end
           end
           # Download ISO
-          #communicator.download('', ISO_FOLDER)
+          iso_folder = ISO_FOLDER << "/build-#{@build_id}"
+          Dir.rmdir iso_folder
+          Dir.mkdir iso_folder
+          communicator.download '/home/vagrant/build.log', (iso_folder << '/build.log')
         end
       end
 

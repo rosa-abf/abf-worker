@@ -40,7 +40,7 @@ echo
 echo "----------> UR IN Z MATRIX <----------"
 
 
-/usr/sbin/chroot $ch /opt/ISOBUILD/build 2>&1 > build.log
+PRODUCTNAME=$PRODUCTNAME externalarch=$externalarch /usr/sbin/chroot $ch /opt/ISOBUILD/build 2>&1 > build.log
 umount -l $ch/sys
 umount -l $ch/proc
 umount -l $ch/dev/pts
