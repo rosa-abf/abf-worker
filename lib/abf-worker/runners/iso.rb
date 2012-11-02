@@ -2,6 +2,7 @@ module AbfWorker
   module Runners
     module Iso
       BUILD_ISO_SCRIPT = File.dirname(__FILE__).to_s << '/../../../scripts/build_iso.sh'
+      ISO_FOLDER = File.dirname(__FILE__).to_s << '/../../../iso'
 
       def run_script
         communicator = @vagrant_env.vms[@vm_name.to_sym].communicate
@@ -9,7 +10,7 @@ module AbfWorker
           prepare_script communicator
           logger.info '==> Run script...'
 
-          commands = []
+          commands = ['mkdir /tmp/iso']
           command = {
             'lst' => @lst,
             'externalarch' => @externalarch,
@@ -26,6 +27,8 @@ module AbfWorker
               logger.info data 
             end
           end
+          # Download ISO
+          #communicator.download('', ISO_FOLDER)
         end
       end
 

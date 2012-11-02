@@ -16,8 +16,8 @@ namespace :abf_worker do
     externalarch = 'i586'
     productname = 'ROSA.2012.LTS'
     repo = 'http://abf.rosalinux.ru/downloads/rosa2012lts/repository/i586/'
-    srcpath = 'https://grendizer@abf.rosalinux.ru/grendizer/test.git'
-    branch = 'rosa2012.1'
+    srcpath = 'https://abf.rosalinux.ru/avokhmin/test.git'
+    branch = 'abf-worker'
     # build_id, lst, externalarch, productname, repo, srcpath, branch
     Resque.enqueue(AbfWorker::IsoWorker,
       build_id, lst, externalarch, productname, repo, srcpath, branch)

@@ -17,7 +17,7 @@ mkdir -p $ch/dev
 mkdir -p $ch/dev/pts
 mkdir -p $ch/proc
 mkdir -p $ch/sys
-mkdir -o $ch/opt
+mkdir -p $ch/opt
 
 mount --bind /dev/     $ch/dev
 mount --bind /dev/pts   $ch/dev/pts
