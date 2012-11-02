@@ -31,12 +31,12 @@ module AbfWorker
       initialize_vagrant_env
       start_vm
       run_script
-#      rollback_and_halt_vm
+      #rollback_and_halt_vm
     rescue Resque::TermException
-#      clean
+      #clean
     rescue Exception => e
       logger.error e.message
-#      rollback_and_halt_vm
+      #rollback_and_halt_vm
     end
 
     def self.logger
