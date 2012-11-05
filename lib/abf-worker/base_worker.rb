@@ -22,7 +22,7 @@ module AbfWorker
       @logger = Log4r::Logger.new logger_name, ALL
       @logger.outputters << Log4r::Outputter.stdout
       @logger.outputters << Log4r::FileOutputter.
-        new(logger_name, :filename =>  "logs/#{logger_name}.log")
+        new(logger_name, :filename =>  "log/#{logger_name}.log")
       @logger
     end
 
