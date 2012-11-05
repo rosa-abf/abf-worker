@@ -155,6 +155,7 @@ DEPENDENCIES
   capistrano
   capistrano_colors
   log4r (= 1.1.10)
+  rake
   resque
   rvm-capistrano
   sahara!

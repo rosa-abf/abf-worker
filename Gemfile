@@ -1,5 +1,6 @@
 source "http://rubygems.org"
 
+gem 'rake'
 gem 'resque'
 gem 'vagrant', :git => 'git://github.com/avokhmin/vagrant.git',
   :branch => 'abf-worker'
