@@ -10,7 +10,7 @@ GIT
 
 GIT
   remote: git://github.com/avokhmin/vagrant.git
-  revision: 8f2d4338e64f6e958bad8263f78aef59fcfd5da9
+  revision: 8dbdfe3cf1e06c11b5440c2d0967e82a1a7f5ff6
   branch: abf-worker
   specs:
     vagrant (1.1.0.dev)
