@@ -5,16 +5,15 @@ require 'resque/tasks'
 namespace :abf_worker do
   desc 'Add test data for ISO worker'
   task :test_iso do
-    build_id = 16
-    lst = 'kde'
+    options = {
+      :id => 16,
+      :srcpath => 'https://abf.rosalinux.ru/avokhmin/test.git',
+      :params => 'hello_world=555',
+      :main_script => 'build.sh'
+    }
     externalarch = 'i586'
     productname = 'ROSA.2012.LTS'
-    repo = 'http://abf.rosalinux.ru/downloads/rosa2012lts/repository/i586/'
-    srcpath = 'https://abf.rosalinux.ru/avokhmin/test.git'
-    branch = 'abf-worker'
-    # build_id, lst, externalarch, productname, repo, srcpath, branch
-    Resque.enqueue(AbfWorker::IsoWorker,
-      build_id, lst, externalarch, productname, repo, srcpath, branch)
+    Resque.enqueue(AbfWorker::IsoWorker, options)
   end
 
   desc 'Init VM'
