@@ -11,8 +11,6 @@ namespace :abf_worker do
       :params => 'hello_world=555',
       :main_script => 'build.sh'
     }
-    externalarch = 'i586'
-    productname = 'ROSA.2012.LTS'
     Resque.enqueue(AbfWorker::IsoWorker, options)
   end
 

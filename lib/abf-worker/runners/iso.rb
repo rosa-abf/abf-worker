@@ -11,7 +11,8 @@ module AbfWorker
           logger.info '==> Run script...'
 
           command = "cd iso_builder/; #{@params} ./#{@main_script}"
-          exit_status = execute_command(communicator, command, true)
+          begin
+            exit_status = execute_command(communicator, command, {:sudo => true})
           logger.info "==>  Script done with exit_status = #{exit_status}"
 
           save_results communicator
@@ -48,13 +49,14 @@ module AbfWorker
         commands << "curl -O #{@srcpath}"
         file_name = @srcpath.match(/archive\/.*/)[0].gsub(/^archive\//, '')
         commands << "tar -xzf #{file_name}"
-        commands << "mv #{file_name} iso_builder"
+        folder_name = file_name.gsub /\.tar\.gz$/, ''
+        commands << "mv #{folder_name} iso_builder"
 
         commands.each{ |c| execute_command(communicator, c) }
       end
 
-      def execute_command(communicator, command, sudo = false)
-        logger.info "--> execute command with sudo = #{sudo}: #{command}"
+      def execute_command(communicator, command, params = {:sudo => false})
+        logger.info "--> execute command with sudo = #{params[:sudo]}: #{command}"
         communicator.execute command, {:sudo => sudo} do |channel, data|
           logger.info data 
         end

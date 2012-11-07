@@ -16,10 +16,10 @@ module AbfWorker
     def self.initialize(options)
       @externalarch = 'x86_64'
       @productname = 'ROSA.2012.LTS'
-      @srcpath = options[:srcpath]
-      @params = options[:params]
-      @main_script = options[:main_script]
-      super options[:id], @productname, @externalarch
+      @srcpath = options['srcpath']
+      @params = options['params']
+      @main_script = options['main_script']
+      super options['id'], @productname, @externalarch
     end
 
     def self.perform(options)
