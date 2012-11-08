@@ -6,7 +6,9 @@ module AbfWorker
     module Iso
       RESULTS_FOLDER = File.dirname(__FILE__).to_s << '/../../../results'
       LOG_FOLDER = File.dirname(__FILE__).to_s << '/../../../log'
-      FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
+      # TODO: revert changes
+      FILE_STORE = 'http://0.0.0.0:3001/api/v1/file_stores.json'
+      # FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
 
       def run_script
         communicator = @vagrant_env.vms[@vm_name.to_sym].communicate
@@ -38,7 +40,7 @@ module AbfWorker
         end
         uploaded << upload_file(LOG_FOLDER, "abfworker::iso-worker-#{@build_id}.log")
 
-        logger.info results.inspect
+        logger.info uploaded.inspect
       end
 
       private
@@ -59,17 +61,13 @@ module AbfWorker
         sha1 = Digest::SHA1.file(path_to_file).hexdigest
 
         # curl --user myuser@gmail.com:mypass -POST -F "file_store[file]=@files/archive.zip" http://file-store.rosalinux.ru/api/v1/file_stores.json
-        # TODO: revert changes
-        url = 'http://0.0.0.0:3001/api/v1/file_stores.json'
-        # url = FILE_STORE
-        if %x[ curl #{url}?hash=#{sha1} ] == '[]'
+        if %x[ curl #{FILE_STORE}?hash=#{sha1} ] == '[]'
           command = 'curl --user '
           command << 'avokhmin@gmail.com:qwerty '
           command << '-POST -F "file_store[file]=@'
           command << path_to_file
           command << '" '
-          command << url
-          command << 'api/v1/file_stores.json'
+          command << FILE_STORE
           system command
         end
 
