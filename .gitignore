@@ -11,6 +11,11 @@ test/tmp
 test/version_tmp
 tmp
 
+vagrantfiles/*
+results/*
+log/*
+iso/*
+
 # YARD artifacts
 .yardoc
 _yardoc

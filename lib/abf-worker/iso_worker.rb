@@ -33,6 +33,8 @@ module AbfWorker
     rescue Exception => e
       logger.error e.message
       rollback_and_halt_vm
+    ensure
+      upload_results_to_file_store
     end
 
     def self.logger

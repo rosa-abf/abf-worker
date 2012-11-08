@@ -14,6 +14,14 @@ namespace :abf_worker do
     Resque.enqueue(AbfWorker::IsoWorker, options)
   end
 
+  desc 'Init env'
+  task :init_env do
+    path = File.dirname(__FILE__).to_s + '/../../'
+    Dir.mkdir path + 'log'
+    Dir.mkdir path + 'results'
+    Dir.mkdir path + 'vagrantfiles'
+  end
+
   desc 'Init VM'
   task :init do
     vm_config = YAML.load_file(File.dirname(__FILE__).to_s + '/../../config/vm.yml')

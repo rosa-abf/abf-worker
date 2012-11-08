@@ -4,6 +4,7 @@ module AbfWorker
   module Runners
     module Iso
       RESULTS_FOLDER = File.dirname(__FILE__).to_s << '/../../../results'
+      LOG_FOLDER = File.dirname(__FILE__).to_s << '/../../../log'
 
       def run_script
         communicator = @vagrant_env.vms[@vm_name.to_sym].communicate
@@ -24,14 +25,49 @@ module AbfWorker
         end
       end
 
+      def upload_results_to_file_store
+        results_folder = RESULTS_FOLDER + "/build-#{@build_id}"
+        if File.exists?(results_folder) && File.directory?(results_folder)
+          Dir.new(results_folder).entries.each do |f|
+            upload_file results_folder, f
+          end
+          Dir.rmdir results_folder
+        end
+        upload_file LOG_FOLDER, "abfworker::iso-worker-#{@build_id}.log"
+      end
+
       private
+
+      def upload_file(path, file_name)
+        path_to_file = path + '/' + file_name
+        return unless File.file?(path_to_file)
+        logger.info "==> Uploading file '#{file_name}'...."
+
+        # curl --user myuser@gmail.com:mypass -POST -F "file_store[file]=@files/archive.zip" http://file-store.rosalinux.ru/api/v1/file_stores.json
+        command = 'curl --user '
+        command << 'avokhmin@gmail.com:qwerty '
+        command << '-POST -F "file_store[file]=@'
+        command << path_to_file
+        command << '" '
+        # TODO: revert changes
+        command << 'http://0.0.0.0:3001/api/v1/file_stores.json'
+        # command << 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
+        system command
+
+        File.delete path_to_file
+        logger.info "Done."
+      end
 
       def save_results(communicator)
         # Download ISOs and etc.
         logger.info '==> Saving results....'
-        results_folder = RESULTS_FOLDER << "/build-#{@build_id}"
+        results_folder = RESULTS_FOLDER + "/build-#{@build_id}"
         Dir.rmdir results_folder if File.exists?(results_folder) && File.directory?(results_folder)
         Dir.mkdir results_folder
+
+        ['tar -zcvf results/archives.tar.gz archives', 'rm -rf archives'].each do |command|
+          execute_command communicator, command
+        end
 
         files = ''
         communicator.execute 'ls -1 results/' do |channel, data|
@@ -52,6 +88,7 @@ module AbfWorker
         logger.info '==> Prepare script...'
         commands = []
         commands << 'mkdir results'
+        commands << 'mkdir archives'
         commands << "curl -O #{@srcpath}"
         # TODO: revert changes when ABF will be working.
         file_name = @srcpath.match(/945501\/.*/)[0].gsub(/^945501\//, '')
