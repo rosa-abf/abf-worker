@@ -1,10 +1,12 @@
 require 'abf-worker/exceptions/script_error'
+require 'digest/md5'
 
 module AbfWorker
   module Runners
     module Iso
       RESULTS_FOLDER = File.dirname(__FILE__).to_s << '/../../../results'
       LOG_FOLDER = File.dirname(__FILE__).to_s << '/../../../log'
+      FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
 
       def run_script
         communicator = @vagrant_env.vms[@vm_name.to_sym].communicate
@@ -27,13 +29,16 @@ module AbfWorker
 
       def upload_results_to_file_store
         results_folder = RESULTS_FOLDER + "/build-#{@build_id}"
+        uploaded = []
         if File.exists?(results_folder) && File.directory?(results_folder)
           Dir.new(results_folder).entries.each do |f|
-            upload_file results_folder, f
+            uploaded << upload_file(results_folder, f)
           end
           Dir.rmdir results_folder
         end
-        upload_file LOG_FOLDER, "abfworker::iso-worker-#{@build_id}.log"
+        uploaded << upload_file(LOG_FOLDER, "abfworker::iso-worker-#{@build_id}.log")
+
+        logger.info results.inspect
       end
 
       private
@@ -41,21 +46,36 @@ module AbfWorker
       def upload_file(path, file_name)
         path_to_file = path + '/' + file_name
         return unless File.file?(path_to_file)
+
+        # Compress the log when file size more than 10MB
+        if path == LOG_FOLDER && (File.size(path_to_file).to_f / 2**20).round(2) >= 10
+          system "tar -zcvf #{path_to_file}.tar.gz #{path_to_file}"
+          File.delete path_to_file
+          path_to_file << '.tar.gz'
+          file_name << '.tar.gz'
+        end
+
         logger.info "==> Uploading file '#{file_name}'...."
+        sha1 = Digest::SHA1.file(path_to_file).hexdigest
 
         # curl --user myuser@gmail.com:mypass -POST -F "file_store[file]=@files/archive.zip" http://file-store.rosalinux.ru/api/v1/file_stores.json
-        command = 'curl --user '
-        command << 'avokhmin@gmail.com:qwerty '
-        command << '-POST -F "file_store[file]=@'
-        command << path_to_file
-        command << '" '
         # TODO: revert changes
-        command << 'http://0.0.0.0:3001/api/v1/file_stores.json'
-        # command << 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
-        system command
+        url = 'http://0.0.0.0:3001/api/v1/file_stores.json'
+        # url = FILE_STORE
+        if %x[ curl #{url}?hash=#{sha1} ] == '[]'
+          command = 'curl --user '
+          command << 'avokhmin@gmail.com:qwerty '
+          command << '-POST -F "file_store[file]=@'
+          command << path_to_file
+          command << '" '
+          command << url
+          command << 'api/v1/file_stores.json'
+          system command
+        end
 
         File.delete path_to_file
         logger.info "Done."
+        {:sha1 => sha1, :file_name => file_name}
       end
 
       def save_results(communicator)
