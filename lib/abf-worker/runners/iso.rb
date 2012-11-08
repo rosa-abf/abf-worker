@@ -4,6 +4,10 @@ require 'digest/md5'
 module AbfWorker
   module Runners
     module Iso
+      BUILD_STARTED = 2
+      BUILD_COMPLETED = 0
+      BUILD_FAILED = 1
+
       RESULTS_FOLDER = File.dirname(__FILE__).to_s << '/../../../results'
       LOG_FOLDER = File.dirname(__FILE__).to_s << '/../../../log'
       # TODO: revert changes
@@ -17,12 +21,13 @@ module AbfWorker
           logger.info '==> Run script...'
 
           command = "cd iso_builder/; #{@params} ./#{@main_script}"
-          exit_status = 0
           begin
             execute_command communicator, command, {:sudo => true}
             logger.info '==>  Script done with exit_status = 0'
+            @status = BUILD_COMPLETED
           rescue AbfWorker::Exceptions::ScriptError => e
             logger.info "==>  Script done with exit_status != 0. Error message: #{e.message}"
+            @status = BUILD_FAILED
           end
 
           save_results communicator
@@ -39,8 +44,7 @@ module AbfWorker
           Dir.rmdir results_folder
         end
         uploaded << upload_file(LOG_FOLDER, "abfworker::iso-worker-#{@build_id}.log")
-
-        logger.info uploaded.inspect
+        uploaded
       end
 
       private

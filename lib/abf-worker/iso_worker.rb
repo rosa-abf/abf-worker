@@ -4,7 +4,6 @@ require 'abf-worker/runners/iso'
 module AbfWorker
   class IsoWorker < BaseWorker
     extend Runners::Iso
-
     @queue = :iso_worker
 
     # Initialize a new ISO worker.
@@ -14,6 +13,7 @@ module AbfWorker
     # - [String] params The params for running script
     # - [String] main_script The main script
     def self.initialize(options)
+      @status = AbfWorker::Runners::Iso::BUILD_STARTED
       @externalarch = 'x86_64'
       @productname = 'ROSA.2012.LTS'
       @srcpath = options['srcpath']
@@ -34,7 +34,16 @@ module AbfWorker
       logger.error e.message
       rollback_and_halt_vm
     ensure
-      upload_results_to_file_store
+      results = upload_results_to_file_store.compact
+      Resque.push(
+        'iso_worker_observer',
+        'class' => 'AbfWorker::IsoWorkerObserver',
+        'args' => [{
+          :id => @build_id,
+          :status => @status,
+          :results => results
+        }]
+      )
     end
 
     def self.logger
