@@ -20,7 +20,8 @@ module AbfWorker
       # perform the write
       def write(data)
         @buffer.shift if @buffer.size > @buffer_limit
-        @buffer << [@line_number, data]
+        line = data.to_s.gsub(/^.*\:{1}/, '')
+        @buffer << [@line_number, line] unless line.empty?
         @line_number += 1
       end
 
