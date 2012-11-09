@@ -45,6 +45,7 @@ module AbfWorker
         logger.info '==> Halt VM...'
         @vagrant_env.cli 'halt', @vm_name
         logger.info '==> Done.'
+        yield if block_given?
       end
 
       def clean(destroy_all = false)
@@ -69,6 +70,7 @@ module AbfWorker
 
           File.delete(VAGRANTFILES_FOLDER + "/#{f}")
         end
+        yield if block_given?
       end
 
     end

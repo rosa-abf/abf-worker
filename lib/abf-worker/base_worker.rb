@@ -1,9 +1,10 @@
-require 'abf-worker/runners/vm'
 require 'vagrant'
 require 'sahara'
 require 'sahara/command/vagrant'
 require 'net/ssh'
 require 'log4r'
+require 'abf-worker/runners/vm'
+require 'abf-worker/outputters/redis_outputter'
 
 module AbfWorker
   class BaseWorker
@@ -23,6 +24,7 @@ module AbfWorker
       @logger.outputters << Log4r::Outputter.stdout
       @logger.outputters << Log4r::FileOutputter.
         new(logger_name, :filename =>  "log/#{logger_name}.log")
+      @logger.outputters << AbfWorker::Outputters::RedisOutputter.new(logger_name)
       @logger
     end
 

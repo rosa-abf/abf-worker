@@ -27,13 +27,19 @@ module AbfWorker
       initialize_vagrant_env
       start_vm
       run_script
-      rollback_and_halt_vm
+      rollback_and_halt_vm { send_results }
     rescue Resque::TermException
-      clean
+      clean { send_results }
     rescue Exception => e
       logger.error e.message
-      rollback_and_halt_vm
-    ensure
+      rollback_and_halt_vm { send_results }
+    end
+
+    def self.logger
+      @logger || init_logger("abfworker::iso-worker-#{@build_id}")
+    end
+
+    def self.send_results
       results = upload_results_to_file_store.compact
       Resque.push(
         'iso_worker_observer',
@@ -44,10 +50,6 @@ module AbfWorker
           :results => results
         }]
       )
-    end
-
-    def self.logger
-      @logger || init_logger("abfworker::iso-worker-#{@build_id}")
     end
 
   end

@@ -146,6 +146,7 @@ GEM
     tilt (1.3.3)
     vegas (0.1.11)
       rack (>= 1.0.0)
+    yajl-ruby (1.1.0)
 
 PLATFORMS
   ruby
@@ -156,8 +157,10 @@ DEPENDENCIES
   capistrano_colors
   log4r (= 1.1.10)
   rake
-  resque
+  redis (= 3.0.2)
+  resque (= 1.23.0)
   rvm-capistrano
   sahara!
   vagrant!
   veewee (= 0.3.1)!
+  yajl-ruby (= 1.1.0)
