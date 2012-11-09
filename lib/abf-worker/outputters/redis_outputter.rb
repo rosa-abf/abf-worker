@@ -1,5 +1,4 @@
 require 'log4r/outputter/outputter'
-require 'yajl'
 
 module AbfWorker
   module Outputters
@@ -21,8 +20,13 @@ module AbfWorker
       def write(data)
         @buffer.shift if @buffer.size > @buffer_limit
         line = data.to_s.gsub(/^.*\:{1}/, '')
-        @buffer << [@line_number, line] unless line.empty?
-        @line_number += 1
+        unless line.empty?
+          l = @line_number.to_s
+          l << ': '
+          l << line
+          @buffer << l
+          @line_number += 1
+        end
       end
 
       def init_thread
@@ -32,7 +36,7 @@ module AbfWorker
             Resque.redis.setex(
               @name,
               (@time_interval + 5),
-              Yajl::Encoder.encode(@buffer)
+              @buffer.join
             )
           end
         end
