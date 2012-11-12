@@ -29,8 +29,10 @@ module AbfWorker
       run_script
       rollback_and_halt_vm { send_results }
     rescue Resque::TermException
+      @status = AbfWorker::Runners::Iso::BUILD_FAILED
       clean { send_results }
     rescue Exception => e
+      @status = AbfWorker::Runners::Iso::BUILD_FAILED
       logger.error e.message
       rollback_and_halt_vm { send_results }
     end
