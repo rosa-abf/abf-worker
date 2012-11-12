@@ -11,8 +11,8 @@ module AbfWorker
       RESULTS_FOLDER = File.dirname(__FILE__).to_s << '/../../../results'
       LOG_FOLDER = File.dirname(__FILE__).to_s << '/../../../log'
       # TODO: revert changes
-      FILE_STORE = 'http://0.0.0.0:3001/api/v1/file_stores.json'
-      # FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
+      # FILE_STORE = 'http://0.0.0.0:3001/api/v1/file_stores.json'
+      FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
 
       def run_script
         communicator = @vagrant_env.vms[@vm_name.to_sym].communicate
