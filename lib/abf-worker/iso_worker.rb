@@ -1,5 +1,6 @@
 require 'abf-worker/base_worker'
 require 'abf-worker/runners/iso'
+require 'abf-worker/inspectors/live_inspector'
 
 module AbfWorker
   class IsoWorker < BaseWorker
@@ -20,6 +21,8 @@ module AbfWorker
       @params = options['params']
       @main_script = options['main_script']
       super options['id'], @productname, @externalarch
+      @live_inspector = AbfWorker::Inspectors::LiveInspector.
+        new(@build_id, @worker_id, options['time_living'])
     end
 
     def self.perform(options)
