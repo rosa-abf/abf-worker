@@ -13,14 +13,15 @@ module AbfWorker
     # - [String] srcpath The path for build scripts
     # - [String] params The params for running script
     # - [String] main_script The main script
+    # - [String] time_living The max time for building (in minutes)
+    # - [String] arch The arch of VM
+    # - [String] distrib_type The type of product
     def self.initialize(options)
       @status = AbfWorker::Runners::Iso::BUILD_STARTED
-      @externalarch = 'x86_64'
-      @productname = 'ROSA.2012.LTS'
       @srcpath = options['srcpath']
       @params = options['params']
       @main_script = options['main_script']
-      super options['id'], @productname, @externalarch
+      super options['id'], options['distrib_type'], options['arch']
       @live_inspector = AbfWorker::Inspectors::LiveInspector.
         new(@build_id, @worker_id, options['time_living'])
     end

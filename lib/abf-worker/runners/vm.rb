@@ -5,6 +5,7 @@ module AbfWorker
 
       def initialize_vagrant_env
         vagrantfile = "#{VAGRANTFILES_FOLDER}/#{@vm_name}"
+        first_run = false
         unless File.exist?(vagrantfile)
           begin
             file = File.open(vagrantfile, 'w')
@@ -15,7 +16,8 @@ module AbfWorker
                   vm_config.vm.box = '#{@os}.#{@arch}'
                 end
               end"
-            file.write(str) 
+            file.write(str)
+            first_run = true
           rescue IOError => e
             logger.error e.message
           ensure
@@ -24,6 +26,19 @@ module AbfWorker
         end
         @vagrant_env = Vagrant::Environment.
           new(:vagrantfile_name => "vagrantfiles/#{@vm_name}")
+        # Hook for fix:
+        # ERROR warden: Error occurred: uninitialized constant VagrantPlugins::ProviderVirtualBox::Action::Customize::Errors
+        # on vm_config.vm.customizations << ['modifyvm', :id, '--memory',  '#{memory}']
+        # and config.vm.customize ['modifyvm', '#{@vm_name}', '--memory', '#{memory}']
+        if first_run
+          logger.info '==> Up VM at first time...'
+          @vagrant_env.cli 'up', @vm_name
+          logger.info '==> Set memory for VM...'
+          # Halt, because: The machine 'abf-worker_...' is already locked for a session (or being unlocked)
+          @vagrant_env.cli 'halt', @vm_name
+          memory = @arch == 'i586' ? 4096 : 8192
+          system "VBoxManage modifyvm #{@vagrant_env.vms.first[1].id} --memory #{memory}"
+        end
       end
 
 
