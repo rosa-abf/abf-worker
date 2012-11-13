@@ -1,3 +1,5 @@
 virtual_machines:
-  - name: rosa.64
-    path: /home/avokhmin/workspace/warpc/lucid32.box
+  - name: mdv.i586
+    path: /home/rosa/boxes/rosa.i586.box
+  - name: mdv.x64_86
+    path: /home/rosa/boxes/rosa.x64_86.box
