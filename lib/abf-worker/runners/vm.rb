@@ -9,11 +9,14 @@ module AbfWorker
         unless File.exist?(vagrantfile)
           begin
             file = File.open(vagrantfile, 'w')
+            port = 2000 + (@build_id % 1000)
             str = "
               Vagrant::Config.run do |config|
                 config.vm.share_folder('v-root', nil, nil)
                 config.vm.define '#{@vm_name}' do |vm_config|
                   vm_config.vm.box = '#{@os}.#{@arch}'
+                  vm_config.vm.forward_port 22, #{port}
+                  vm_config.ssh.port = #{port}
                 end
               end"
             file.write(str)
@@ -36,6 +39,7 @@ module AbfWorker
           logger.info '==> Set memory for VM...'
           # Halt, because: The machine 'abf-worker_...' is already locked for a session (or being unlocked)
           @vagrant_env.cli 'halt', @vm_name
+          # memory = @arch == 'i586' ? 512 : 1024
           memory = @arch == 'i586' ? 4096 : 8192
           system "VBoxManage modifyvm #{@vagrant_env.vms.first[1].id} --memory #{memory}"
         end
