@@ -9,7 +9,7 @@ module AbfWorker
         unless File.exist?(vagrantfile)
           begin
             file = File.open(vagrantfile, 'w')
-            port = 2000 + (@build_id % 1000)
+            port = 2000 + (@build_id % 63000)
             str = "
               Vagrant::Config.run do |config|
                 config.vm.share_folder('v-root', nil, nil)
