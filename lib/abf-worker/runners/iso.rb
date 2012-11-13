@@ -8,11 +8,13 @@ module AbfWorker
       BUILD_COMPLETED = 0
       BUILD_FAILED = 1
 
-      RESULTS_FOLDER = File.dirname(__FILE__).to_s << '/../../../results'
-      LOG_FOLDER = File.dirname(__FILE__).to_s << '/../../../log'
+      ROOT_PATH = File.dirname(__FILE__).to_s << '/../../../'
+      RESULTS_FOLDER = ROOT_PATH + 'results'
+      LOG_FOLDER = ROOT_PATH + 'log'
       # TODO: revert changes
       # FILE_STORE = 'http://0.0.0.0:3001/api/v1/file_stores.json'
       FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
+      FILE_STORE_CONFIG = ROOT_PATH + 'config/file-store.yml'
 
       def run_script
         communicator = @vagrant_env.vms[@vm_name.to_sym].communicate
@@ -67,8 +69,8 @@ module AbfWorker
         # curl --user myuser@gmail.com:mypass -POST -F "file_store[file]=@files/archive.zip" http://file-store.rosalinux.ru/api/v1/file_stores.json
         if %x[ curl #{FILE_STORE}?hash=#{sha1} ] == '[]'
           command = 'curl --user '
-          command << 'avokhmin@gmail.com:qwerty '
-          command << '-POST -F "file_store[file]=@'
+          command << file_store_token
+          command << ' -POST -F "file_store[file]=@'
           command << path_to_file
           command << '" '
           command << FILE_STORE
@@ -113,8 +115,8 @@ module AbfWorker
         commands << 'mkdir archives'
         commands << "curl -O #{@srcpath}"
         # TODO: revert changes when ABF will be working.
-        file_name = @srcpath.match(/945501\/.*/)[0].gsub(/^945501\//, '')
-        # file_name = @srcpath.match(/archive\/.*/)[0].gsub(/^archive\//, '')
+        # file_name = @srcpath.match(/945501\/.*/)[0].gsub(/^945501\//, '')
+        file_name = @srcpath.match(/archive\/.*/)[0].gsub(/^archive\//, '')
         commands << "tar -xzf #{file_name}"
         folder_name = file_name.gsub /\.tar\.gz$/, ''
         commands << "mv #{folder_name} iso_builder"
@@ -131,6 +133,14 @@ module AbfWorker
         communicator.execute command, opts do |channel, data|
           logger.info data 
         end
+      end
+
+      def file_store_token
+        return @file_store_token if @file_store_token
+        server_id = ENV['SERVER_ID'] || '1'
+        fs_config = YAML.load_file(FILE_STORE_CONFIG)
+        @file_store_token = fs_config["server_#{server_id}"]
+        @file_store_token
       end
 
     end
