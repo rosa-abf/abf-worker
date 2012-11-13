@@ -70,7 +70,7 @@ module AbfWorker
         if %x[ curl #{FILE_STORE}?hash=#{sha1} ] == '[]'
           command = 'curl --user '
           command << file_store_token
-          command << ' -POST -F "file_store[file]=@'
+          command << ': -POST -F "file_store[file]=@'
           command << path_to_file
           command << '" '
           command << FILE_STORE
