@@ -17,7 +17,7 @@ namespace :abf_worker do
   desc 'Init env'
   task :init_env do
     path = File.dirname(__FILE__).to_s + '/../../'
-    Dir.mkdir path + 'log'
+    # Dir.mkdir path + 'log'
     Dir.mkdir path + 'results'
     Dir.mkdir path + 'vagrantfiles'
   end
