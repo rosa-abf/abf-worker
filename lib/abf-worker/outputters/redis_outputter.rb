@@ -18,14 +18,19 @@ module AbfWorker
 
       # perform the write
       def write(data)
-        @buffer.shift if @buffer.size > @buffer_limit
         line = data.to_s.gsub(/^.*\:{1}/, '')
         unless line.empty?
-          l = @line_number.to_s
-          l << ': '
-          l << line
-          @buffer << l
-          @line_number += 1
+          last_line = @buffer.last
+          if last_line && line[0] == last_line[0]
+            last_line << line
+          else
+            l = @line_number.to_s
+            l << ': '
+            l << line
+            @line_number += 1
+            @buffer.shift if @buffer.size > @buffer_limit
+            @buffer << l
+          end
         end
       end
 

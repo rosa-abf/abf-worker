@@ -106,7 +106,10 @@ module AbfWorker
           next if file.empty?
           logger.info "==> Downloading file '#{file}'...."
           path = "/home/vagrant/results/" << file
-          communicator.download path, (results_folder + '/' + file)
+          # communicator.download path, (results_folder + '/' + file)
+          # TODO: need refactoring
+          port = @vagrant_env.vms.first[1].config.ssh.port
+          system "scp -i keys/vagrant -P #{port} vagrant@127.0.0.1:#{path} #{(results_folder + '/' + file)}"
           logger.info "Done."
         end
       end
