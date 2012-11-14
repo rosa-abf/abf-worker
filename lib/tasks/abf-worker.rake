@@ -3,23 +3,10 @@ require 'abf-worker'
 require 'resque/tasks'
 
 namespace :abf_worker do
-  desc 'Add test data for ISO worker'
-  task :test_iso do
-    options = {
-      :id => 16,
-      :srcpath => 'https://abf.rosalinux.ru/avokhmin/test.git',
-      :params => 'hello_world=555',
-      :main_script => 'build.sh'
-    }
-    Resque.enqueue(AbfWorker::IsoWorker, options)
-  end
-
-  desc 'Init env'
+  desc 'Init dev env'
   task :init_env do
     path = File.dirname(__FILE__).to_s + '/../../'
-    # Dir.mkdir path + 'log'
-    Dir.mkdir path + 'results'
-    Dir.mkdir path + 'vagrantfiles'
+    Dir.mkdir path + 'log'
   end
 
   desc 'Init VM'
@@ -36,9 +23,10 @@ namespace :abf_worker do
     end
   end
 
-  desc "Destroy VM's"
-  task :destroy_vms do
-    AbfWorker::BaseWorker.clean true
+  desc "Destroy ISO worker VM's"
+  task :destroy_iso_worker_vms do
+    AbfWorker::IsoWorker.init_tmp_folder_and_server_id
+    AbfWorker::IsoWorker.clean true
   end
 
 end

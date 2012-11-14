@@ -9,12 +9,19 @@ module AbfWorker
       BUILD_FAILED = 1
 
       ROOT_PATH = File.dirname(__FILE__).to_s << '/../../../'
-      RESULTS_FOLDER = ROOT_PATH + 'results'
       LOG_FOLDER = ROOT_PATH + 'log'
-      # TODO: revert changes
-      # FILE_STORE = 'http://0.0.0.0:3001/api/v1/file_stores.json'
       FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
       FILE_STORE_CONFIG = ROOT_PATH + 'config/file-store.yml'
+
+      def results_folder
+        return @results_folder if @results_folder
+        @results_folder = @tmp_dir + '/results'
+        Dir.mkdir(@results_folder) unless File.exists?(@results_folder)
+        @results_folder << "/build-#{@build_id}"
+        Dir.rmdir(@results_folder) if File.exists?(@results_folder)
+        Dir.mkdir(@results_folder)
+        @results_folder
+      end
 
       def run_script
         communicator = @vagrant_env.vms[@vm_name.to_sym].communicate
@@ -37,7 +44,6 @@ module AbfWorker
       end
 
       def upload_results_to_file_store
-        results_folder = RESULTS_FOLDER + "/build-#{@build_id}"
         uploaded = []
         if File.exists?(results_folder) && File.directory?(results_folder)
           Dir.new(results_folder).entries.each do |f|
@@ -85,9 +91,6 @@ module AbfWorker
       def save_results(communicator)
         # Download ISOs and etc.
         logger.info '==> Saving results....'
-        results_folder = RESULTS_FOLDER + "/build-#{@build_id}"
-        Dir.rmdir results_folder if File.exists?(results_folder) && File.directory?(results_folder)
-        Dir.mkdir results_folder
 
         ['tar -zcvf results/archives.tar.gz archives', 'rm -rf archives'].each do |command|
           execute_command communicator, command
@@ -137,9 +140,8 @@ module AbfWorker
 
       def file_store_token
         return @file_store_token if @file_store_token
-        server_id = ENV['SERVER_ID'] || '1'
         fs_config = YAML.load_file(FILE_STORE_CONFIG)
-        @file_store_token = fs_config["server_#{server_id}"]
+        @file_store_token = fs_config["server_#{@server_id}"]
         @file_store_token
       end
 

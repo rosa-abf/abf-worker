@@ -1,10 +1,16 @@
 module AbfWorker
   module Runners
     module Vm
-      VAGRANTFILES_FOLDER = File.dirname(__FILE__).to_s << '/../../../vagrantfiles'
+
+      def vagrantfiles_folder
+        return @vagrantfiles_folder if @vagrantfiles_folder
+        @vagrantfiles_folder = @tmp_dir + '/vagrantfiles'
+        Dir.mkdir(@vagrantfiles_folder) unless File.exists?(@vagrantfiles_folder)
+        @vagrantfiles_folder 
+      end
 
       def initialize_vagrant_env
-        vagrantfile = "#{VAGRANTFILES_FOLDER}/#{@vm_name}"
+        vagrantfile = "#{vagrantfiles_folder}/#{@vm_name}"
         first_run = false
         unless File.exist?(vagrantfile)
           begin
@@ -27,8 +33,10 @@ module AbfWorker
             file.close unless file.nil?
           end
         end
-        @vagrant_env = Vagrant::Environment.
-          new(:vagrantfile_name => "vagrantfiles/#{@vm_name}")
+        @vagrant_env = Vagrant::Environment.new(
+          :cwd => vagrantfiles_folder,
+          :vagrantfile_name => @vm_name
+        )
         # Hook for fix:
         # ERROR warden: Error occurred: uninitialized constant VagrantPlugins::ProviderVirtualBox::Action::Customize::Errors
         # on vm_config.vm.customizations << ['modifyvm', :id, '--memory',  '#{memory}']
@@ -36,16 +44,18 @@ module AbfWorker
         if first_run
           logger.info '==> Up VM at first time...'
           @vagrant_env.cli 'up', @vm_name
-          logger.info '==> Set memory for VM...'
+          logger.info '==> Configure VM...'
           # Halt, because: The machine 'abf-worker_...' is already locked for a session (or being unlocked)
           @vagrant_env.cli 'halt', @vm_name
-          # memory = @arch == 'i586' ? 512 : 1024
+          vm_id = @vagrant_env.vms.first[1].id
           memory = @arch == 'i586' ? 4096 : 8192
-          system "VBoxManage modifyvm #{@vagrant_env.vms.first[1].id} --memory #{memory}"
+          # memory = @arch == 'i586' ? 512 : 1024
+          # see: http://code.google.com/p/phpvirtualbox/wiki/AdvancedSettings
+          ["--memory #{memory}", '--cpus 2', '--hwvirtex on', '--nestedpaging on', '--largepages on'].each do |c|
+            system "VBoxManage modifyvm #{vm_id} #{c}"
+          end
         end
       end
-
-
 
       def start_vm
         logger.info '==> Up VM...'
@@ -69,15 +79,18 @@ module AbfWorker
 
       def clean(destroy_all = false)
         files = []
-        Dir.new(VAGRANTFILES_FOLDER).entries.each do |f|
-          if File.file?(VAGRANTFILES_FOLDER + "/#{f}") &&
+        Dir.new(vagrantfiles_folder).entries.each do |f|
+          if File.file?(vagrantfiles_folder + "/#{f}") &&
               (f =~ /#{@worker_id}/ || destroy_all) && !(f =~ /^\./)
             files << f
           end
         end
         files.each do |f|
-          env = Vagrant::Environment.
-            new(:vagrantfile_name => "vagrantfiles/#{f}", :ui => false)
+          env = Vagrant::Environment.new(
+            :vagrantfile_name => f,
+            :cwd => vagrantfiles_folder,
+            :ui => false
+          )
           logger.info '==> Halt VM...'
           env.cli 'halt', '-f'
 
@@ -87,7 +100,7 @@ module AbfWorker
           logger.info '==> Destroy VM...'
           env.cli 'destroy', '--force'
 
-          File.delete(VAGRANTFILES_FOLDER + "/#{f}")
+          File.delete(vagrantfiles_folder + "/#{f}")
         end
         yield if block_given?
       end

@@ -11,8 +11,7 @@ test/tmp
 test/version_tmp
 tmp
 
-vagrantfiles/*
-results/*
+abf-worker-tmp/*
 log/*
 iso/*
 
