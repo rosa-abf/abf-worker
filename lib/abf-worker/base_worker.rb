@@ -36,7 +36,7 @@ module AbfWorker
     def self.init_tmp_folder_and_server_id
       @server_id = ENV['SERVER_ID'] || '1'
       @tmp_dir = ''
-      base = ENV['ENV'] == 'production' ? '/mnt/store/abf-worker-tmp' : "#{Dir.pwd}/abf-worker-tmp"
+      base = ENV['ENV'] == 'production' ? '/mnt/store/tmp/abf-worker-tmp' : "#{Dir.pwd}/abf-worker-tmp"
       [base, "server-#{@server_id}", name].each do |d|
         @tmp_dir << '/'
         @tmp_dir << d
