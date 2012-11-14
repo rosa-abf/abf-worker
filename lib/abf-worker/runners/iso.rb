@@ -22,7 +22,7 @@ module AbfWorker
           prepare_script communicator
           logger.info '==> Run script...'
 
-          command = "cd iso_builder/; #{@params} ./#{@main_script}"
+          command = "cd iso_builder/; #{@params} /bin/bash #{@main_script}"
           begin
             execute_command communicator, command, {:sudo => true}
             logger.info '==>  Script done with exit_status = 0'
