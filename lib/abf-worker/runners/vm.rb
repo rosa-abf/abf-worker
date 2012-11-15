@@ -54,16 +54,17 @@ module AbfWorker
           ["--memory #{memory}", '--cpus 2', '--hwvirtex on', '--nestedpaging on', '--largepages on'].each do |c|
             system "VBoxManage modifyvm #{vm_id} #{c}"
           end
+
+          start_vm
+          # VM should be exist before using sandbox
+          logger.info '==> Enable save mode...'
+          Sahara::Session.on(@vm_name, @vagrant_env)
         end
       end
 
       def start_vm
         logger.info '==> Up VM...'
         @vagrant_env.cli 'up', @vm_name
-
-        # VM should be exist before using sandbox
-        logger.info '==> Enable save mode...'
-        Sahara::Session.on(@vm_name, @vagrant_env)
       end
 
       def rollback_and_halt_vm
