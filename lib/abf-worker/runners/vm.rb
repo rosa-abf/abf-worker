@@ -55,23 +55,27 @@ module AbfWorker
             system "VBoxManage modifyvm #{vm_id} #{c}"
           end
 
-          start_vm
+          start_vm true
           # VM should be exist before using sandbox
           logger.info '==> Enable save mode...'
           Sahara::Session.on(@vm_name, @vagrant_env)
         end
       end
 
-      def start_vm
+      def start_vm(first_run = false)
         logger.info '==> Up VM...'
         @vagrant_env.cli 'up', @vm_name
+        rollback_vm unless first_run
       end
 
-      def rollback_and_halt_vm
+      def rollback_vm
         # machine state should be (Running, Paused or Stuck)
         logger.info '==> Rollback activity'
         Sahara::Session.rollback(@vm_name, @vagrant_env)
+      end
 
+      def rollback_and_halt_vm
+        rollback_vm
         logger.info '==> Halt VM...'
         @vagrant_env.cli 'halt', @vm_name
         logger.info '==> Done.'

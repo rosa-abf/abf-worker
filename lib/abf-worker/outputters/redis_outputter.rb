@@ -22,7 +22,8 @@ module AbfWorker
         unless line.empty?
           last_line = @buffer.last
           if last_line && (line.strip =~ /^[\#]+$/) && (line[-1, 1] == last_line[-1, 1])
-            last_line << line.strip
+            last_line.rstrip!
+            last_line << line.lstrip
           else
             l = @line_number.to_s
             l << ': '
