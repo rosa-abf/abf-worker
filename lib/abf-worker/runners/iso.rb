@@ -106,7 +106,7 @@ module AbfWorker
         # end
         logger.info "==> Downloading results...."
         port = @vagrant_env.vms.first[1].config.ssh.port
-        system "yes | scp -r -i /home/rosa/.ssh/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{results_folder}"
+        system "yes | scp -r -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{results_folder}"
         logger.info "Done."
 
         # files.split(/\b\s/).each do |file|
