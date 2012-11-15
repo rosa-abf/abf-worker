@@ -2,8 +2,8 @@ virtual_machines:
   - name: mdv.i586
     path: /home/rosa/boxes/rosa.i586.box
   - name: mdv.x86_64
-    path: /nfhome/rosa/boxes/rosa.x86_64.box
+    path: /home/rosa/boxes/rosa.x86_64.box
   - name: rhel.i586
     path: /home/rosa/boxes/rhel.i586.box
   - name: rhel.x86_64
-    path: /nfhome/rosa/boxes/rhel.x86_64.box
+    path: /home/rosa/boxes/rhel.x86_64.box
