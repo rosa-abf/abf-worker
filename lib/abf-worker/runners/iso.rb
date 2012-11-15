@@ -99,22 +99,26 @@ module AbfWorker
           execute_command communicator, command
         end
 
-        files = ''
-        communicator.execute 'ls -1 results/' do |channel, data|
-          f = data.strip
-          files << f unless f.empty?
-        end
-        files.split(/\b\s/).each do |file|
-          file = file.strip
-          next if file.empty?
-          logger.info "==> Downloading file '#{file}'...."
-          path = "/home/vagrant/results/" << file
-          # communicator.download path, (results_folder + '/' + file)
-          # TODO: need refactoring
-          port = @vagrant_env.vms.first[1].config.ssh.port
-          system "scp -i keys/vagrant -P #{port} vagrant@127.0.0.1:#{path} #{(results_folder + '/' + file)}"
-          logger.info "Done."
-        end
+        # files = ''
+        # communicator.execute 'ls -1 results/' do |channel, data|
+        #   f = data.strip
+        #   files << f unless f.empty?
+        # end
+        logger.info "==> Downloading results...."
+        system "scp -r -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{results_folder}"
+        logger.info "Done."
+
+        # files.split(/\b\s/).each do |file|
+        #   file = file.strip
+        #   next if file.empty?
+        #   logger.info "==> Downloading file '#{file}'...."
+        #   path = "/home/vagrant/results/" << file
+        #   # communicator.download path, (results_folder + '/' + file)
+        #   # TODO: need refactoring
+        #   port = @vagrant_env.vms.first[1].config.ssh.port
+        #   system "scp -i keys/vagrant -P #{port} vagrant@127.0.0.1:#{path} #{(results_folder + '/' + file)}"
+        #   logger.info "Done."
+        # end
       end
 
       def prepare_script(communicator)
