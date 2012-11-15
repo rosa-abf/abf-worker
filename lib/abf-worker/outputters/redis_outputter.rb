@@ -21,7 +21,7 @@ module AbfWorker
         line = data.to_s.gsub(/^.*\:{1}/, '')
         unless line.empty?
           last_line = @buffer.last
-          if last_line && line[0] == last_line[0]
+          if last_line && line[0] == last_line[last_line.length - 1]
             last_line << line
           else
             l = @line_number.to_s
