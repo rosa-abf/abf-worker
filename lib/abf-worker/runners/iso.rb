@@ -52,7 +52,7 @@ module AbfWorker
               uploaded << upload_file(folder, f)
             end
           end
-          Dir.rmdir results_folder
+          system "rm -rf #{results_folder}"
         end
         uploaded << upload_file(LOG_FOLDER, "abfworker::iso-worker-#{@build_id}.log")
         uploaded
