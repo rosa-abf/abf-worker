@@ -22,13 +22,17 @@ module AbfWorker
       @params = options['params']
       @main_script = options['main_script']
       super options['id'], options['distrib_type'], options['arch']
+    end
+
+    def self.initialize_live_inspector(options)
       @live_inspector = AbfWorker::Inspectors::LiveInspector.
-        new(@build_id, @worker_id, options['time_living'])
+        new(@build_id, @worker_id, options['time_living'], @vagrant_env, logger)
     end
 
     def self.perform(options)
       initialize options
       initialize_vagrant_env
+      initialize_live_inspector options
       start_vm
       run_script
       rollback_and_halt_vm { send_results }
