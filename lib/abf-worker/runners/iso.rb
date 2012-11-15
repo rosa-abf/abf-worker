@@ -105,6 +105,7 @@ module AbfWorker
         #   files << f unless f.empty?
         # end
         logger.info "==> Downloading results...."
+        port = @vagrant_env.vms.first[1].config.ssh.port
         system "scp -r -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{results_folder}"
         logger.info "Done."
 
