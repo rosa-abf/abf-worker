@@ -46,8 +46,11 @@ module AbfWorker
       def upload_results_to_file_store
         uploaded = []
         if File.exists?(results_folder) && File.directory?(results_folder)
-          Dir.new(results_folder).entries.each do |f|
-            uploaded << upload_file(results_folder, f)
+          # Dir.new(results_folder).entries.each do |f|
+          Dir[results_folder + '/**/'].each do |folder|
+            Dir.new(folder).entries.each do |f|
+              uploaded << upload_file(folder, f)
+            end
           end
           Dir.rmdir results_folder
         end
