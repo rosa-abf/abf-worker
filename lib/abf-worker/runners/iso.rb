@@ -102,11 +102,21 @@ module AbfWorker
         logger.info "==> Downloading results...."
         port = @vagrant_env.vms.first[1].config.ssh.port
         system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{results_folder}"
+        # Umount tmpfs
+        execute_command communicator, 'umount /home/vagrant/iso_builder', {:sudo => true}
         logger.info "Done."
       end
 
       def prepare_script(communicator)
         logger.info '==> Prepare script...'
+        execute_command(communicator, 'mkdir /home/vagrant/iso_builder')
+        # Create tmpfs
+        execute_command(
+          communicator,
+          'mount -t tmpfs tmpfs -o size=30000M,nr_inodes=10M  /home/vagrant/iso_builder',
+          {:sudo => true}
+        )
+
         commands = []
         commands << 'mkdir results'
         commands << 'mkdir archives'
@@ -116,7 +126,9 @@ module AbfWorker
         file_name = @srcpath.match(/archive\/.*/)[0].gsub(/^archive\//, '')
         commands << "tar -xzf #{file_name}"
         folder_name = file_name.gsub /\.tar\.gz$/, ''
-        commands << "mv #{folder_name} iso_builder"
+
+        commands << "mv #{folder_name}/* iso_builder/"
+        commands << "rm -rf #{folder_name}"
 
         commands.each{ |c| execute_command(communicator, c) }
       end
