@@ -3,7 +3,7 @@ require 'time'
 module AbfWorker
   module Inspectors
     class LiveInspector
-      CHECK_INTERVAL = 90 # 90 sec
+      CHECK_INTERVAL = 60 # 60 sec
 
       def initialize(build_id, worker_id, time_living, vagrant_env, logger)
         @build_id     = build_id
