@@ -44,6 +44,7 @@ module AbfWorker
         if first_run
           logger.info '==> Up VM at first time...'
           @vagrant_env.cli 'up', @vm_name
+
           logger.info '==> Configure VM...'
           # Halt, because: The machine 'abf-worker_...' is already locked for a session (or being unlocked)
           @vagrant_env.cli 'halt', @vm_name
@@ -57,8 +58,10 @@ module AbfWorker
 
           start_vm true
           # VM should be exist before using sandbox
-          logger.info '==> Enable save mode...'
-          Sahara::Session.on(@vm_name, @vagrant_env)
+          if @vagrant_env.vms[@vm_name.to_sym].communicate.ready? 
+            logger.info '==> Enable save mode...'
+            Sahara::Session.on(@vm_name, @vagrant_env)
+          end
         end
       end
 
