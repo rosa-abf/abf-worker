@@ -5,12 +5,6 @@ module AbfWorker
   module Runners
     module Iso
 
-      BUILD_COMPLETED = 0
-      BUILD_FAILED    = 1
-      BUILD_IN_QUEUE  = 2
-      BUILD_STARTED   = 3
-      BUILD_CANCELED  = 4
-
       TWO_IN_THE_TWENTIETH = 2**20
 
       ROOT_PATH = File.dirname(__FILE__).to_s << '/../../../'
@@ -38,10 +32,10 @@ module AbfWorker
           begin
             execute_command communicator, command, {:sudo => true}
             logger.info '==>  Script done with exit_status = 0'
-            @status = BUILD_COMPLETED
+            @status = AbfWorker::BaseWorker::BUILD_COMPLETED
           rescue AbfWorker::Exceptions::ScriptError => e
             logger.info "==>  Script done with exit_status != 0. Error message: #{e.message}"
-            @status = BUILD_FAILED
+            @status = AbfWorker::BaseWorker::BUILD_FAILED
           end
 
           save_results communicator

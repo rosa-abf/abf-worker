@@ -11,8 +11,15 @@ module AbfWorker
     include Log4r
     extend Runners::Vm
 
+    BUILD_COMPLETED = 0
+    BUILD_FAILED    = 1
+    BUILD_IN_QUEUE  = 2
+    BUILD_STARTED   = 3
+    BUILD_CANCELED  = 4
+    BUILD_CANCELING = 5
+
     def self.initialize(build_id, os, arch)
-      @status = AbfWorker::Runners::Iso::BUILD_STARTED
+      @status = BUILD_STARTED
       @build_id = build_id
       @os = os
       @arch = arch
