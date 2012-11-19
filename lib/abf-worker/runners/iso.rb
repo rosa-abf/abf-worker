@@ -122,8 +122,8 @@ module AbfWorker
         commands << 'mkdir archives'
         commands << "curl -O -L #{@srcpath}"
         # TODO: revert changes when ABF will be working.
-        file_name = @srcpath.match(/945501\/.*/)[0].gsub(/^945501\//, '')
-        # file_name = @srcpath.match(/archive\/.*/)[0].gsub(/^archive\//, '')
+        # file_name = @srcpath.match(/945501\/.*/)[0].gsub(/^945501\//, '')
+        file_name = @srcpath.match(/archive\/.*/)[0].gsub(/^archive\//, '')
         commands << "tar -xzf #{file_name}"
         folder_name = file_name.gsub /\.tar\.gz$/, ''
 

@@ -56,8 +56,8 @@ module AbfWorker
           @vagrant_env.cli 'halt', @vm_name
           sleep 20
           vm_id = @vagrant_env.vms.first[1].id
-          # memory = @arch == 'i586' ? 4096 : 8192
-          memory = @arch == 'i586' ? 512 : 1024
+          memory = @arch == 'i586' ? 4096 : 8192
+          # memory = @arch == 'i586' ? 512 : 1024
           # see: http://code.google.com/p/phpvirtualbox/wiki/AdvancedSettings
           ["--memory #{memory}", '--cpus 2', '--hwvirtex on', '--nestedpaging on', '--largepages on'].each do |c|
             system "VBoxManage modifyvm #{vm_id} #{c}"
