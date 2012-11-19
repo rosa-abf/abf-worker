@@ -12,12 +12,14 @@ module AbfWorker
     extend Runners::Vm
 
     def self.initialize(build_id, os, arch)
+      @status = AbfWorker::Runners::Iso::BUILD_STARTED
       @build_id = build_id
       @os = os
       @arch = arch
       @worker_id = Process.ppid
       @vm_name = "#{@os}.#{@arch}_#{@worker_id}"
       self.init_tmp_folder_and_server_id
+      self.update_build_status_on_abf
     end
 
     def self.init_logger(logger_name = nil)
@@ -42,6 +44,17 @@ module AbfWorker
         @tmp_dir << d
         Dir.mkdir(@tmp_dir) unless File.exists?(@tmp_dir)
       end
+    end
+
+    def self.update_build_status_on_abf(args = {})
+      Resque.push(
+        @observer_queue,
+        'class' => @observer_class,
+        'args' => [{
+          :id => @build_id,
+          :status => @status
+        }.merge(args)]
+      )
     end
 
   end

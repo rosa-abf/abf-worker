@@ -42,26 +42,33 @@ module AbfWorker
         # on vm_config.vm.customizations << ['modifyvm', :id, '--memory',  '#{memory}']
         # and config.vm.customize ['modifyvm', '#{@vm_name}', '--memory', '#{memory}']
         if first_run
-          logger.info '==> Up VM at first time...'
-          @vagrant_env.cli 'up', @vm_name
+
+          File.open("#{@tmp_dir}/vm.synchro", File::RDWR|File::CREAT, 0644) do |f|
+            f.flock(File::LOCK_EX)
+            logger.info '==> Up VM at first time...'
+            @vagrant_env.cli 'up', @vm_name
+            sleep 1
+          end
+          sleep 30
 
           logger.info '==> Configure VM...'
           # Halt, because: The machine 'abf-worker_...' is already locked for a session (or being unlocked)
           @vagrant_env.cli 'halt', @vm_name
+          sleep 20
           vm_id = @vagrant_env.vms.first[1].id
-          memory = @arch == 'i586' ? 4096 : 8192
-          # memory = @arch == 'i586' ? 512 : 1024
+          # memory = @arch == 'i586' ? 4096 : 8192
+          memory = @arch == 'i586' ? 512 : 1024
           # see: http://code.google.com/p/phpvirtualbox/wiki/AdvancedSettings
           ["--memory #{memory}", '--cpus 2', '--hwvirtex on', '--nestedpaging on', '--largepages on'].each do |c|
             system "VBoxManage modifyvm #{vm_id} #{c}"
           end
 
+          sleep 10
           start_vm true
+          sleep 30
           # VM should be exist before using sandbox
-          if @vagrant_env.vms[@vm_name.to_sym].communicate.ready? 
-            logger.info '==> Enable save mode...'
-            Sahara::Session.on(@vm_name, @vagrant_env)
-          end
+          logger.info '==> Enable save mode...'
+          Sahara::Session.on(@vm_name, @vagrant_env)
         end
       end
 

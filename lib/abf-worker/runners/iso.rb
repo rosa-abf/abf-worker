@@ -4,9 +4,14 @@ require 'digest/md5'
 module AbfWorker
   module Runners
     module Iso
-      BUILD_STARTED = 2
+
       BUILD_COMPLETED = 0
-      BUILD_FAILED = 1
+      BUILD_FAILED    = 1
+      BUILD_IN_QUEUE  = 2
+      BUILD_STARTED   = 3
+      BUILD_CANCELED  = 4
+
+      TWO_IN_THE_TWENTIETH = 2**20
 
       ROOT_PATH = File.dirname(__FILE__).to_s << '/../../../'
       LOG_FOLDER = ROOT_PATH + 'log'
@@ -55,7 +60,7 @@ module AbfWorker
           system "rm -rf #{results_folder}"
         end
         uploaded << upload_file(LOG_FOLDER, "abfworker::iso-worker-#{@build_id}.log")
-        uploaded
+        uploaded.compact
       end
 
       private
@@ -65,7 +70,8 @@ module AbfWorker
         return unless File.file?(path_to_file)
 
         # Compress the log when file size more than 10MB
-        if path == LOG_FOLDER && (File.size(path_to_file).to_f / 2**20).round(2) >= 10
+        file_size = (File.size(path_to_file).to_f / TWO_IN_THE_TWENTIETH).round(2)
+        if path == LOG_FOLDER && file_size >= 10
           system "tar -zcvf #{path_to_file}.tar.gz #{path_to_file}"
           File.delete path_to_file
           path_to_file << '.tar.gz'
@@ -88,7 +94,7 @@ module AbfWorker
 
         File.delete path_to_file
         logger.info "Done."
-        {:sha1 => sha1, :file_name => file_name}
+        {:sha1 => sha1, :file_name => file_name, :size => file_size}
       end
 
       def save_results(communicator)
@@ -122,8 +128,8 @@ module AbfWorker
         commands << 'mkdir archives'
         commands << "curl -O -L #{@srcpath}"
         # TODO: revert changes when ABF will be working.
-        # file_name = @srcpath.match(/945501\/.*/)[0].gsub(/^945501\//, '')
-        file_name = @srcpath.match(/archive\/.*/)[0].gsub(/^archive\//, '')
+        file_name = @srcpath.match(/945501\/.*/)[0].gsub(/^945501\//, '')
+        # file_name = @srcpath.match(/archive\/.*/)[0].gsub(/^archive\//, '')
         commands << "tar -xzf #{file_name}"
         folder_name = file_name.gsub /\.tar\.gz$/, ''
 

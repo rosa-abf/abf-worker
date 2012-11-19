@@ -17,7 +17,8 @@ module AbfWorker
     # - [String] arch The arch of VM
     # - [String] distrib_type The type of product
     def self.initialize(options)
-      @status = AbfWorker::Runners::Iso::BUILD_STARTED
+      @observer_queue = 'iso_worker_observer'
+      @observer_class = 'AbfWorker::IsoWorkerObserver'
       @srcpath = options['srcpath']
       @params = options['params']
       @main_script = options['main_script']
@@ -50,16 +51,7 @@ module AbfWorker
     end
 
     def self.send_results
-      results = upload_results_to_file_store.compact
-      Resque.push(
-        'iso_worker_observer',
-        'class' => 'AbfWorker::IsoWorkerObserver',
-        'args' => [{
-          :id => @build_id,
-          :status => @status,
-          :results => results
-        }]
-      )
+      update_build_status_on_abf({:results => upload_results_to_file_store})
     end
 
   end
