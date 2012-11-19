@@ -27,7 +27,7 @@ module AbfWorker
 
     def self.initialize_live_inspector(options)
       @live_inspector = AbfWorker::Inspectors::LiveInspector.
-        new(@build_id, @worker_id, options['time_living'], @vagrant_env, logger)
+        new(self, options['time_living'])
     end
 
     def self.perform(options)
@@ -38,10 +38,10 @@ module AbfWorker
       run_script
       rollback_and_halt_vm { send_results }
     rescue Resque::TermException
-      @status = BUILD_FAILED
+      @status = BUILD_FAILED if @status != BUILD_CANCELED
       clean { send_results }
     rescue Exception => e
-      @status = BUILD_FAILED
+      @status = BUILD_FAILED if @status != BUILD_CANCELED
       logger.error e.message
       rollback_and_halt_vm { send_results }
     end

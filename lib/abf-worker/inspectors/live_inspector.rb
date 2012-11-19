@@ -5,12 +5,13 @@ module AbfWorker
     class LiveInspector
       CHECK_INTERVAL = 60 # 60 sec
 
-      def initialize(build_id, worker_id, time_living, vagrant_env, logger)
-        @build_id     = build_id
-        @worker_id    = worker_id
+      def initialize(worker, time_living)
+        @worker       = worker
+        @build_id     = @worker.instance_variable_get '@build_id'
+        @worker_id    = @worker.instance_variable_get '@worker_id'
         @kill_at      = Time.now + (time_living.to_i * 60)
-        @vagrant_env  = vagrant_env
-        @logger       = logger
+        @vagrant_env  = @worker.instance_variable_get '@vagrant_env'
+        @logger       = @worker.instance_variable_get '@logger'
         init_thread
       end
 
@@ -42,6 +43,7 @@ module AbfWorker
       end
 
       def stop_build
+        @worker.instance_variable_set '@status', AbfWorker::BaseWorker::BUILD_CANCELED
         # Immediately kill child but don't exit
         Process.kill('USR1', @worker_id)
       end
