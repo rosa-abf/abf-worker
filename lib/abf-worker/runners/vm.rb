@@ -1,12 +1,22 @@
+require 'forwardable'
+
 module AbfWorker
   module Runners
-    module Vm
+    class Vm
+      extend Forwardable
 
-      def vagrantfiles_folder
-        return @vagrantfiles_folder if @vagrantfiles_folder
-        @vagrantfiles_folder = @tmp_dir + '/vagrantfiles'
-        Dir.mkdir(@vagrantfiles_folder) unless File.exists?(@vagrantfiles_folder)
-        @vagrantfiles_folder 
+      attr_accessor :vagrant_env,
+                    :vm_name,
+                    :os,
+                    :arch
+
+      def_delegators :@worker, :logger
+
+      def initialize(worker, os, arch)
+        @worker = worker
+        @os = os
+        @arch = arch
+        @vm_name = "#{@os}.#{@arch}_#{@worker.worker_id}"
       end
 
       def initialize_vagrant_env
@@ -15,7 +25,7 @@ module AbfWorker
         unless File.exist?(vagrantfile)
           begin
             file = File.open(vagrantfile, 'w')
-            port = 2000 + (@build_id % 63000)
+            port = 2000 + (@worker.build_id % 63000)
             str = "
               Vagrant::Config.run do |config|
                 config.vm.share_folder('v-root', nil, nil)
@@ -43,7 +53,7 @@ module AbfWorker
         # and config.vm.customize ['modifyvm', '#{@vm_name}', '--memory', '#{memory}']
         if first_run
 
-          File.open("#{@tmp_dir}/vm.synchro", File::RDWR|File::CREAT, 0644) do |f|
+          File.open("#{@worker.tmp_dir}/vm.synchro", File::RDWR|File::CREAT, 0644) do |f|
             f.flock(File::LOCK_EX)
             logger.info '==> Up VM at first time...'
             @vagrant_env.cli 'up', @vm_name
@@ -55,7 +65,7 @@ module AbfWorker
           # Halt, because: The machine 'abf-worker_...' is already locked for a session (or being unlocked)
           @vagrant_env.cli 'halt', @vm_name
           sleep 20
-          vm_id = @vagrant_env.vms.first[1].id
+          vm_id = get_vm.id
           memory = @arch == 'i586' ? 4096 : 8192
           # memory = @arch == 'i586' ? 512 : 1024
           # see: http://code.google.com/p/phpvirtualbox/wiki/AdvancedSettings
@@ -64,24 +74,22 @@ module AbfWorker
           end
 
           sleep 10
-          start_vm true
+          @vagrant_env.cli 'up', @vm_name
           sleep 30
           # VM should be exist before using sandbox
           logger.info '==> Enable save mode...'
           Sahara::Session.on(@vm_name, @vagrant_env)
-        end
+        end # first_run
       end
 
-      def start_vm(first_run = false)
-        logger.info '==> Up VM...'
+      def get_vm
+        @vagrant_env.vms[@vm_name.to_sym]
+      end
+
+      def start_vm
+        logger.info "==> Up VM..."
         @vagrant_env.cli 'up', @vm_name
-        rollback_vm unless first_run
-      end
-
-      def rollback_vm
-        # machine state should be (Running, Paused or Stuck)
-        logger.info '==> Rollback activity'
-        Sahara::Session.rollback(@vm_name, @vagrant_env)
+        rollback_vm
       end
 
       def rollback_and_halt_vm
@@ -118,6 +126,21 @@ module AbfWorker
           File.delete(vagrantfiles_folder + "/#{f}")
         end
         yield if block_given?
+      end
+
+      private
+
+      def rollback_vm
+        # machine state should be (Running, Paused or Stuck)
+        logger.info '==> Rollback activity'
+        Sahara::Session.rollback(@vm_name, @vagrant_env)
+      end
+
+      def vagrantfiles_folder
+        return @vagrantfiles_folder if @vagrantfiles_folder
+        @vagrantfiles_folder = @worker.tmp_dir + '/vagrantfiles'
+        Dir.mkdir(@vagrantfiles_folder) unless File.exists?(@vagrantfiles_folder)
+        @vagrantfiles_folder 
       end
 
     end

@@ -1,9 +1,11 @@
 require 'abf-worker/exceptions/script_error'
 require 'digest/md5'
+require 'forwardable'
 
 module AbfWorker
   module Runners
-    module Iso
+    class Iso
+      extend Forwardable
 
       TWO_IN_THE_TWENTIETH = 2**20
 
@@ -12,34 +14,42 @@ module AbfWorker
       FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
       FILE_STORE_CONFIG = ROOT_PATH + 'config/file-store.yml'
 
-      def results_folder
-        return @results_folder if @results_folder
-        @results_folder = @tmp_dir + '/results'
-        Dir.mkdir(@results_folder) unless File.exists?(@results_folder)
-        @results_folder << "/build-#{@build_id}"
-        Dir.rmdir(@results_folder) if File.exists?(@results_folder)
-        Dir.mkdir(@results_folder)
-        @results_folder
+      attr_accessor :srcpath,
+                    :params,
+                    :main_script,
+                    :script_runner,
+                    :can_run
+
+      def_delegators :@worker, :logger
+
+      def initialize(worker, srcpath, params, main_script)
+        @worker = worker
+        @srcpath = srcpath
+        @params = params
+        @main_script = main_script
+        @can_run = true
       end
 
       def run_script
-        communicator = @vagrant_env.vms[@vm_name.to_sym].communicate
-        if communicator.ready?
-          prepare_script communicator
-          logger.info '==> Run script...'
+        @script_runner = Thread.new do
+          communicator = @worker.vm.get_vm.communicate
+          if communicator.ready?
+            prepare_script communicator
+            logger.info '==> Run script...'
 
-          command = "cd iso_builder/; #{@params} /bin/bash #{@main_script}"
-          begin
-            execute_command communicator, command, {:sudo => true}
-            logger.info '==>  Script done with exit_status = 0'
-            @status = AbfWorker::BaseWorker::BUILD_COMPLETED
-          rescue AbfWorker::Exceptions::ScriptError => e
-            logger.info "==>  Script done with exit_status != 0. Error message: #{e.message}"
-            @status = AbfWorker::BaseWorker::BUILD_FAILED
+            command = "cd iso_builder/; #{@params} /bin/bash #{@main_script}"
+            begin
+              execute_command communicator, command, {:sudo => true}
+              logger.info '==>  Script done with exit_status = 0'
+              @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED
+            rescue AbfWorker::Exceptions::ScriptError => e
+              logger.info "==>  Script done with exit_status != 0. Error message: #{e.message}"
+              @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
+            end
+            save_results communicator
           end
-
-          save_results communicator
         end
+        @script_runner.join if @can_run
       end
 
       def upload_results_to_file_store
@@ -53,11 +63,21 @@ module AbfWorker
           end
           system "rm -rf #{results_folder}"
         end
-        uploaded << upload_file(LOG_FOLDER, "abfworker::iso-worker-#{@build_id}.log")
+        uploaded << upload_file(LOG_FOLDER, "abfworker::iso-worker-#{@worker.build_id}.log")
         uploaded.compact
       end
 
       private
+
+      def results_folder
+        return @results_folder if @results_folder
+        @results_folder = @worker.tmp_dir + '/results'
+        Dir.mkdir(@results_folder) unless File.exists?(@results_folder)
+        @results_folder << "/build-#{@build_id}"
+        Dir.rmdir(@results_folder) if File.exists?(@results_folder)
+        Dir.mkdir(@results_folder)
+        @results_folder
+      end
 
       def upload_file(path, file_name)
         path_to_file = path + '/' + file_name
@@ -77,7 +97,7 @@ module AbfWorker
 
         # curl --user myuser@gmail.com:mypass -POST -F "file_store[file]=@files/archive.zip" http://file-store.rosalinux.ru/api/v1/file_stores.json
         if %x[ curl #{FILE_STORE}?hash=#{sha1} ] == '[]'
-          command = 'curl --header "Transfer-Encoding: chunked" --user '
+          command = 'curl --user '
           command << file_store_token
           command << ': -POST -F "file_store[file]=@'
           command << path_to_file
@@ -100,7 +120,7 @@ module AbfWorker
         end
 
         logger.info "==> Downloading results...."
-        port = @vagrant_env.vms.first[1].config.ssh.port
+        port = @worker.vm.get_vm.config.ssh.port
         system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{results_folder}"
         # Umount tmpfs
         execute_command communicator, 'umount /home/vagrant/iso_builder', {:sudo => true}
@@ -147,7 +167,7 @@ module AbfWorker
       def file_store_token
         return @file_store_token if @file_store_token
         fs_config = YAML.load_file(FILE_STORE_CONFIG)
-        @file_store_token = fs_config["server_#{@server_id}"]
+        @file_store_token = fs_config["server_#{@worker.server_id}"]
         @file_store_token
       end
 
