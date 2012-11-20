@@ -25,15 +25,13 @@ namespace :abf_worker do
 
   desc "Destroy ISO worker VM's"
   task :destroy_iso_worker_vms do
-    AbfWorker::IsoWorker.init_tmp_folder_and_server_id
-    AbfWorker::IsoWorker.clean true
+    AbfWorker::IsoWorker.clean_up
   end
 
   desc "Destroy ISO worker VM's on production"
   task :destroy_vms do
     ENV['ENV'] = 'production'
-    AbfWorker::IsoWorker.init_tmp_folder_and_server_id
-    AbfWorker::IsoWorker.clean true
+    AbfWorker::IsoWorker.clean_up
   end
 
 end

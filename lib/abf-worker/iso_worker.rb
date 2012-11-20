@@ -52,7 +52,6 @@ module AbfWorker
       @logger || init_logger("abfworker::iso-worker-#{@build_id}")
     end
 
-
     def self.perform(options)
       initialize options
       @vm.initialize_vagrant_env

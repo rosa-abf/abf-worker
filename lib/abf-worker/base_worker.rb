@@ -69,6 +69,12 @@ module AbfWorker
       
     end
 
+    def self.clean_up
+      init_tmp_folder_and_server_id
+      @vm = Runners::Vm.new(self, nil, nil)
+      @vm.clean true
+    end
+
     def self.logger
       @logger || init_logger('abfworker::base-worker')
     end

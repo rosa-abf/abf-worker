@@ -104,7 +104,7 @@ module AbfWorker
         files = []
         Dir.new(vagrantfiles_folder).entries.each do |f|
           if File.file?(vagrantfiles_folder + "/#{f}") &&
-              (f =~ /#{@worker_id}/ || destroy_all) && !(f =~ /^\./)
+              (f =~ /#{@worker.worker_id}/ || destroy_all) && !(f =~ /^\./)
             files << f
           end
         end
