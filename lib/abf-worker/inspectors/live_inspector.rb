@@ -63,7 +63,6 @@ module AbfWorker
       end
 
       def status
-        @logger.info "-> Check status: #{@build_id}"
         Resque.redis.get("abfworker::iso-worker-#{@build_id}::live-inspector")
       end
 
