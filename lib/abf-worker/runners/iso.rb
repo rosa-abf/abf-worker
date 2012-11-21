@@ -12,6 +12,7 @@ module AbfWorker
       ROOT_PATH = File.dirname(__FILE__).to_s << '/../../../'
       LOG_FOLDER = ROOT_PATH + 'log'
       FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
+      FILE_STORE_CREATE_PATH = 'http://file-store.rosalinux.ru/api/v1/upload'
       FILE_STORE_CONFIG = ROOT_PATH + 'config/file-store.yml'
 
       attr_accessor :srcpath,
@@ -102,7 +103,7 @@ module AbfWorker
           command << ': -POST -F "file_store[file]=@'
           command << path_to_file
           command << '" '
-          command << FILE_STORE
+          command << FILE_STORE_CREATE_PATH
           system command
         end
 
