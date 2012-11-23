@@ -62,9 +62,10 @@ module AbfWorker
     rescue Resque::TermException
       @status = BUILD_FAILED if @status != BUILD_CANCELED
       @vm.clean { send_results }
-    rescue Exception, Error => e
+    rescue => e
       @status = BUILD_FAILED if @status != BUILD_CANCELED
       logger.error e.message
+      logger.error e.backtrace.join("\n")
       @vm.rollback_and_halt_vm { send_results }
     end
 

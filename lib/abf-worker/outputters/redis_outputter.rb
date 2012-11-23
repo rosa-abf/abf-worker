@@ -4,8 +4,9 @@ module AbfWorker
   module Outputters
     class RedisOutputter < Log4r::Outputter
 
-      def initialize(name, buffer_limit = 100, time_interval = 10, hash={})
+      def initialize(worker, name, buffer_limit = 100, time_interval = 10, hash={})
         super(name, hash)
+        @worker = worker
         @buffer = []
         @buffer_limit = buffer_limit
         @time_interval = time_interval
@@ -38,12 +39,17 @@ module AbfWorker
       def init_thread
         @thread = Thread.new do
           while true
-            sleep @time_interval
-            Resque.redis.setex(
-              @name,
-              (@time_interval + 5),
-              @buffer.join
-            )
+            begin
+              sleep @time_interval
+              Resque.redis.setex(
+                @name,
+                (@time_interval + 5),
+                @buffer.join
+              )
+            rescue => e
+              @worker.logger.error e.message
+              @worker.logger.error e.backtrace.join("\n")
+            end # while
           end
         end
         @thread.run

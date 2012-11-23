@@ -41,7 +41,7 @@ module AbfWorker
         @logger.outputters << Log4r::Outputter.stdout
         @logger.outputters << Log4r::FileOutputter.
           new(logger_name, :filename =>  "log/#{logger_name}.log")
-        @logger.outputters << AbfWorker::Outputters::RedisOutputter.new(logger_name)
+        @logger.outputters << AbfWorker::Outputters::RedisOutputter.new(self, logger_name)
         @logger
       end
 
