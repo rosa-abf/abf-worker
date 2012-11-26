@@ -71,7 +71,7 @@ module AbfWorker
         logger.info "Done."
       end
 
-      def prepare_script(communicator)
+      def prepare_script
         logger.info '==> Prepare script...'
         @worker.vm.execute_command 'mkdir /home/vagrant/iso_builder'
         # Create tmpfs
