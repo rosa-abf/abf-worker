@@ -22,7 +22,6 @@ module AbfWorker
 
       def initialize(worker, srcpath, params, main_script)
         @worker = worker
-        @vm = @worker.vm.get_vm
         @srcpath = srcpath
         @params = params
         @main_script = main_script
@@ -31,13 +30,13 @@ module AbfWorker
 
       def run_script
         @script_runner = Thread.new do
-          if @vm.communicator.ready?
+          if vm.communicator.ready?
             prepare_script
             logger.info '==> Run script...'
 
             command = "cd iso_builder/; #{@params} /bin/bash #{@main_script}"
             begin
-              @vm.execute_command command, {:sudo => true}
+              vm.execute_command command, {:sudo => true}
               logger.info '==>  Script done with exit_status = 0'
               @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED
             rescue AbfWorker::Exceptions::ScriptError => e
@@ -52,27 +51,31 @@ module AbfWorker
 
       private
 
+      def vm
+        @vm ||= @worker.vm
+      end
+
       def save_results
         # Download ISOs and etc.
         logger.info '==> Saving results....'
 
         ['tar -zcvf results/archives.tar.gz archives', 'rm -rf archives'].each do |command|
-          @vm.execute_command command
+          vm.execute_command command
         end
 
         logger.info "==> Downloading results...."
-        port = @vm.config.ssh.port
+        port = vm.config.ssh.port
         system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@vm.results_folder}"
         # Umount tmpfs
-        @vm.execute_command 'umount /home/vagrant/iso_builder', {:sudo => true}
+        vm.execute_command 'umount /home/vagrant/iso_builder', {:sudo => true}
         logger.info "Done."
       end
 
       def prepare_script(communicator)
         logger.info '==> Prepare script...'
-        @vm.execute_command 'mkdir /home/vagrant/iso_builder'
+        vm.execute_command 'mkdir /home/vagrant/iso_builder'
         # Create tmpfs
-        @vm.execute_command(
+        vm.execute_command(
           'mount -t tmpfs tmpfs -o size=30000M,nr_inodes=10M  /home/vagrant/iso_builder',
           {:sudo => true}
         )
@@ -90,7 +93,7 @@ module AbfWorker
         commands << "mv #{folder_name}/* iso_builder/"
         commands << "rm -rf #{folder_name}"
 
-        commands.each{ |c| @vm.execute_command(c) }
+        commands.each{ |c| vm.execute_command(c) }
       end
 
     end

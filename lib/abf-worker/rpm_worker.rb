@@ -1,5 +1,5 @@
 require 'abf-worker/base_worker'
-require 'abf-worker/runners/iso'
+require 'abf-worker/runners/rpm'
 require 'abf-worker/inspectors/live_inspector'
 
 module AbfWorker
@@ -23,7 +23,7 @@ module AbfWorker
           self,
           options['git_project_address'],
           options['commit_hash'],
-          options['build_requires']
+          options['build_requires'],
           options['include_repos_hash']
         )
       end
@@ -43,7 +43,7 @@ module AbfWorker
       @vm.initialize_vagrant_env
       initialize_live_inspector options['time_living']
       @vm.start_vm
-      @iso.run_script
+      @rpm.run_script
       @vm.rollback_and_halt_vm { send_results }
     rescue Resque::TermException
       @status = BUILD_FAILED if @status != BUILD_CANCELED

@@ -24,7 +24,8 @@ module AbfWorker
                     :tmp_dir,
                     :server_id,
                     :vm,
-                    :live_inspector
+                    :live_inspector,
+                    :logger_name
 
       protected
 
