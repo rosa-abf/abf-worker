@@ -25,7 +25,7 @@ module AbfWorker
 
       def run_script
         @script_runner = Thread.new do
-          if vm.communicator.ready?
+          if @worker.vm.communicator.ready?
             prepare_script
             logger.info '==> Run script...'
 
@@ -37,7 +37,7 @@ module AbfWorker
             # command << "INCLUDE_REPOS_HASH='#{@include_repos_hash}'"
             command << '/bin/bash build.sh'
             begin
-              vm.execute_command command.join(' ')
+              @worker.vm.execute_command command.join(' ')
               logger.info '==>  Script done with exit_status = 0'
               @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED
             rescue AbfWorker::Exceptions::ScriptError => e
@@ -52,20 +52,16 @@ module AbfWorker
 
       private
 
-      def vm
-        @vm ||= @worker.vm
-      end
-
       def save_results
         # Download ISOs and etc.
         logger.info '==> Saving results....'
         ['tar -zcvf results/archives.tar.gz archives', 'rm -rf archives'].each do |command|
-          vm.execute_command command
+          @worker.vm.execute_command command
         end
 
         logger.info "==> Downloading results...."
-        port = vm.config.ssh.port
-        system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@vm.results_folder}"
+        port = @worker.vm.get_vm.config.ssh.port
+        system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@worker.vm.results_folder}"
         logger.info "Done."
       end
 
@@ -81,7 +77,7 @@ module AbfWorker
         commands << "mv #{folder_name} rpm-build-script"
         commands << "rm -rf #{file_name}"
 
-        commands.each{ |c| vm.execute_command(c) }
+        commands.each{ |c| @worker.vm.execute_command(c) }
       end
 
     end
