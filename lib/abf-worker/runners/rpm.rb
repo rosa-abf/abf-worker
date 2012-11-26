@@ -14,12 +14,13 @@ module AbfWorker
 
       def_delegators :@worker, :logger
 
-      def initialize(worker, git_project_address, commit_hash, include_repos_hash)
+      def initialize(worker, git_project_address, commit_hash, build_requires, include_repos_hash)
         @worker = worker
         @vm = @worker.vm.get_vm
-        @git_project_address = srcpath
-        @commit_hash = params
-        @include_repos_hash = main_script
+        @git_project_address = git_project_address
+        @commit_hash = commit_hash
+        @build_requires = build_requires
+        @include_repos_hash = include_repos_hash
         @can_run = true
       end
 
@@ -29,9 +30,15 @@ module AbfWorker
             prepare_script
             logger.info '==> Run script...'
 
-            command = "cd rpm-build-script; /bin/bash build.sh"
+            command = []
+            command << 'cd rpm-build-script;'
+            command << "GIT_PROJECT_ADDRESS=#{@git_project_address}"
+            command << "COMMIT_HASH=#{@commit_hash}"
+            command << "BUILD_REQUIRES=#{@build_requires}"
+            # command << "INCLUDE_REPOS_HASH='#{@include_repos_hash}'"
+            command << '/bin/bash build.sh'
             begin
-              @vm.execute_command command
+              @vm.execute_command command.join(' ')
               logger.info '==>  Script done with exit_status = 0'
               @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED
             rescue AbfWorker::Exceptions::ScriptError => e

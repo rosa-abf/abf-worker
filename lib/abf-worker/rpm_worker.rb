@@ -14,14 +14,7 @@ module AbfWorker
       protected
 
       # Initialize a new RPM worker.
-      # @param [Hash] options The hash with options:
-      # - [Integer] id The identifier of current build
-      # - [String] srcpath The path for build scripts
-      # - [String] params The params for running script
-      # - [String] main_script The main script
-      # - [String] time_living The max time for building (in minutes)
-      # - [String] arch The arch of VM
-      # - [String] distrib_type The type of product
+      # @param [Hash] options The hash with options
       def initialize(options)
         @observer_queue = 'rpm_worker_observer'
         @observer_class = 'AbfWorker::RpmWorkerObserver'
@@ -30,6 +23,7 @@ module AbfWorker
           self,
           options['git_project_address'],
           options['commit_hash'],
+          options['build_requires']
           options['include_repos_hash']
         )
       end
