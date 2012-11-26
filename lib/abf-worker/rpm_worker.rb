@@ -3,17 +3,17 @@ require 'abf-worker/runners/iso'
 require 'abf-worker/inspectors/live_inspector'
 
 module AbfWorker
-  class IsoWorker < BaseWorker
-    @queue = :iso_worker
+  class RpmWorker < BaseWorker
+    @queue = :rpm_worker
 
     class << self
       attr_accessor :observer_queue,
                     :observer_queue,
-                    :iso
+                    :rpm
 
       protected
 
-      # Initialize a new ISO worker.
+      # Initialize a new RPM worker.
       # @param [Hash] options The hash with options:
       # - [Integer] id The identifier of current build
       # - [String] srcpath The path for build scripts
@@ -23,14 +23,14 @@ module AbfWorker
       # - [String] arch The arch of VM
       # - [String] distrib_type The type of product
       def initialize(options)
-        @observer_queue = 'iso_worker_observer'
-        @observer_class = 'AbfWorker::IsoWorkerObserver'
+        @observer_queue = 'rpm_worker_observer'
+        @observer_class = 'AbfWorker::RpmWorkerObserver'
         super options['id'], options['distrib_type'], options['arch']
-        @iso = Runners::Iso.new(
+        @rpm = Runners::Rpm.new(
           self,
-          options['srcpath'],
-          options['params'],
-          options['main_script']
+          options['git_project_address'],
+          options['commit_hash'],
+          options['include_repos_hash']
         )
       end
 
@@ -41,7 +41,7 @@ module AbfWorker
     end
 
     def self.logger
-      @logger || init_logger("abfworker::iso-worker-#{@build_id}")
+      @logger || init_logger("abfworker::rpm-worker-#{@build_id}")
     end
 
     def self.perform(options)
@@ -54,9 +54,10 @@ module AbfWorker
     rescue Resque::TermException
       @status = BUILD_FAILED if @status != BUILD_CANCELED
       @vm.clean { send_results }
-    rescue Exception, Error => e
+    rescue => e
       @status = BUILD_FAILED if @status != BUILD_CANCELED
       logger.error e.message
+      logger.error e.backtrace.join("\n")
       @vm.rollback_and_halt_vm { send_results }
     end
 

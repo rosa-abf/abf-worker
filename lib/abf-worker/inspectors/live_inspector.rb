@@ -63,6 +63,7 @@ module AbfWorker
       end
 
       def status
+        return nil unless @worker.is_a?(AbfWorker::IsoWorker)
         Resque.redis.get("abfworker::iso-worker-#{@build_id}::live-inspector")
       end
 

@@ -23,9 +23,15 @@ module AbfWorker
                     :worker_id,
                     :tmp_dir,
                     :server_id,
-                    :vm
+                    :vm,
+                    :live_inspector
 
       protected
+
+      def initialize_live_inspector(time_living)
+        @live_inspector = AbfWorker::Inspectors::LiveInspector.new(self, time_living)
+        @live_inspector.run
+      end
 
       def initialize(build_id, os, arch)
         @status = BUILD_STARTED
@@ -37,11 +43,12 @@ module AbfWorker
       end
 
       def init_logger(logger_name = nil)
-        @logger = Log4r::Logger.new logger_name, Log4r::ALL
+        @logger_name = logger_name
+        @logger = Log4r::Logger.new @logger_name, Log4r::ALL
         @logger.outputters << Log4r::Outputter.stdout
         @logger.outputters << Log4r::FileOutputter.
-          new(logger_name, :filename =>  "log/#{logger_name}.log")
-        @logger.outputters << AbfWorker::Outputters::RedisOutputter.new(logger_name)
+          new(@logger_name, :filename =>  "log/#{@logger_name}.log")
+        @logger.outputters << AbfWorker::Outputters::RedisOutputter.new(@logger_name)
         @logger
       end
 

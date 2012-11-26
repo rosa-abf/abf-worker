@@ -7,25 +7,19 @@ module AbfWorker
     class Iso
       extend Forwardable
 
-      TWO_IN_THE_TWENTIETH = 2**20
-
-      ROOT_PATH = File.dirname(__FILE__).to_s << '/../../../'
-      LOG_FOLDER = ROOT_PATH + 'log'
-      FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
-      FILE_STORE_CREATE_PATH = 'http://file-store.rosalinux.ru/api/v1/upload'
-      FILE_STORE_CONFIG = ROOT_PATH + 'config/file-store.yml'
+      RPM_BUILD_SCRIPT_PATH = 'https://abf.rosalinux.ru/avokhmin/rpm-build-script/archive/avokhmin-rpm-build-script-master.tar.gz'
 
       attr_accessor :script_runner,
                     :can_run
 
       def_delegators :@worker, :logger
 
-      def initialize(worker, srcpath, params, main_script)
+      def initialize(worker, git_project_address, commit_hash, include_repos_hash)
         @worker = worker
         @vm = @worker.vm.get_vm
-        @srcpath = srcpath
-        @params = params
-        @main_script = main_script
+        @git_project_address = srcpath
+        @commit_hash = params
+        @include_repos_hash = main_script
         @can_run = true
       end
 
@@ -35,9 +29,9 @@ module AbfWorker
             prepare_script
             logger.info '==> Run script...'
 
-            command = "cd iso_builder/; #{@params} /bin/bash #{@main_script}"
+            command = "cd rpm-build-script; /bin/bash build.sh"
             begin
-              @vm.execute_command command, {:sudo => true}
+              @vm.execute_command command
               logger.info '==>  Script done with exit_status = 0'
               @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED
             rescue AbfWorker::Exceptions::ScriptError => e
@@ -55,7 +49,6 @@ module AbfWorker
       def save_results
         # Download ISOs and etc.
         logger.info '==> Saving results....'
-
         ['tar -zcvf results/archives.tar.gz archives', 'rm -rf archives'].each do |command|
           @vm.execute_command command
         end
@@ -63,31 +56,19 @@ module AbfWorker
         logger.info "==> Downloading results...."
         port = @vm.config.ssh.port
         system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@vm.results_folder}"
-        # Umount tmpfs
-        @vm.execute_command 'umount /home/vagrant/iso_builder', {:sudo => true}
         logger.info "Done."
       end
 
-      def prepare_script(communicator)
+      def prepare_script
         logger.info '==> Prepare script...'
-        @vm.execute_command 'mkdir /home/vagrant/iso_builder'
-        # Create tmpfs
-        @vm.execute_command(
-          'mount -t tmpfs tmpfs -o size=30000M,nr_inodes=10M  /home/vagrant/iso_builder',
-          {:sudo => true}
-        )
 
         commands = []
-        commands << 'mkdir results'
-        commands << 'mkdir archives'
-        commands << "curl -O -L #{@srcpath}"
-        # TODO: revert changes when ABF will be working.
-        # file_name = @srcpath.match(/945501\/.*/)[0].gsub(/^945501\//, '')
-        file_name = @srcpath.match(/archive\/.*/)[0].gsub(/^archive\//, '')
+        commands << "curl -O -L #{RPM_BUILD_SCRIPT_PATH}"
+        file_name = 'avokhmin-rpm-build-script-master.tar.gz'
         commands << "tar -xzf #{file_name}"
         folder_name = file_name.gsub /\.tar\.gz$/, ''
 
-        commands << "mv #{folder_name}/* iso_builder/"
+        commands << "mv #{folder_name}/* rpm-build-script/"
         commands << "rm -rf #{folder_name}"
 
         commands.each{ |c| @vm.execute_command(c) }
