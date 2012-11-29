@@ -24,7 +24,8 @@ module AbfWorker
           options['git_project_address'],
           options['commit_hash'],
           options['build_requires'],
-          options['include_repos_hash']
+          options['include_repos_hash'],
+          options['bplname']
         )
       end
 

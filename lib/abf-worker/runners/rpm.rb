@@ -14,12 +14,13 @@ module AbfWorker
 
       def_delegators :@worker, :logger
 
-      def initialize(worker, git_project_address, commit_hash, build_requires, include_repos_hash)
+      def initialize(worker, git_project_address, commit_hash, build_requires, include_repos_hash, bplname)
         @worker = worker
         @git_project_address = git_project_address
         @commit_hash = commit_hash
         @build_requires = build_requires
         @include_repos_hash = include_repos_hash
+        @bplname = bplname
         @can_run = true
       end
 
@@ -33,7 +34,9 @@ module AbfWorker
             command << 'cd rpm-build-script;'
             command << "GIT_PROJECT_ADDRESS=#{@git_project_address}"
             command << "COMMIT_HASH=#{@commit_hash}"
-            command << "BUILD_REQUIRES=#{@build_requires}"
+            # command << "ARCH=#{@worker.vm.arch}"
+            command << "DISTRIB_TYPE=#{@worker.vm.os}"
+            # command << "BUILD_REQUIRES=#{@build_requires}"
             # command << "INCLUDE_REPOS_HASH='#{@include_repos_hash}'"
             command << '/bin/bash build.sh'
             begin
@@ -82,6 +85,77 @@ module AbfWorker
         commands << "rm -rf #{file_name}"
 
         commands.each{ |c| @worker.vm.execute_command(c) }
+        init_mock_configs
+      end
+
+      def init_mock_configs
+        lines = []
+        if @worker.vm.os == 'mdv'
+          # config_opts['urpmi_media'] = {
+          #   'name_1': 'url_1', 'name_2': 'url_2'
+          # }
+          lines << "config_opts['urpmi_media'] = {"
+          include_repos_hash.map do |name, url|
+            "'#{name}': '#{url}'"
+          end.join(', ').each{ |r| lines << r }
+          lines << '}'
+        else
+          # config_opts['yum.conf'] = """
+          #   [main]
+          #   cachedir=/var/cache/yum
+          #   debuglevel=1
+          #   reposdir=/dev/null
+          #   logfile=/var/log/yum.log
+          #   retries=20
+          #   obsoletes=1
+          #   gpgcheck=0
+          #   assumeyes=1
+          #   syslog_ident=mock
+          #   syslog_device=
+
+          #   # repos
+          #   [base]
+          #   name=BaseOS
+          #   enabled=1
+          #   mirrorlist=http://mirrorlist.centos.org/?release=6&arch=i386&repo=os
+          #   failovermethod=priority
+          # """
+          '
+          config_opts[\'yum.conf\'] = """
+            [main]
+            cachedir=/var/cache/yum
+            debuglevel=1
+            reposdir=/dev/null
+            logfile=/var/log/yum.log
+            retries=20
+            obsoletes=1
+            gpgcheck=0
+            assumeyes=1
+            syslog_ident=mock
+            syslog_device=
+
+            # repos
+          '.split("\n").each{ |l| lines << l }
+          include_repos_hash.each do |name, url|
+            "
+            [#{name}]
+            name=#{name}
+            enabled=1
+            mirrorlist=#{url}
+            failovermethod=priority
+
+            ".split("\n").each{ |l| lines << l }
+          end
+
+          lines << '"""'
+        end
+
+        config_name = "#{@worker.vm.os}#{@worker.vm.os == 'mdv' && @bplname =~ /ltc/ ? '-ltc' : ''}-#{@worker.vm.arch}.cfg"
+        @worker.vm.execute_command "cp /home/vagrant/rpm-build-script/configs/#{config_name} /home/vagrant/rpm-build-script/configs/default.cfg"
+        lines.each{ |line|
+          command = "echo '#{line}' >> /home/vagrant/rpm-build-script/configs/default.cfg"
+          @worker.vm.execute_command(command)
+        }
       end
 
     end
