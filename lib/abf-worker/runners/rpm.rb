@@ -62,7 +62,10 @@ module AbfWorker
       def save_results
         # Download ISOs and etc.
         logger.info '==> Saving results....'
-        ['tar -zcvf results/archives.tar.gz archives', 'rm -rf archives'].each do |command|
+        project_name = @git_project_address.
+          scan(/\/([^\/]+)\.git/).inject.first
+
+        ["tar -zcvf results/#{project_name}-#{@worker.build_id}.tar.gz archives", 'rm -rf archives'].each do |command|
           @worker.vm.execute_command command
         end
 
