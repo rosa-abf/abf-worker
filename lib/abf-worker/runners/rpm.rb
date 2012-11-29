@@ -14,12 +14,12 @@ module AbfWorker
 
       def_delegators :@worker, :logger
 
-      def initialize(worker, git_project_address, commit_hash, build_requires, include_repos_hash, bplname)
+      def initialize(worker, git_project_address, commit_hash, build_requires, include_repos, bplname)
         @worker = worker
         @git_project_address = git_project_address
         @commit_hash = commit_hash
         @build_requires = build_requires
-        @include_repos_hash = include_repos_hash
+        @include_repos = include_repos
         @bplname = bplname
         @can_run = true
       end
@@ -37,7 +37,7 @@ module AbfWorker
             # command << "ARCH=#{@worker.vm.arch}"
             command << "DISTRIB_TYPE=#{@worker.vm.os}"
             # command << "BUILD_REQUIRES=#{@build_requires}"
-            # command << "INCLUDE_REPOS_HASH='#{@include_repos_hash}'"
+            # command << "INCLUDE_REPOS='#{@include_repos}'"
             command << '/bin/bash build.sh'
             begin
               @worker.vm.execute_command command.join(' ')
@@ -95,7 +95,7 @@ module AbfWorker
           #   'name_1': 'url_1', 'name_2': 'url_2'
           # }
           lines << "config_opts['urpmi_media'] = {"
-          include_repos_hash.map do |name, url|
+          @include_repos.map do |name, url|
             "'#{name}': '#{url}'"
           end.join(', ').each{ |r| lines << r }
           lines << '}'
@@ -136,7 +136,7 @@ module AbfWorker
 
             # repos
           '.split("\n").each{ |l| lines << l }
-          include_repos_hash.each do |name, url|
+          @include_repos_hash.each do |name, url|
             "
             [#{name}]
             name=#{name}
