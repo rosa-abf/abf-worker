@@ -97,7 +97,7 @@ module AbfWorker
           # config_opts['urpmi_media'] = {
           #   'name_1': 'url_1', 'name_2': 'url_2'
           # }
-          lines << "config_opts[\"urpmi_media\"] = {"
+          lines << 'config_opts["urpmi_media"] = {'
           lines << @include_repos.map do |name, url|
             "\"#{name}\": \"#{url}\""
           end.join(', ')
@@ -144,7 +144,7 @@ module AbfWorker
             [#{name}]
             name=#{name}
             enabled=1
-            mirrorlist=#{url}
+            baseurl=#{url}
             failovermethod=priority
 
             ".split("\n").each{ |l| lines << l }
@@ -156,7 +156,7 @@ module AbfWorker
         config_name = "#{@worker.vm.os}#{@worker.vm.os == 'mdv' && @bplname =~ /lts/ ? '-lts' : ''}-#{@worker.vm.arch}.cfg"
         @worker.vm.execute_command "cp /home/vagrant/rpm-build-script/configs/#{config_name} /home/vagrant/rpm-build-script/configs/default.cfg"
         lines.each{ |line|
-          command = "echo '#{line}' >> /home/vagrant/rpm-build-script/configs/default.cfg"
+          command = "echo '#{line.strip}' >> /home/vagrant/rpm-build-script/configs/default.cfg"
           @worker.vm.execute_command(command)
         }
       end
