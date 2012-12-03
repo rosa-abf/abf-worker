@@ -61,7 +61,7 @@ module AbfWorker
         # and config.vm.customize ['modifyvm', '#{@vm_name}', '--memory', '#{memory}']
         if first_run
 
-          File.open("#{@worker.tmp_dir}/vm.synchro", File::RDWR|File::CREAT, 0644) do |f|
+          File.open("#{@worker.tmp_dir}/../vm.synchro", File::RDWR|File::CREAT, 0644) do |f|
             f.flock(File::LOCK_EX)
             logger.info '==> Up VM at first time...'
             @vagrant_env.cli 'up', @vm_name
