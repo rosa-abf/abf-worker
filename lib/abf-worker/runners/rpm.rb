@@ -76,9 +76,9 @@ module AbfWorker
         port = @worker.vm.get_vm.config.ssh.port
         system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@worker.vm.results_folder}"
 
-        container_data = "#{@worker.vm.results_folder}/container_data.json"
+        container_data = "#{@worker.vm.results_folder}/results/container_data.json"
         if File.exists?(container_data)
-          @packages = JSON.parse(IO.read(container_data)).select{ |p| p[:name] }
+          @packages = JSON.parse(IO.read(container_data)).select{ |p| p['name'] }
           File.delete container_data
         end
         logger.info "Done."

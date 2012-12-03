@@ -2,7 +2,8 @@ source "http://rubygems.org"
 
 gem 'rake'
 gem 'resque', '1.23.0'
-gem 'redis', '3.0.2'
+gem 'redis', :git => 'git://github.com/avokhmin/redis-rb.git',
+  :branch => '735-reconnect-on-timeout-error'
 gem 'vagrant', :git => 'git://github.com/avokhmin/vagrant.git',
   :branch => 'abf-worker'
 gem 'sahara', :git => 'git://github.com/avokhmin/sahara.git',
