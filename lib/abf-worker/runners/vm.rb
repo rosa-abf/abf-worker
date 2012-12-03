@@ -5,6 +5,14 @@ module AbfWorker
     class Vm
       extend Forwardable
 
+      TWO_IN_THE_TWENTIETH = 2**20
+
+      ROOT_PATH = File.dirname(__FILE__).to_s << '/../../../'
+      LOG_FOLDER = ROOT_PATH + 'log'
+      FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
+      FILE_STORE_CREATE_PATH = 'http://file-store.rosalinux.ru/api/v1/upload'
+      FILE_STORE_CONFIG = ROOT_PATH + 'config/file-store.yml'
+
       attr_accessor :vagrant_env,
                     :vm_name,
                     :os,
@@ -53,7 +61,7 @@ module AbfWorker
         # and config.vm.customize ['modifyvm', '#{@vm_name}', '--memory', '#{memory}']
         if first_run
 
-          File.open("#{@worker.tmp_dir}/vm.synchro", File::RDWR|File::CREAT, 0644) do |f|
+          File.open("#{@worker.tmp_dir}/../vm.synchro", File::RDWR|File::CREAT, 0644) do |f|
             f.flock(File::LOCK_EX)
             logger.info '==> Up VM at first time...'
             @vagrant_env.cli 'up', @vm_name
@@ -128,7 +136,81 @@ module AbfWorker
         yield if block_given?
       end
 
+      def execute_command(command, opts = nil)
+        opts = {
+          :sudo => false,
+          :error_class => AbfWorker::Exceptions::ScriptError
+        }.merge(opts || {})
+        logger.info "--> execute command with sudo = #{opts[:sudo]}: #{command}"
+        if communicator.ready?
+          communicator.execute command, opts do |channel, data|
+            logger.info data 
+          end
+        end
+      end
+
+      def upload_results_to_file_store
+        uploaded = []
+        if File.exists?(results_folder) && File.directory?(results_folder)
+          # Dir.new(results_folder).entries.each do |f|
+          Dir[results_folder + '/**/'].each do |folder|
+            Dir.new(folder).entries.each do |f|
+              uploaded << upload_file(folder, f)
+            end
+          end
+          system "rm -rf #{results_folder}"
+        end
+        uploaded << upload_file(LOG_FOLDER, "#{@worker.logger_name}.log")
+        uploaded.compact
+      end
+
+      def communicator
+        @communicator ||= get_vm.communicate
+      end
+
+      def results_folder
+        return @results_folder if @results_folder
+        @results_folder = @worker.tmp_dir + '/results'
+        Dir.mkdir(@results_folder) unless File.exists?(@results_folder)
+        @results_folder << "/build-#{@build_id}"
+        Dir.rmdir(@results_folder) if File.exists?(@results_folder)
+        Dir.mkdir(@results_folder)
+        @results_folder
+      end
+
       private
+
+      def upload_file(path, file_name)
+        path_to_file = path + '/' + file_name
+        return unless File.file?(path_to_file)
+
+        # Compress the log when file size more than 10MB
+        file_size = (File.size(path_to_file).to_f / TWO_IN_THE_TWENTIETH).round(2)
+        if path == LOG_FOLDER && file_size >= 10
+          system "tar -zcvf #{path_to_file}.tar.gz #{path_to_file}"
+          File.delete path_to_file
+          path_to_file << '.tar.gz'
+          file_name << '.tar.gz'
+        end
+
+        logger.info "==> Uploading file '#{file_name}'...."
+        sha1 = Digest::SHA1.file(path_to_file).hexdigest
+
+        # curl --user myuser@gmail.com:mypass -POST -F "file_store[file]=@files/archive.zip" http://file-store.rosalinux.ru/api/v1/file_stores.json
+        if %x[ curl #{FILE_STORE}?hash=#{sha1} ] == '[]'
+          command = 'curl --user '
+          command << file_store_token
+          command << ': -POST -F "file_store[file]=@'
+          command << path_to_file
+          command << '" '
+          command << FILE_STORE_CREATE_PATH
+          system command
+        end
+
+        File.delete path_to_file
+        logger.info "Done."
+        {:sha1 => sha1, :file_name => file_name, :size => file_size}
+      end
 
       def rollback_vm
         # machine state should be (Running, Paused or Stuck)
@@ -141,6 +223,13 @@ module AbfWorker
         @vagrantfiles_folder = @worker.tmp_dir + '/vagrantfiles'
         Dir.mkdir(@vagrantfiles_folder) unless File.exists?(@vagrantfiles_folder)
         @vagrantfiles_folder 
+      end
+
+      def file_store_token
+        return @file_store_token if @file_store_token
+        fs_config = YAML.load_file(FILE_STORE_CONFIG)
+        @file_store_token = fs_config["server_#{@worker.server_id}"]
+        @file_store_token
       end
 
     end

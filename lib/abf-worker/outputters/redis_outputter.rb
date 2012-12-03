@@ -4,12 +4,12 @@ module AbfWorker
   module Outputters
     class RedisOutputter < Log4r::Outputter
 
-      def initialize(worker, name, buffer_limit = 100, time_interval = 10, hash={})
+      def initialize(name, hash={})
         super(name, hash)
-        @worker = worker
+        @worker = hash[:worker]
         @buffer = []
-        @buffer_limit = buffer_limit
-        @time_interval = time_interval
+        @buffer_limit = hash[:buffer_limit] || 100
+        @time_interval = hash[:time_interval] || 10
         @line_number = 1
         init_thread
       end
@@ -19,7 +19,7 @@ module AbfWorker
 
       # perform the write
       def write(data)
-        line = data.to_s.gsub(/^.*\:{1}/, '')
+        line = data.to_s#.gsub(/^.*(worker\-[\d]+\:)/, '')
         unless line.empty?
           last_line = @buffer.last
           if last_line && (line.strip =~ /^[\#]+$/) && (line[-1, 1] == last_line[-1, 1])
