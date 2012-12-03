@@ -1,4 +1,11 @@
 GIT
+  remote: git://github.com/avokhmin/redis-rb.git
+  revision: 29a843120a75618e58a4ec0a55d72ae7813a6d19
+  branch: 735-reconnect-on-timeout-error
+  specs:
+    redis (3.0.2)
+
+GIT
   remote: git://github.com/avokhmin/sahara.git
   revision: f26b169779681b8a7fd1b76eadc29a140810354e
   branch: update-to-vagrant-1.1.0
@@ -118,7 +125,6 @@ GEM
     rack-protection (1.2.0)
       rack
     rake (0.9.2.2)
-    redis (3.0.2)
     redis-namespace (1.2.1)
       redis (~> 3.0.0)
     resque (1.23.0)
@@ -156,7 +162,7 @@ DEPENDENCIES
   capistrano_colors
   log4r (= 1.1.10)
   rake
-  redis (= 3.0.2)
+  redis!
   resque (= 1.23.0)
   rvm-capistrano
   sahara!

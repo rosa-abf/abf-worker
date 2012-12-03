@@ -1,6 +1,7 @@
 require 'abf-worker/exceptions/script_error'
 require 'digest/md5'
 require 'forwardable'
+require 'json'
 
 module AbfWorker
   module Runners
@@ -10,7 +11,8 @@ module AbfWorker
       RPM_BUILD_SCRIPT_PATH = 'https://abf.rosalinux.ru/avokhmin/rpm-build-script/archive/avokhmin-rpm-build-script-master.tar.gz'
 
       attr_accessor :script_runner,
-                    :can_run
+                    :can_run,
+                    :packages
 
       def_delegators :@worker, :logger
 
@@ -22,6 +24,7 @@ module AbfWorker
         @include_repos = include_repos
         @bplname = bplname
         @can_run = true
+        @packages = []
       end
 
       def run_script
@@ -72,6 +75,12 @@ module AbfWorker
         logger.info "==> Downloading results...."
         port = @worker.vm.get_vm.config.ssh.port
         system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@worker.vm.results_folder}"
+
+        container_data = "#{@worker.vm.results_folder}/results/container_data.json"
+        if File.exists?(container_data)
+          @packages = JSON.parse(IO.read(container_data)).select{ |p| p['name'] }
+          File.delete container_data
+        end
         logger.info "Done."
       end
 

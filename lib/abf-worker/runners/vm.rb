@@ -172,7 +172,7 @@ module AbfWorker
         return @results_folder if @results_folder
         @results_folder = @worker.tmp_dir + '/results'
         Dir.mkdir(@results_folder) unless File.exists?(@results_folder)
-        @results_folder << "/build-#{@build_id}"
+        @results_folder << "/build-#{@worker.build_id}"
         Dir.rmdir(@results_folder) if File.exists?(@results_folder)
         Dir.mkdir(@results_folder)
         @results_folder
