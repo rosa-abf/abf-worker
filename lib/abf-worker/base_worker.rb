@@ -34,6 +34,7 @@ module AbfWorker
         a << '==> ABF-WORKER-ERROR-START'
         a << 'Please inform us using https://abf.rosalinux.ru/contact'
         a << '----------'
+        a << e.message
         a << e.backtrace.join("\n")
         a << '<== ABF-WORKER-ERROR-END'
         logger.error a.join("\n")
