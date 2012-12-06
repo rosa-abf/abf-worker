@@ -9,7 +9,7 @@ module AbfWorker
         @worker       = worker
         @build_id     = @worker.build_id
         @worker_id    = @worker.worker_id
-        @kill_at      = Time.now + (time_living.to_i * 60)
+        @kill_at      = Time.now + time_living.to_i
         @logger       = @worker.logger
       end
 
