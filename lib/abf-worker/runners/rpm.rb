@@ -16,7 +16,8 @@ module AbfWorker
 
       def_delegators :@worker, :logger
 
-      def initialize(worker, git_project_address, commit_hash, build_requires, include_repos, bplname)
+      def initialize(worker, git_project_address, commit_hash, build_requires, include_repos, bplname, user)
+        @user = user
         @worker = worker
         @git_project_address = git_project_address
         @commit_hash = commit_hash
@@ -88,6 +89,7 @@ module AbfWorker
         logger.info '==> Prepare script...'
 
         commands = []
+        commands << "echo '%packager #{@user['uname']} #{@user['email']}' > ~/.rpmmacros"
         commands << "curl -O -L #{RPM_BUILD_SCRIPT_PATH}"
         file_name = 'avokhmin-rpm-build-script-master.tar.gz'
         commands << "tar -xzf #{file_name}"

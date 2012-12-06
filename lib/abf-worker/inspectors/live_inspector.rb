@@ -16,9 +16,13 @@ module AbfWorker
       def run
         @thread = Thread.new do
           while true
-            sleep CHECK_INTERVAL
-            stop_build if kill_now?
-            reboot_vm if reboot?
+            begin
+              sleep CHECK_INTERVAL
+              stop_build if kill_now?
+            rescue => e
+              # @worker.logger.error e.message
+              # @worker.logger.error e.backtrace.join("\n")
+            end
           end
         end
         @thread.run
@@ -43,28 +47,18 @@ module AbfWorker
         @worker.status = AbfWorker::BaseWorker::BUILD_CANCELED
         # Immediately kill child but don't exit
         # Process.kill('USR1', @worker_id)
-        iso = @worker.iso
-        iso.can_run = false
-        iso.script_runner.kill if iso.script_runner
-      end
-
-      def reboot_vm
-        id = @worker.vm.get_vm.id
-        system "VBoxManage controlvm #{id} reset"
-      end
-
-      def reboot?
-        if status == 'reboot'
-          @logger.info '===> Received signal to reboot VM...'
-          true
-        else
-          false
-        end
+        runner = @worker.runner
+        runner.can_run = false
+        runner.script_runner.kill if runner.script_runner
       end
 
       def status
-        return nil unless @worker.is_a?(AbfWorker::IsoWorker)
-        Resque.redis.get("abfworker::iso-worker-#{@build_id}::live-inspector")
+        q = 'abfworker::'
+        q << (@worker.is_a?(AbfWorker::IsoWorker) ? 'iso' : 'rpm')
+        q << '-worker-'
+        q << @worker.build_id.to_s
+        q << '::live-inspector'
+        Resque.redis.get(q)
       end
 
     end

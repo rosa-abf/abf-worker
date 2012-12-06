@@ -29,6 +29,16 @@ module AbfWorker
 
       protected
 
+      def print_error(e)
+        a = []
+        a << '==> ABF-WORKER-ERROR-START'
+        a << 'Please inform us using https://abf.rosalinux.ru/contact'
+        a << '----------'
+        a << e.backtrace.join("\n")
+        a << '<== ABF-WORKER-ERROR-END'
+        logger.error a.join("\n")
+      end
+
       def initialize_live_inspector(time_living)
         @live_inspector = AbfWorker::Inspectors::LiveInspector.new(self, time_living)
         @live_inspector.run

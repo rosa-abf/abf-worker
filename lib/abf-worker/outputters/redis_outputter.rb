@@ -6,11 +6,11 @@ module AbfWorker
 
       def initialize(name, hash={})
         super(name, hash)
+        @name = name
         @worker = hash[:worker]
         @buffer = []
         @buffer_limit = hash[:buffer_limit] || 100
         @time_interval = hash[:time_interval] || 10
-        @line_number = 1
         init_thread
       end
 
@@ -19,19 +19,15 @@ module AbfWorker
 
       # perform the write
       def write(data)
-        line = data.to_s#.gsub(/^.*(worker\-[\d]+\:)/, '')
+        line = data.to_s
         unless line.empty?
           last_line = @buffer.last
           if last_line && (line.strip =~ /^[\#]+$/) && (line[-1, 1] == last_line[-1, 1])
             last_line.rstrip!
             last_line << line.lstrip
           else
-            l = @line_number.to_s
-            l << ': '
-            l << line
-            @line_number += 1
             @buffer.shift if @buffer.size > @buffer_limit
-            @buffer << l
+            @buffer << line
           end
         end
       end
@@ -47,10 +43,10 @@ module AbfWorker
                 @buffer.join
               )
             rescue => e
-              @worker.logger.error e.message
-              @worker.logger.error e.backtrace.join("\n")
-            end # while
-          end
+              # @worker.logger.error e.message
+              # @worker.logger.error e.backtrace.join("\n")
+            end
+          end # while
         end
         @thread.run
       end

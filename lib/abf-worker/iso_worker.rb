@@ -9,7 +9,8 @@ module AbfWorker
     class << self
       attr_accessor :observer_queue,
                     :observer_queue,
-                    :iso
+                    :iso,
+                    :runner
 
       protected
 
@@ -32,6 +33,8 @@ module AbfWorker
           options['params'],
           options['main_script']
         )
+        @runner = @iso
+        initialize_live_inspector options['time_living']
       end
 
       def send_results
@@ -56,8 +59,7 @@ module AbfWorker
       @vm.clean { send_results }
     rescue => e
       @status = BUILD_FAILED if @status != BUILD_CANCELED
-      logger.error e.message
-      logger.error e.backtrace.join("\n")
+      print_error(e)
       @vm.rollback_and_halt_vm { send_results }
     end
 
