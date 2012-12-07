@@ -86,7 +86,8 @@ module AbfWorker
           @vagrant_env.cli 'up', @vm_name
           sleep 30
           if mdv_rpm_build?
-            execute_command('urpmi --auto mock-urpm --auto-update', {:sudo => true})
+            execute_command('urpmi.update -a', {:sudo => true})
+            execute_command('urpmi  --auto  mock-urpm', {:sudo => true})
           end
           # VM should be exist before using sandbox
           logger.info '==> Enable save mode...'
