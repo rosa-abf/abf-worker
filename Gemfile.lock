@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/avokhmin/redis-rb.git
-  revision: 29a843120a75618e58a4ec0a55d72ae7813a6d19
+  revision: 2d24ae5b3a177202cc54562b07e89f5fecb78a98
   branch: 735-reconnect-on-timeout-error
   specs:
     redis (3.0.2)

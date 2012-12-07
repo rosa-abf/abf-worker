@@ -9,7 +9,8 @@ module AbfWorker
     class << self
       attr_accessor :observer_queue,
                     :observer_queue,
-                    :rpm
+                    :rpm,
+                    :runner
 
       protected
 
@@ -25,8 +26,11 @@ module AbfWorker
           options['commit_hash'],
           options['build_requires'],
           options['include_repos'],
-          options['bplname']
+          options['bplname'],
+          options['user']
         )
+        @runner = @rpm
+        initialize_live_inspector options['time_living']
       end
 
       def send_results
@@ -54,8 +58,7 @@ module AbfWorker
       @vm.clean { send_results }
     rescue => e
       @status = BUILD_FAILED if @status != BUILD_CANCELED
-      logger.error e.message
-      logger.error e.backtrace.join("\n")
+      print_error(e)
       @vm.rollback_and_halt_vm { send_results }
     end
 
