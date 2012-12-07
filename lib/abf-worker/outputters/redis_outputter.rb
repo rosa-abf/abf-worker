@@ -43,8 +43,6 @@ module AbfWorker
                 @buffer.join
               )
             rescue => e
-              # @worker.logger.error e.message
-              # @worker.logger.error e.backtrace.join("\n")
             end
           end # while
         end

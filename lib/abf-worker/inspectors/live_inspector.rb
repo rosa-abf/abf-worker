@@ -20,8 +20,6 @@ module AbfWorker
               sleep CHECK_INTERVAL
               stop_build if kill_now?
             rescue => e
-              # @worker.logger.error e.message
-              # @worker.logger.error e.backtrace.join("\n")
             end
           end
         end
