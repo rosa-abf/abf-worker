@@ -75,7 +75,8 @@ module AbfWorker
           @vagrant_env.cli 'halt', @vm_name
           sleep 20
           vm_id = get_vm.id
-          memory = (can_use_x86_64_for_x86? || @arch == 'x86_64') ? 8192 : 4096
+          # see: #initialize_vagrant_env: 37
+          memory = arch == 'x86_64' ? 8192 : 4096
           # memory = @arch == 'i586' ? 512 : 1024
           # see: http://code.google.com/p/phpvirtualbox/wiki/AdvancedSettings
           ["--memory #{memory}", '--cpus 2', '--hwvirtex on', '--nestedpaging on', '--largepages on'].each do |c|
