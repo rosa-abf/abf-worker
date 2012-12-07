@@ -24,7 +24,8 @@ module AbfWorker
         @worker = worker
         @os = os
         @arch = arch
-        @vm_name = "#{@os}.#{@arch}_#{@worker.worker_id}"
+        @vm_name = "#{@os}.#{can_use_x86_64_for_x86? ? 'x86_64' : @arch}_#{@worker.worker_id}"
+        # @vm_name = "#{@os}.#{@arch}_#{@worker.worker_id}"
       end
 
       def initialize_vagrant_env
