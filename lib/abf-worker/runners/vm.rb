@@ -34,7 +34,7 @@ module AbfWorker
           begin
             file = File.open(vagrantfile, 'w')
             port = 2000 + (@worker.build_id % 63000)
-            arch = rpm_build? ? 'x86_64' : @arch
+            arch = can_use_x86_64_for_x86? ? 'x86_64' : @arch
             str = "
               Vagrant::Config.run do |config|
                 config.vm.share_folder('v-root', nil, nil)
@@ -75,7 +75,7 @@ module AbfWorker
           @vagrant_env.cli 'halt', @vm_name
           sleep 20
           vm_id = get_vm.id
-          memory = (rpm_build? || @arch == 'x86_64') ? 8192 : 4096
+          memory = (can_use_x86_64_for_x86? || @arch == 'x86_64') ? 8192 : 4096
           # memory = @arch == 'i586' ? 512 : 1024
           # see: http://code.google.com/p/phpvirtualbox/wiki/AdvancedSettings
           ["--memory #{memory}", '--cpus 2', '--hwvirtex on', '--nestedpaging on', '--largepages on'].each do |c|
@@ -85,7 +85,7 @@ module AbfWorker
           sleep 10
           @vagrant_env.cli 'up', @vm_name
           sleep 30
-          if rpm_build? && @os == 'mdv'
+          if @os == 'mdv'
             execute_command('urpmi.update -a', {:sudo => true})
             execute_command('urpmi  --auto  mock-urpm', {:sudo => true})
           end
@@ -185,8 +185,9 @@ module AbfWorker
 
       private
 
-      def rpm_build?
-        @worker.is_a?(AbfWorker::RpmWorker)
+      def can_use_x86_64_for_x86?
+        # Override @arch, and up x86_64 for all workers
+        true
       end
 
       def upload_file(path, file_name)
