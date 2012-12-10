@@ -16,7 +16,8 @@ module AbfWorker
       attr_accessor :vagrant_env,
                     :vm_name,
                     :os,
-                    :arch
+                    :arch,
+                    :share_folder
 
       def_delegators :@worker, :logger
 
@@ -25,6 +26,7 @@ module AbfWorker
         @os = os
         @arch = arch
         @vm_name = "#{@os}.#{can_use_x86_64_for_x86? ? 'x86_64' : @arch}_#{@worker.worker_id}"
+        @share_folder = nil
         # @vm_name = "#{@os}.#{@arch}_#{@worker.worker_id}"
       end
 
@@ -38,7 +40,7 @@ module AbfWorker
             arch = can_use_x86_64_for_x86? ? 'x86_64' : @arch
             str = "
               Vagrant::Config.run do |config|
-                config.vm.share_folder('v-root', nil, nil)
+                #{share_folder_config}
                 config.vm.define '#{@vm_name}' do |vm_config|
                   vm_config.vm.box = '#{@os}.#{arch}'
                   vm_config.vm.forward_port 22, #{port}
@@ -186,6 +188,14 @@ module AbfWorker
       end
 
       private
+
+      def share_folder_config
+        if @share_folder
+          "config.vm.share_folder('v-root', '/home/vagrant/share_folder', '#{@share_folder}')"
+        else
+          "config.vm.share_folder('v-root', nil, nil)"
+        end
+      end
 
       def can_use_x86_64_for_x86?
         # Override @arch, and up x86_64 for all workers

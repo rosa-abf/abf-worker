@@ -7,10 +7,7 @@ module AbfWorker
     @queue = :iso_worker
 
     class << self
-      attr_accessor :observer_queue,
-                    :observer_queue,
-                    :iso,
-                    :runner
+      attr_accessor :runner
 
       protected
 
@@ -27,13 +24,12 @@ module AbfWorker
         @observer_queue = 'iso_worker_observer'
         @observer_class = 'AbfWorker::IsoWorkerObserver'
         super options['id'], options['distrib_type'], options['arch']
-        @iso = Runners::Iso.new(
+        @runner = Runners::Iso.new(
           self,
           options['srcpath'],
           options['params'],
           options['main_script']
         )
-        @runner = @iso
         initialize_live_inspector options['time_living']
       end
 
@@ -50,9 +46,8 @@ module AbfWorker
     def self.perform(options)
       initialize options
       @vm.initialize_vagrant_env
-      initialize_live_inspector options['time_living']
       @vm.start_vm
-      @iso.run_script
+      @runner.run_script
       @vm.rollback_and_halt_vm { send_results }
     rescue Resque::TermException
       @status = BUILD_FAILED if @status != BUILD_CANCELED
