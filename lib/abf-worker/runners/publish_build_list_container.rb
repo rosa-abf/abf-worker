@@ -14,9 +14,10 @@ module AbfWorker
 
       def_delegators :@worker, :logger
 
-      def initialize(worker, container_sha1)
+      def initialize(worker, container_sha1, released)
         @worker = worker
         @container_sha1 = container_sha1
+        @released = released
         @can_run = true
       end
 
@@ -26,12 +27,13 @@ module AbfWorker
             prepare_script
             logger.info '==> Run script...'
 
-            main_script = 'build'
-            main_script << @worker.vm.os
-            main_script << '.sh'
-            command = "cd publish-build-list-script/; /bin/bash #{main_script}"
+            command = []
+            command << 'cd publish-build-list-script/;'
+            command << "RELEASED=#{@released}"
+            command << '/bin/bash'
+            command << "build.#{@worker.vm.os}.sh"
             begin
-              @worker.vm.execute_command command, {:sudo => true}
+              @worker.vm.execute_command command.join(' ')
               logger.info '==>  Script done with exit_status = 0'
               @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED
             rescue AbfWorker::Exceptions::ScriptError => e
