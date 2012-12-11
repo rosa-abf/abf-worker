@@ -29,7 +29,7 @@ module AbfWorker
     end
 
     def self.logger
-      @logger || init_logger("abfworker::publish-build-list-container-worker-#{@build_id}")
+      @logger || init_logger("abfworker::publish-build-list-container-worker-#{@build_id}", false)
     end
 
     def self.perform(options)

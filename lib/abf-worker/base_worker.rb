@@ -54,7 +54,7 @@ module AbfWorker
         @vm = Runners::Vm.new(self, os, arch)
       end
 
-      def init_logger(logger_name = nil)
+      def init_logger(logger_name = nil, redis_outputter = true)
         @logger_name = logger_name
         @logger = Log4r::Logger.new @logger_name, Log4r::ALL
         @logger.outputters << Log4r::Outputter.stdout
@@ -70,7 +70,7 @@ module AbfWorker
         )
         @logger.outputters << AbfWorker::Outputters::RedisOutputter.new(
           @logger_name, {:formatter => formatter, :worker => self}
-        )
+        ) if redis_outputter
         @logger
       end
 
