@@ -40,8 +40,8 @@ module AbfWorker
             arch = can_use_x86_64_for_x86? ? 'x86_64' : @arch
             str = "
               Vagrant::Config.run do |config|
-                #{share_folder_config}
                 config.vm.define '#{@vm_name}' do |vm_config|
+                  #{share_folder_config}
                   vm_config.vm.box = '#{@os}.#{arch}'
                   vm_config.vm.forward_port 22, #{port}
                   vm_config.ssh.port = #{port}
@@ -191,9 +191,9 @@ module AbfWorker
 
       def share_folder_config
         if @share_folder
-          "config.vm.share_folder('v-root', '/home/vagrant/share_folder', '#{@share_folder}')"
+          "vm_config.vm.share_folder('v-root', '/home/vagrant/share_folder', '#{@share_folder}')"
         else
-          "config.vm.share_folder('v-root', nil, nil)"
+          "vm_config.vm.share_folder('v-root', nil, nil)"
         end
       end
 
