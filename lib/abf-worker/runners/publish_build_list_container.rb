@@ -33,8 +33,10 @@ module AbfWorker
             command << "RELEASED=#{@platform['released']}"
             command << "REPOSITORY_NAME=#{@repository_name}"
             command << "ARCH=#{@worker.vm.arch}"
+            command << "TYPE=#{@worker.vm.os}"
             command << '/bin/bash'
-            command << "build.#{@worker.vm.os}.sh"
+            # command << "build.#{@worker.vm.os}.sh"
+            command << 'build.sh'
             begin
               @worker.vm.execute_command command.join(' ')
               logger.info '==>  Script done with exit_status = 0'
