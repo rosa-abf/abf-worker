@@ -16,10 +16,9 @@ module AbfWorker
         super options['id'], options['distrib_type'], options['arch']
         @runner = Runners::PublishBuildListContainer.new(
           self,
-          options['container_sha1'],
-          options['released']
+          options
         )
-        @vm.share_folder = options['platform_path']
+        @vm.share_folder = options['platform']['platform_path']
         initialize_live_inspector options['time_living']
       end
 

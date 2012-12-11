@@ -14,10 +14,11 @@ module AbfWorker
 
       def_delegators :@worker, :logger
 
-      def initialize(worker, container_sha1, released)
+      def initialize(worker, options)
         @worker = worker
-        @container_sha1 = container_sha1
-        @released = released
+        @container_sha1 = options['container_sha1']
+        @platform = options['platform']
+        @repository_name = options['repository_name']
         @can_run = true
       end
 
@@ -29,7 +30,9 @@ module AbfWorker
 
             command = []
             command << 'cd publish-build-list-script/;'
-            command << "RELEASED=#{@released}"
+            command << "RELEASED=#{@platform['released']}"
+            command << "REPOSITORY_NAME=#{@repository_name}"
+            command << "ARCH=#{@worker.vm.arch}"
             command << '/bin/bash'
             command << "build.#{@worker.vm.os}.sh"
             begin
