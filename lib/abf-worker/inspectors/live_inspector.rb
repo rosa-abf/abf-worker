@@ -48,6 +48,7 @@ module AbfWorker
         runner = @worker.runner
         runner.can_run = false
         runner.script_runner.kill if runner.script_runner
+        runner.rollback if runner.respond_to?(:rollback)
       end
 
       def status

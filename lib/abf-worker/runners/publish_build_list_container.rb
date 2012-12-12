@@ -37,6 +37,7 @@ module AbfWorker
             command << '/bin/bash'
             # command << "build.#{@worker.vm.os}.sh"
             command << 'build.sh'
+            critical_error = false
             begin
               @worker.vm.execute_command command.join(' ')
               logger.info '==>  Script done with exit_status = 0'
@@ -45,14 +46,18 @@ module AbfWorker
               logger.info "==>  Script done with exit_status != 0. Error message: #{e.message}"
               @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
             rescue => e
-              logger.error e.message
-              logger.error e.backtrace.join("\n")
+              @worker.print_error e
               @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
+              critical_error = true
             end
             save_results
+            rollback if critical_error
           end
         end
         @script_runner.join if @can_run
+      end
+
+      def rollback
       end
 
       private

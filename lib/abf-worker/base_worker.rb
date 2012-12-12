@@ -27,8 +27,6 @@ module AbfWorker
                     :live_inspector,
                     :logger_name
 
-      protected
-
       def print_error(e)
         a = []
         a << '==> ABF-WORKER-ERROR-START'
@@ -39,6 +37,8 @@ module AbfWorker
         a << '<== ABF-WORKER-ERROR-END'
         logger.error a.join("\n")
       end
+
+      protected
 
       def initialize_live_inspector(time_living)
         @live_inspector = AbfWorker::Inspectors::LiveInspector.new(self, time_living)
