@@ -23,50 +23,48 @@ module AbfWorker
       end
 
       def run_script
-        @script_runner = Thread.new do
-          if @worker.vm.communicator.ready?
-            prepare_script
-            logger.info '==> Run script...'
-
-            command = []
-            command << 'cd publish-build-list-script/;'
-            command << "RELEASED=#{@platform['released']}"
-            command << "REPOSITORY_NAME=#{@repository_name}"
-            command << "ARCH=#{@worker.vm.arch}"
-            command << "TYPE=#{@worker.vm.os}"
-            command << '/bin/bash'
-            # command << "build.#{@worker.vm.os}.sh"
-            command << 'build.sh'
-            critical_error = false
-            begin
-              @worker.vm.execute_command command.join(' ')
-              logger.info '==>  Script done with exit_status = 0'
-              @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED
-            rescue AbfWorker::Exceptions::ScriptError => e
-              logger.info "==>  Script done with exit_status != 0. Error message: #{e.message}"
-              @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
-            rescue => e
-              @worker.print_error e
-              @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
-              critical_error = true
-            end
-            save_results
-            rollback if critical_error
-          end
-        end
+        @script_runner = Thread.new{ run_build_script }
         @script_runner.join if @can_run
       end
 
       def rollback
+        @worker.vm.rollback_vm
+        run_build_script true
       end
 
       private
 
-      def save_results
-        logger.info "==> Downloading results...."
-        port = @worker.vm.get_vm.config.ssh.port
-        system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@worker.vm.results_folder}"
-        logger.info "Done."
+      def run_build_script(rollback_activity = false)
+        if @worker.vm.communicator.ready?
+          prepare_script
+          logger.info "==> Run #{rollback_activity ? 'rollback activity ' : ''}script..."
+
+          command = []
+          command << 'cd publish-build-list-script/;'
+          command << "RELEASED=#{@platform['released']}"
+          command << "REPOSITORY_NAME=#{@repository_name}"
+          command << "ARCH=#{@worker.vm.arch}"
+          command << "TYPE=#{@worker.vm.os}"
+          command << '/bin/bash'
+          # command << "build.#{@worker.vm.os}.sh"
+          command << (rollback_activity ? 'rollback.sh' : 'build.sh')
+          critical_error = false
+          begin
+            @worker.vm.execute_command command.join(' ')
+            logger.info '==>  Script done with exit_status = 0'
+            @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED unless rollback_activity
+          rescue AbfWorker::Exceptions::ScriptError => e
+            logger.info "==>  Script done with exit_status != 0. Error message: #{e.message}"
+            @worker.status = AbfWorker::BaseWorker::BUILD_FAILED unless rollback_activity
+          rescue => e
+            @worker.print_error e
+            @worker.status = AbfWorker::BaseWorker::BUILD_FAILED unless rollback_activity
+            critical_error = true
+          end
+          # No logs on publishing build_list
+          # save_results 
+          rollback if critical_error && !rollback_activity
+        end
       end
 
       def prepare_script

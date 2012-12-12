@@ -191,6 +191,12 @@ module AbfWorker
         @results_folder
       end
 
+      def rollback_vm
+        # machine state should be (Running, Paused or Stuck)
+        logger.info '==> Rollback activity'
+        Sahara::Session.rollback(@vm_name, @vagrant_env)
+      end
+
       private
 
       def share_folder_config
@@ -236,12 +242,6 @@ module AbfWorker
         File.delete path_to_file
         logger.info "Done."
         {:sha1 => sha1, :file_name => file_name, :size => file_size}
-      end
-
-      def rollback_vm
-        # machine state should be (Running, Paused or Stuck)
-        logger.info '==> Rollback activity'
-        Sahara::Session.rollback(@vm_name, @vagrant_env)
       end
 
       def vagrantfiles_folder
