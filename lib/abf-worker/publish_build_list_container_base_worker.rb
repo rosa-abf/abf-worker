@@ -34,7 +34,7 @@ module AbfWorker
 
     def self.perform(options)
       initialize options
-      @vm.initialize_vagrant_env
+      @vm.initialize_vagrant_env true
       @vm.start_vm
       @runner.run_script
       @vm.rollback_and_halt_vm { send_results }

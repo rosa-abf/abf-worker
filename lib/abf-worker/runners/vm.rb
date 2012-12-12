@@ -30,7 +30,7 @@ module AbfWorker
         # @vm_name = "#{@os}.#{@arch}_#{@worker.worker_id}"
       end
 
-      def initialize_vagrant_env
+      def initialize_vagrant_env(update_share_folder = false)
         vagrantfile = "#{vagrantfiles_folder}/#{@vm_name}"
         first_run = false
         unless File.exist?(vagrantfile)
@@ -54,7 +54,11 @@ module AbfWorker
           ensure
             file.close unless file.nil?
           end
+        elsif update_share_folder
+          system "sed \"4s/.*/#{share_folder_config}/\" #{vagrantfile} > #{vagrantfile}_tmp"
+          system "mv #{vagrantfile}_tmp #{vagrantfile}"
         end
+
         @vagrant_env = Vagrant::Environment.new(
           :cwd => vagrantfiles_folder,
           :vagrantfile_name => @vm_name
