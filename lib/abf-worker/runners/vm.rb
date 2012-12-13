@@ -16,7 +16,8 @@ module AbfWorker
       attr_accessor :vagrant_env,
                     :vm_name,
                     :os,
-                    :arch
+                    :arch,
+                    :share_folder
 
       def_delegators :@worker, :logger
 
@@ -25,10 +26,11 @@ module AbfWorker
         @os = os
         @arch = arch
         @vm_name = "#{@os}.#{can_use_x86_64_for_x86? ? 'x86_64' : @arch}_#{@worker.worker_id}"
+        @share_folder = nil
         # @vm_name = "#{@os}.#{@arch}_#{@worker.worker_id}"
       end
 
-      def initialize_vagrant_env
+      def initialize_vagrant_env(update_share_folder = false)
         vagrantfile = "#{vagrantfiles_folder}/#{@vm_name}"
         first_run = false
         unless File.exist?(vagrantfile)
@@ -38,8 +40,8 @@ module AbfWorker
             arch = can_use_x86_64_for_x86? ? 'x86_64' : @arch
             str = "
               Vagrant::Config.run do |config|
-                config.vm.share_folder('v-root', nil, nil)
                 config.vm.define '#{@vm_name}' do |vm_config|
+                  #{share_folder_config}
                   vm_config.vm.box = '#{@os}.#{arch}'
                   vm_config.vm.forward_port 22, #{port}
                   vm_config.ssh.port = #{port}
@@ -52,7 +54,11 @@ module AbfWorker
           ensure
             file.close unless file.nil?
           end
+        elsif update_share_folder
+          system "sed \"4s/.*/#{share_folder_config}/\" #{vagrantfile} > #{vagrantfile}_tmp"
+          system "mv #{vagrantfile}_tmp #{vagrantfile}"
         end
+
         @vagrant_env = Vagrant::Environment.new(
           :cwd => vagrantfiles_folder,
           :vagrantfile_name => @vm_name
@@ -185,7 +191,21 @@ module AbfWorker
         @results_folder
       end
 
+      def rollback_vm
+        # machine state should be (Running, Paused or Stuck)
+        logger.info '==> Rollback activity'
+        Sahara::Session.rollback(@vm_name, @vagrant_env)
+      end
+
       private
+
+      def share_folder_config
+        if @share_folder
+          "vm_config.vm.share_folder('v-root', '/home/vagrant/share_folder', '#{@share_folder}')"
+        else
+          "vm_config.vm.share_folder('v-root', nil, nil)"
+        end
+      end
 
       def can_use_x86_64_for_x86?
         # Override @arch, and up x86_64 for all workers
@@ -222,12 +242,6 @@ module AbfWorker
         File.delete path_to_file
         logger.info "Done."
         {:sha1 => sha1, :file_name => file_name, :size => file_size}
-      end
-
-      def rollback_vm
-        # machine state should be (Running, Paused or Stuck)
-        logger.info '==> Rollback activity'
-        Sahara::Session.rollback(@vm_name, @vagrant_env)
       end
 
       def vagrantfiles_folder

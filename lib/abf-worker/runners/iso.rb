@@ -43,8 +43,7 @@ module AbfWorker
               logger.info "==>  Script done with exit_status != 0. Error message: #{e.message}"
               @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
             rescue => e
-              logger.error e.message
-              logger.error e.backtrace.join("\n")
+              @worker.print_error e
               @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
             end
             save_results

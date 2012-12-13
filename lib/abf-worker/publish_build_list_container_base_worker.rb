@@ -1,50 +1,40 @@
 require 'abf-worker/base_worker'
-require 'abf-worker/runners/rpm'
+require 'abf-worker/runners/publish_build_list_container'
 require 'abf-worker/inspectors/live_inspector'
 
 module AbfWorker
-  class RpmWorker < BaseWorker
-    @queue = :rpm_worker
+  class PublishBuildListContainerBaseWorker < BaseWorker
 
     class << self
       attr_accessor :runner
 
       protected
 
-      # Initialize a new RPM worker.
-      # @param [Hash] options The hash with options
       def initialize(options)
-        @observer_queue = 'rpm_worker_observer'
-        @observer_class = 'AbfWorker::RpmWorkerObserver'
+        @observer_queue = 'publish_build_list_container_observer'
+        @observer_class = 'AbfWorker::PublishBuildListContainerObserver'
         super options['id'], options['distrib_type'], options['arch']
-        @runner = Runners::Rpm.new(
+        @runner = Runners::PublishBuildListContainer.new(
           self,
-          options['git_project_address'],
-          options['commit_hash'],
-          options['build_requires'],
-          options['include_repos'],
-          options['bplname'],
-          options['user']
+          options
         )
+        @vm.share_folder = options['platform']['platform_path']
         initialize_live_inspector options['time_living']
       end
 
       def send_results
-        update_build_status_on_abf({
-          :results => @vm.upload_results_to_file_store,
-          :packages => @runner.packages
-        })
+        update_build_status_on_abf({:results => @vm.upload_results_to_file_store})
       end
 
     end
 
     def self.logger
-      @logger || init_logger("abfworker::rpm-worker-#{@build_id}")
+      @logger || init_logger("abfworker::publish-build-list-container-worker-#{@build_id}", false)
     end
 
     def self.perform(options)
       initialize options
-      @vm.initialize_vagrant_env
+      @vm.initialize_vagrant_env true
       @vm.start_vm
       @runner.run_script
       @vm.rollback_and_halt_vm { send_results }
