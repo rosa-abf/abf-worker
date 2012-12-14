@@ -34,6 +34,8 @@ namespace :abf_worker do
     ENV['ENV'] = 'production'
     AbfWorker::IsoWorker.clean_up
     AbfWorker::RpmWorker.clean_up
+    AbfWorker::PublishBuildListContainerMdvWorker.clean_up
+    AbfWorker::PublishBuildListContainerRhelWorker.clean_up
   end
 
 end
