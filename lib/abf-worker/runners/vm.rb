@@ -54,7 +54,8 @@ module AbfWorker
           ensure
             file.close unless file.nil?
           end
-        elsif update_share_folder
+        end
+        if !first_run && update_share_folder
           system "sed \"4s/.*/#{share_folder_config}/\" #{vagrantfile} > #{vagrantfile}_tmp"
           system "mv #{vagrantfile}_tmp #{vagrantfile}"
         end
