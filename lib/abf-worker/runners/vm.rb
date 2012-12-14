@@ -56,7 +56,7 @@ module AbfWorker
           end
         end
         if !first_run && update_share_folder
-          system "sed \"4s/.*/#{share_folder_config}/\" #{vagrantfile} > #{vagrantfile}_tmp"
+          system "sed \"4s|.*|#{share_folder_config}|\" #{vagrantfile} > #{vagrantfile}_tmp"
           system "mv #{vagrantfile}_tmp #{vagrantfile}"
         end
 
