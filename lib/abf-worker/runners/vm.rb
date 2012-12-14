@@ -199,6 +199,11 @@ module AbfWorker
         Sahara::Session.rollback(@vm_name, @vagrant_env)
       end
 
+      def define_packager_command(user)
+        mock_command = @os == 'mdv' ? 'mock-urpm' : 'mock'
+        "#{mock_command} --define='packager #{user['uname']} #{user['email']}'"
+      end
+
       private
 
       def share_folder_config
