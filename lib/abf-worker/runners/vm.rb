@@ -97,6 +97,7 @@ module AbfWorker
           if @os == 'mdv'
             execute_command('urpmi.update -a', {:sudo => true})
             execute_command('urpmi  --auto  mock-urpm', {:sudo => true})
+            execute_command('urpmi --update genhdlist2', {:sudo => true})
           end
           # VM should be exist before using sandbox
           logger.info '==> Enable save mode...'
