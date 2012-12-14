@@ -28,7 +28,8 @@ module AbfWorker
           self,
           options['srcpath'],
           options['params'],
-          options['main_script']
+          options['main_script'],
+          options['user']
         )
         initialize_live_inspector options['time_living']
       end

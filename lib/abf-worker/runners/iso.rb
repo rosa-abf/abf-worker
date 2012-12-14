@@ -20,11 +20,12 @@ module AbfWorker
 
       def_delegators :@worker, :logger
 
-      def initialize(worker, srcpath, params, main_script)
+      def initialize(worker, srcpath, params, main_script, user)
         @worker = worker
         @srcpath = srcpath
         @params = params
         @main_script = main_script
+        @user = user
         @can_run = true
       end
 
@@ -80,6 +81,7 @@ module AbfWorker
         )
 
         commands = []
+        commands << @worker.vm.define_packager_command(@user)
         commands << 'mkdir results'
         commands << 'mkdir archives'
         commands << "curl -O -L #{@srcpath}"
