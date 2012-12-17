@@ -13,7 +13,7 @@ module AbfWorker
       def initialize(options)
         @observer_queue = 'publish_build_list_container_observer'
         @observer_class = 'AbfWorker::PublishBuildListContainerObserver'
-        super options['id'], options['distrib_type'], options['arch']
+        super options
         @runner = Runners::PublishBuildListContainer.new(
           self,
           options

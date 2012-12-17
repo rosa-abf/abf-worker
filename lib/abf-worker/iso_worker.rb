@@ -23,7 +23,7 @@ module AbfWorker
       def initialize(options)
         @observer_queue = 'iso_worker_observer'
         @observer_class = 'AbfWorker::IsoWorkerObserver'
-        super options['id'], options['distrib_type'], options['arch']
+        super options
         @runner = Runners::Iso.new(
           self,
           options['srcpath'],
