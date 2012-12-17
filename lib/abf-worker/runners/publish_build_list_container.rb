@@ -20,19 +20,54 @@ module AbfWorker
         @platform = options['platform']
         @repository_name = options['repository_name']
         @can_run = true
+        @packages = options['packages']
       end
 
       def run_script
-        @script_runner = Thread.new{ run_build_script }
+        if @packages
+          @script_runner = Thread.new{ run_cleanup_script }
+        else
+          @script_runner = Thread.new{ run_build_script }
+        end
         @script_runner.join if @can_run
       end
 
       def rollback
-        @worker.vm.rollback_vm
-        run_build_script true
+        unless @packages
+          @worker.vm.rollback_vm
+          run_build_script true
+        end
       end
 
       private
+
+      def run_cleanup_script
+        share_folder = @worker.vm.share_folder
+        ['release', 'updates'].each{ |rep|
+          @packages['sources'].each{ |s|
+            system "rm -f #{share_folder}/SRPMS/#{@repository_name}/#{rep}/#{s}"
+          }
+          @packages['binaries'].each{ |s|
+            system "rm -f #{share_folder}/#{@worker.vm.arch}/#{@repository_name}/#{rep}/#{s}"
+          }
+        }
+        if @worker.vm.communicator.ready?
+          begin
+            download_main_script
+
+            command = []
+            command << 'cd publish-build-list-script/;'
+            command << "REPOSITORY_NAME=#{@repository_name}"
+            command << "ARCH=#{@worker.vm.arch}"
+            command << "TYPE=#{@worker.vm.os}"
+            command << '/bin/bash'
+            command << 'rebuild.sh'
+
+            @worker.vm.execute_command command.join(' ')
+          rescue => e
+          end
+        end
+      end
 
       def run_build_script(rollback_activity = false)
         if @worker.vm.communicator.ready?
@@ -46,7 +81,6 @@ module AbfWorker
           command << "ARCH=#{@worker.vm.arch}"
           command << "TYPE=#{@worker.vm.os}"
           command << '/bin/bash'
-          # command << "build.#{@worker.vm.os}.sh"
           command << (rollback_activity ? 'rollback.sh' : 'build.sh')
           critical_error = false
           begin
@@ -77,6 +111,12 @@ module AbfWorker
         commands << 'mv archives container'
         commands << "rm #{@container_sha1}"
 
+        commands.each{ |c| @worker.vm.execute_command(c) }
+        download_main_script
+      end
+
+      def download_main_script
+        commands = []
         commands << "curl -O -L #{PUBLISH_BUILD_LIST_SCRIPT_PATH}"
         file_name = 'avokhmin-publish-build-list-script-master.tar.gz'
         commands << "tar -xzf #{file_name}"
