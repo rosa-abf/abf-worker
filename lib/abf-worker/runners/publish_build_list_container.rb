@@ -43,26 +43,19 @@ module AbfWorker
 
       def run_cleanup_script
         share_folder = @worker.vm.share_folder
-        ['release', 'updates'].each{ |rep|
-          @packages['sources'].each{ |s|
-            system "rm -f #{share_folder}/SRPMS/#{@repository_name}/#{rep}/#{s}"
-          }
-          @packages['binaries'].each{ |s|
-            system "rm -f #{share_folder}/#{@worker.vm.arch}/#{@repository_name}/#{rep}/#{s}"
-          }
+        rep = @platform['released'] ? 'updates' : 'release'
+        @packages['sources'].each{ |s|
+          system "rm -f #{share_folder}/SRPMS/#{@repository_name}/#{rep}/#{s}"
+        }
+        @packages['binaries'].each{ |s|
+          system "rm -f #{share_folder}/#{@worker.vm.arch}/#{@repository_name}/#{rep}/#{s}"
         }
         if @worker.vm.communicator.ready?
+          download_main_script
+
+          command = base_command_for_run
+          command << 'rebuild.sh'
           begin
-            download_main_script
-
-            command = []
-            command << 'cd publish-build-list-script/;'
-            command << "REPOSITORY_NAME=#{@repository_name}"
-            command << "ARCH=#{@worker.vm.arch}"
-            command << "TYPE=#{@worker.vm.os}"
-            command << '/bin/bash'
-            command << 'rebuild.sh'
-
             @worker.vm.execute_command command.join(' ')
           rescue => e
           end
@@ -74,13 +67,7 @@ module AbfWorker
           prepare_script
           logger.info "==> Run #{rollback_activity ? 'rollback activity ' : ''}script..."
 
-          command = []
-          command << 'cd publish-build-list-script/;'
-          command << "RELEASED=#{@platform['released']}"
-          command << "REPOSITORY_NAME=#{@repository_name}"
-          command << "ARCH=#{@worker.vm.arch}"
-          command << "TYPE=#{@worker.vm.os}"
-          command << '/bin/bash'
+          command = base_command_for_run
           command << (rollback_activity ? 'rollback.sh' : 'build.sh')
           critical_error = false
           begin
@@ -99,6 +86,17 @@ module AbfWorker
           # save_results 
           rollback if critical_error && !rollback_activity
         end
+      end
+
+      def base_command_for_run
+        command = []
+        command << 'cd publish-build-list-script/;'
+        command << "RELEASED=#{@platform['released']}"
+        command << "REPOSITORY_NAME=#{@repository_name}"
+        command << "ARCH=#{@worker.vm.arch}"
+        command << "TYPE=#{@worker.vm.os}"
+        command << '/bin/bash'
+        command
       end
 
       def prepare_script
