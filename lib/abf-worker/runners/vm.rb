@@ -160,7 +160,7 @@ module AbfWorker
         logger.info "--> execute command with sudo = #{opts[:sudo]}: #{filtered_command}"
         if communicator.ready?
           communicator.execute command, opts do |channel, data|
-            logger.info data 
+            logger.info data.gsub(/\:\/\/.*\:\@/, '://[FILTERED]@')
           end
         end
       end
