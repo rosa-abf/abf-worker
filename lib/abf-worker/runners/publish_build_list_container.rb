@@ -21,10 +21,11 @@ module AbfWorker
         @repository_name = options['repository_name']
         @can_run = true
         @packages = options['packages']
+        @cleanup = options['cleanup']
       end
 
       def run_script
-        if @packages
+        if @cleanup
           @script_runner = Thread.new{ run_cleanup_script }
         else
           @script_runner = Thread.new{ run_build_script }
@@ -33,7 +34,7 @@ module AbfWorker
       end
 
       def rollback
-        unless @packages
+        unless @cleanup
           @worker.vm.rollback_vm
           run_build_script true
         end
@@ -41,7 +42,7 @@ module AbfWorker
 
       private
 
-      def run_cleanup_script
+      def remove_old_packages
         share_folder = @worker.vm.share_folder
         rep = @platform['released'] ? 'updates' : 'release'
         @packages['sources'].each{ |s|
@@ -50,6 +51,10 @@ module AbfWorker
         @packages['binaries'].each{ |s|
           system "rm -f #{share_folder}/#{@worker.vm.arch}/#{@repository_name}/#{rep}/#{s}"
         }
+      end
+
+      def run_cleanup_script
+        remove_old_packages
         if @worker.vm.communicator.ready?
           download_main_script
 
