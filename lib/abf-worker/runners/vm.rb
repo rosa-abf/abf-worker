@@ -156,7 +156,8 @@ module AbfWorker
           :sudo => false,
           :error_class => AbfWorker::Exceptions::ScriptError
         }.merge(opts || {})
-        logger.info "--> execute command with sudo = #{opts[:sudo]}: #{command}"
+        filtered_command = command.gsub /\:\/\/.*\:\@/, '://[FILTERED]@'
+        logger.info "--> execute command with sudo = #{opts[:sudo]}: #{filtered_command}"
         if communicator.ready?
           communicator.execute command, opts do |channel, data|
             logger.info data 
@@ -208,6 +209,7 @@ module AbfWorker
 
       def share_folder_config
         if @share_folder
+          logger.info "==> Share folder: #{@share_folder}"
           "vm_config.vm.share_folder('v-root', '/home/vagrant/share_folder', '#{@share_folder}')"
         else
           "vm_config.vm.share_folder('v-root', nil, nil)"
