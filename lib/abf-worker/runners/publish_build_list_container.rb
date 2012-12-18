@@ -68,6 +68,7 @@ module AbfWorker
       end
 
       def run_build_script(rollback_activity = false)
+        remove_old_packages unless rollback_activity
         if @worker.vm.communicator.ready?
           prepare_script
           logger.info "==> Run #{rollback_activity ? 'rollback activity ' : ''}script..."
