@@ -40,6 +40,8 @@ module AbfWorker
             command << "COMMIT_HASH=#{@commit_hash}"
             # command << "ARCH=#{@worker.vm.arch}"
             command << "DISTRIB_TYPE=#{@worker.vm.os}"
+            command << "UNAME=#{@user['uname']}"
+            command << "EMAIL=#{@user['email']}"
             # command << "BUILD_REQUIRES=#{@build_requires}"
             # command << "INCLUDE_REPOS='#{@include_repos}'"
             command << '/bin/bash build.sh'
@@ -98,7 +100,6 @@ module AbfWorker
 
         commands.each{ |c| @worker.vm.execute_command(c) }
         init_mock_configs
-        @worker.vm.execute_command @worker.vm.define_packager_command(@user)
       end
 
       def init_mock_configs
