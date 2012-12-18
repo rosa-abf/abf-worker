@@ -240,7 +240,7 @@ module AbfWorker
           command << path_to_file
           command << '" '
           command << FILE_STORE_CREATE_PATH
-          system command
+          logger.info %x[ #{command} ]
         end
 
         File.delete path_to_file
