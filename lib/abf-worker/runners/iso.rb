@@ -81,7 +81,6 @@ module AbfWorker
         )
 
         commands = []
-        # commands << @worker.vm.define_packager_command(@user)
         commands << 'mkdir results'
         commands << 'mkdir archives'
         commands << "curl -O -L #{@srcpath}"

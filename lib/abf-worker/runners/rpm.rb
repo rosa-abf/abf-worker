@@ -88,7 +88,6 @@ module AbfWorker
         logger.info '==> Prepare script...'
 
         commands = []
-        commands << @worker.vm.define_packager_command(@user)
         commands << "curl -O -L #{RPM_BUILD_SCRIPT_PATH}"
         file_name = 'avokhmin-rpm-build-script-master.tar.gz'
         commands << "tar -xzf #{file_name}"
@@ -99,6 +98,7 @@ module AbfWorker
 
         commands.each{ |c| @worker.vm.execute_command(c) }
         init_mock_configs
+        @worker.vm.execute_command @worker.vm.define_packager_command(@user)
       end
 
       def init_mock_configs
