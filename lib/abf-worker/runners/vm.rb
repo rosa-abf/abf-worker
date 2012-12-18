@@ -156,7 +156,8 @@ module AbfWorker
           :sudo => false,
           :error_class => AbfWorker::Exceptions::ScriptError
         }.merge(opts || {})
-        logger.info "--> execute command with sudo = #{opts[:sudo]}: #{command}"
+        filtered_command = command.gsub /\:\/\/.*\:\@/, '://[FILTERED]@'
+        logger.info "--> execute command with sudo = #{opts[:sudo]}: #{filtered_command}"
         if communicator.ready?
           communicator.execute command, opts do |channel, data|
             logger.info data 
