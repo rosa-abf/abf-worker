@@ -6,9 +6,10 @@ module AbfWorker
 
       # A transformer. All data from an API will be transformed to 
       # BaseStat instance.
-      class BaseStat < APISmith::Smash
-        property :repository, :transformer => RepositoryStat
-      end # BaseStat
+      class KeyPairStat < APISmith::Smash
+        property :public, :transformer => :to_s
+        property :secret, :transformer => :to_s
+      end # KeyPairStat
 
       class RepositoryStat < APISmith::Smash
         property :id,       :transformer => :to_i
@@ -16,10 +17,11 @@ module AbfWorker
         property :key_pair, :transformer => KeyPairStat
       end # RepositoryStat
 
-      class KeyPairStat < APISmith::Smash
-        property :public, :transformer => :to_s
-        property :secret, :transformer => :to_s
-      end # KeyPairStat
+      class BaseStat < APISmith::Smash
+        property :repository, :transformer => RepositoryStat
+      end # BaseStat
+
+
 
       # Finds repository by repository_id
       # Returns nil on 500, 404, timeout HTTP errors and when 
@@ -30,6 +32,7 @@ module AbfWorker
         return repository
       rescue => e
         # We don't raise exception, because high classes don't rescue it.
+        AbfWorker::BaseWorker.print_error(e)
         return nil
       end
 
