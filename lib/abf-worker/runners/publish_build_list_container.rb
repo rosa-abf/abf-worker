@@ -41,14 +41,25 @@ module AbfWorker
 
       private
 
+      # TODO: move to VM script
       def remove_old_packages
         share_folder = @worker.vm.share_folder
         rep = @platform['released'] ? 'updates' : 'release'
+
+        to = "#{share_folder}/SRPMS/#{@repository['name']}/#{rep}-backup/"
+        system "mkdir -p #{to}" unless @cleanup
         @packages['sources'].each{ |s|
-          system "rm -f #{share_folder}/SRPMS/#{@repository['name']}/#{rep}/#{s}"
+          from = "#{share_folder}/SRPMS/#{@repository['name']}/#{rep}/#{s}"
+          system "cp -f #{from} #{to}" unless @cleanup
+          system "rm -f #{from}"
         }
+
+        to = "#{share_folder}/#{@worker.vm.arch}/#{@repository['name']}/#{rep}-backup/"
+        system "mkdir -p #{to}" unless @cleanup
         @packages['binaries'].each{ |s|
-          system "rm -f #{share_folder}/#{@worker.vm.arch}/#{@repository['name']}/#{rep}/#{s}"
+          from = "#{share_folder}/#{@worker.vm.arch}/#{@repository['name']}/#{rep}/#{s}"
+          system "cp -f #{from} #{to}" unless @cleanup
+          system "rm -f #{from}"
         }
       end
 
