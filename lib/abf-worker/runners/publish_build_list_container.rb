@@ -1,4 +1,5 @@
 require 'abf-worker/exceptions/script_error'
+require 'abf-worker/models/repository'
 require 'digest/md5'
 require 'forwardable'
 
@@ -69,6 +70,7 @@ module AbfWorker
         remove_old_packages unless rollback_activity
         if @worker.vm.communicator.ready?
           prepare_script
+          init_gpg_keys unless rollback_activity
           logger.info "==> Run #{rollback_activity ? 'rollback activity ' : ''}script..."
 
           command = base_command_for_run
@@ -127,6 +129,27 @@ module AbfWorker
         commands << "rm -rf #{file_name}"
 
         commands.each{ |c| @worker.vm.execute_command(c) }
+      end
+
+      def init_gpg_keys
+        repository = AbfWorker::Models::Repository.find_by_id(options['repository']['id'])
+        return if repository.nil? || repository.key_pair.secret.empty?
+
+        @worker.vm.execute_command 'mkdir -m 700 /home/vagrant/.gnupg'
+        dir = Dir.mktmpdir
+        begin
+          port = @worker.vm.get_vm.config.ssh.port
+          [:pubring, :secring].each do |key|
+            open("#{dir}/#{key}.txt", "w") { |f|
+              f.write repository.key_pair.send(key == :secring ? :secret : :public)
+            }
+            system "gpg --homedir #{dir} --dearmor < #{dir}/#{key}.txt > #{dir}/#{key}.gpg"
+            system "scp -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} #{dir}/#{key}.gpg vagrant@127.0.0.1:/home/vagrant/.gnupg/#{key}.gpg"
+          end
+        ensure
+          # remove the directory.
+          FileUtils.remove_entry_secure dir
+        end
       end
 
     end
