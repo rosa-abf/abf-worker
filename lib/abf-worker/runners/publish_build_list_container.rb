@@ -20,20 +20,22 @@ module AbfWorker
         @repository = options['repository']
         @can_run = true
         @packages = options['packages']
-        @cleanup = options['cleanup']
+        @type = options['type']
       end
 
       def run_script
-        if @cleanup
-          @script_runner = Thread.new{ run_cleanup_script }
-        else
+        if publish?
           @script_runner = Thread.new{ run_build_script }
+        elsif cleanup?
+          @script_runner = Thread.new{ run_cleanup_script }
+        elsif resign?
+          @script_runner = Thread.new{ run_resign_script }
         end
         @script_runner.join if @can_run
       end
 
       def rollback
-        unless @cleanup
+        if publish?
           @worker.vm.rollback_vm
           run_build_script true
         end
@@ -41,24 +43,36 @@ module AbfWorker
 
       private
 
+      def cleanup?
+        @type == 'cleanup'
+      end
+
+      def resign?
+        @type == 'resign'
+      end
+
+      def publish?
+        @type == 'publish'
+      end
+
       # TODO: move to VM script
       def remove_old_packages
         share_folder = @worker.vm.share_folder
         rep = @platform['released'] ? 'updates' : 'release'
 
         to = "#{share_folder}/SRPMS/#{@repository['name']}/#{rep}-backup/"
-        system "mkdir -p #{to}" unless @cleanup
+        system "mkdir -p #{to}" if publish?
         @packages['sources'].each{ |s|
           from = "#{share_folder}/SRPMS/#{@repository['name']}/#{rep}/#{s}"
-          system "cp -f #{from} #{to}" unless @cleanup
+          system "cp -f #{from} #{to}" if publish?
           system "rm -f #{from}"
         }
 
         to = "#{share_folder}/#{@worker.vm.arch}/#{@repository['name']}/#{rep}-backup/"
-        system "mkdir -p #{to}" unless @cleanup
+        system "mkdir -p #{to}" if publish?
         @packages['binaries'].each{ |s|
           from = "#{share_folder}/#{@worker.vm.arch}/#{@repository['name']}/#{rep}/#{s}"
-          system "cp -f #{from} #{to}" unless @cleanup
+          system "cp -f #{from} #{to}" if publish?
           system "rm -f #{from}"
         }
       end
@@ -70,6 +84,20 @@ module AbfWorker
 
           command = base_command_for_run
           command << 'rebuild.sh'
+          begin
+            @worker.vm.execute_command command.join(' ')
+          rescue => e
+          end
+        end
+      end
+
+      def run_resign_script
+        if @worker.vm.communicator.ready?
+          download_main_script
+          init_gpg_keys
+
+          command = base_command_for_run
+          command << 'resign.sh'
           begin
             @worker.vm.execute_command command.join(' ')
           rescue => e
