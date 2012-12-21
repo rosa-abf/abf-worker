@@ -7,8 +7,6 @@ module AbfWorker
     class PublishBuildListContainer
       extend Forwardable
 
-      FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores/'
-      PUBLISH_BUILD_LIST_SCRIPT_PATH = 'https://abf.rosalinux.ru/avokhmin/publish-build-list-script/archive/avokhmin-publish-build-list-script-master.tar.gz'
       attr_accessor :script_runner,
                     :can_run
 
@@ -110,7 +108,7 @@ module AbfWorker
 
         commands = []
         commands << 'mkdir results'
-        commands << "curl -O -L #{FILE_STORE}/#{@container_sha1}"
+        commands << "curl -O -L #{APP_CONFIG['file_store']['url']}/#{@container_sha1}"
         commands << "tar -xzf #{@container_sha1}"
         commands << 'mv archives container'
         commands << "rm #{@container_sha1}"
@@ -121,7 +119,7 @@ module AbfWorker
 
       def download_main_script
         commands = []
-        commands << "curl -O -L #{PUBLISH_BUILD_LIST_SCRIPT_PATH}"
+        commands << "curl -O -L #{APP_CONFIG['scripts']['publish_build_list']}"
         file_name = 'avokhmin-publish-build-list-script-master.tar.gz'
         commands << "tar -xzf #{file_name}"
         folder_name = file_name.gsub /\.tar\.gz$/, ''

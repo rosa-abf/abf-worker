@@ -7,14 +7,6 @@ module AbfWorker
     class Iso
       extend Forwardable
 
-      TWO_IN_THE_TWENTIETH = 2**20
-
-      ROOT_PATH = File.dirname(__FILE__).to_s << '/../../../'
-      LOG_FOLDER = ROOT_PATH + 'log'
-      FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
-      FILE_STORE_CREATE_PATH = 'http://file-store.rosalinux.ru/api/v1/upload'
-      FILE_STORE_CONFIG = ROOT_PATH + 'config/file-store.yml'
-
       attr_accessor :script_runner,
                     :can_run
 
