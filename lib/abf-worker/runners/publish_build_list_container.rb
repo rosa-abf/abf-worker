@@ -18,7 +18,7 @@ module AbfWorker
         @worker = worker
         @container_sha1 = options['container_sha1']
         @platform = options['platform']
-        @repository_name = options['repository_name']
+        @repository = options['repository']
         @can_run = true
         @packages = options['packages']
         @cleanup = options['cleanup']
@@ -46,10 +46,10 @@ module AbfWorker
         share_folder = @worker.vm.share_folder
         rep = @platform['released'] ? 'updates' : 'release'
         @packages['sources'].each{ |s|
-          system "rm -f #{share_folder}/SRPMS/#{@repository_name}/#{rep}/#{s}"
+          system "rm -f #{share_folder}/SRPMS/#{@repository['name']}/#{rep}/#{s}"
         }
         @packages['binaries'].each{ |s|
-          system "rm -f #{share_folder}/#{@worker.vm.arch}/#{@repository_name}/#{rep}/#{s}"
+          system "rm -f #{share_folder}/#{@worker.vm.arch}/#{@repository['name']}/#{rep}/#{s}"
         }
       end
 
@@ -98,7 +98,7 @@ module AbfWorker
         command = []
         command << 'cd publish-build-list-script/;'
         command << "RELEASED=#{@platform['released']}"
-        command << "REPOSITORY_NAME=#{@repository_name}"
+        command << "REPOSITORY_NAME=#{@repository['name']}"
         command << "ARCH=#{@worker.vm.arch}"
         command << "TYPE=#{@worker.vm.os}"
         command << '/bin/bash'
