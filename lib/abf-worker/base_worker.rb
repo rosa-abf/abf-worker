@@ -77,13 +77,8 @@ module AbfWorker
 
       def init_tmp_folder_and_server_id
         @server_id = ENV['SERVER_ID'] || '1'
-        @tmp_dir = ''
-        base = ENV['ENV'] == 'production' ? '/mnt/store/tmp/abf-worker-tmp' : "#{Dir.pwd}/abf-worker-tmp"
-        [base, "server-#{@server_id}", name].each do |d|
-          @tmp_dir << '/'
-          @tmp_dir << d
-          Dir.mkdir(@tmp_dir) unless File.exists?(@tmp_dir)
-        end
+        @tmp_dir = "#{APP_CONFIG['tmp_path']}/server-#{@server_id}/#{name}"
+        system "mkdir -p -m 0700 #{@tmp_dir}"
       end
 
       def update_build_status_on_abf(args = {})

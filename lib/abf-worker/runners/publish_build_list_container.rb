@@ -175,7 +175,7 @@ module AbfWorker
         return if repository.nil? || repository.key_pair.secret.empty?
 
         @worker.vm.execute_command 'mkdir -m 700 /home/vagrant/.gnupg'
-        dir = Dir.mktmpdir
+        dir = Dir.mktmpdir('keys-', "#{@worker.tmp_dir}")
         begin
           port = @worker.vm.get_vm.config.ssh.port
           [:pubring, :secring].each do |key|
