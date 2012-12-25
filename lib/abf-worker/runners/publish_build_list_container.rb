@@ -85,7 +85,7 @@ module AbfWorker
           command = base_command_for_run
           command << 'rebuild.sh'
           begin
-            @worker.vm.execute_command command.join(' ')
+            @worker.vm.execute_command command.join(' '), {:sudo => true}
           rescue => e
           end
         end
@@ -99,7 +99,7 @@ module AbfWorker
           command = base_command_for_run
           command << 'resign.sh'
           begin
-            @worker.vm.execute_command command.join(' ')
+            @worker.vm.execute_command command.join(' '), {:sudo => true}
           rescue => e
           end
         end
