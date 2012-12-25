@@ -69,8 +69,9 @@ module AbfWorker
         # on vm_config.vm.customizations << ['modifyvm', :id, '--memory',  '#{memory}']
         # and config.vm.customize ['modifyvm', '#{@vm_name}', '--memory', '#{memory}']
         if first_run
+          synchro_file = "#{@worker.tmp_dir}/../vm.synchro"
           begin
-            while !system("lockfile -r 0 #{@worker.tmp_dir}/../vm.synchro") do
+            while !system("lockfile -r 0 #{synchro_file}") do
               sleep rand(10)
             end
             logger.info '==> Up VM at first time...'
@@ -79,7 +80,7 @@ module AbfWorker
           rescue => e
             @worker.print_error e
           ensure
-            system "rm -f #{@worker.tmp_dir}/../vm.synchro"
+            system "rm -f #{synchro_file}"
           end
           sleep 30
           logger.info '==> Configure VM...'
