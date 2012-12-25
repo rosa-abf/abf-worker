@@ -50,7 +50,7 @@ module AbfWorker
             file.write(str)
             first_run = true
           rescue IOError => e
-            logger.error e.message
+            @worker.print_error e
           ensure
             file.close unless file.nil?
           end
@@ -69,15 +69,20 @@ module AbfWorker
         # on vm_config.vm.customizations << ['modifyvm', :id, '--memory',  '#{memory}']
         # and config.vm.customize ['modifyvm', '#{@vm_name}', '--memory', '#{memory}']
         if first_run
-
-          File.open("#{@worker.tmp_dir}/../vm.synchro", File::RDWR|File::CREAT, 0644) do |f|
-            f.flock(File::LOCK_EX)
+          synchro_file = "#{@worker.tmp_dir}/../vm.synchro"
+          begin
+            while !system("lockfile -r 0 #{synchro_file}") do
+              sleep rand(10)
+            end
             logger.info '==> Up VM at first time...'
             @vagrant_env.cli 'up', @vm_name
             sleep 1
+          rescue => e
+            @worker.print_error e
+          ensure
+            system "rm -f #{synchro_file}"
           end
           sleep 30
-
           logger.info '==> Configure VM...'
           # Halt, because: The machine 'abf-worker_...' is already locked for a session (or being unlocked)
           @vagrant_env.cli 'halt', @vm_name
