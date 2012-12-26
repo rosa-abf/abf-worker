@@ -116,7 +116,7 @@ module AbfWorker
       end
 
       def start_vm
-        logger.info "==> Up VM..."
+        logger.info "==> Up VM '#{get_vm.id}' ..."
         @vagrant_env.cli 'up', @vm_name
         rollback_vm
       end
