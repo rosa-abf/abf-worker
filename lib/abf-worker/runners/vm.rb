@@ -125,6 +125,7 @@ module AbfWorker
         rollback_vm
         logger.info '==> Halt VM...'
         @vagrant_env.cli 'halt', @vm_name
+        sleep 15
         logger.info '==> Done.'
         yield if block_given?
       end
@@ -203,7 +204,9 @@ module AbfWorker
       def rollback_vm
         # machine state should be (Running, Paused or Stuck)
         logger.info '==> Rollback activity'
+        sleep 10
         Sahara::Session.rollback(@vm_name, @vagrant_env)
+        sleep 5
       end
 
       private
