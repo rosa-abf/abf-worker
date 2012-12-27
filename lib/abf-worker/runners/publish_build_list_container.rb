@@ -171,6 +171,7 @@ module AbfWorker
       end
 
       def init_gpg_keys
+        return true # TODO: Remove this line when API will be done.
         repository = AbfWorker::Models::Repository.find_by_id(options['repository']['id'])
         return if repository.nil? || repository.key_pair.secret.empty?
 
