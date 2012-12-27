@@ -7,10 +7,7 @@ module AbfWorker
 
       def initialize(worker, time_living)
         @worker       = worker
-        @build_id     = @worker.build_id
-        @worker_id    = @worker.worker_id
         @kill_at      = Time.now + time_living.to_i
-        @logger       = @worker.logger
       end
 
       def run
@@ -29,11 +26,11 @@ module AbfWorker
 
       def kill_now?
         if @kill_at < Time.now
-          @logger.info '===> Time expired, VM will be stopped...'
+          @worker.logger.info '===> Time expired, VM will be stopped...'
           return true
         end
         if status == 'USR1'
-          @logger.info '===> Received signal to stop VM...'
+          @worker.logger.info '===> Received signal to stop VM...'
           true
         else
           false
@@ -42,8 +39,6 @@ module AbfWorker
 
       def stop_build
         @worker.status = AbfWorker::BaseWorker::BUILD_CANCELED
-        # Immediately kill child but don't exit
-        # Process.kill('USR1', @worker_id)
         runner = @worker.runner
         runner.can_run = false
         runner.script_runner.kill if runner.script_runner

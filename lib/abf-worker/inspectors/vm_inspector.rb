@@ -7,7 +7,6 @@ module AbfWorker
 
       def initialize(worker)
         @worker   = worker
-        @logger   = @worker.logger
         @thread   = nil
       end
 
@@ -25,7 +24,7 @@ module AbfWorker
       private
 
       def restart_vm
-        @logger.info "===> [#{Time.now.utc}] Restart VM..."
+        @worker.logger.info "===> [#{Time.now.utc}] Restart VM..."
         vm_id = @worker.vm.get_vm.id
         system "VBoxManage controlvm #{vm_id} reset"
       end
