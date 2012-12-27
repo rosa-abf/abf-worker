@@ -26,11 +26,11 @@ module AbfWorker
 
       def kill_now?
         if @kill_at < Time.now
-          @worker.logger.info '===> Time expired, VM will be stopped...'
+          @worker.logger.info "===> [#{Time.now.utc}] Time expired, VM will be stopped..."
           return true
         end
         if status == 'USR1'
-          @worker.logger.info '===> Received signal to stop VM...'
+          @worker.logger.info "===> [#{Time.now.utc}] Received signal to stop VM..."
           true
         else
           false
