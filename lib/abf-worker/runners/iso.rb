@@ -10,13 +10,13 @@ module AbfWorker
 
       def_delegators :@worker, :logger
 
-      def initialize(worker, srcpath, params, main_script, user)
-        @worker = worker
-        @srcpath = srcpath
-        @params = params
-        @main_script = main_script
-        @user = user
-        @can_run = true
+      def initialize(worker, options)
+        @worker       = worker
+        @srcpath      = options['srcpath']
+        @params       = options['params']
+        @main_script  = options['main_script']
+        @user         = options['user']
+        @can_run      = true
       end
 
       def run_script

@@ -16,15 +16,7 @@ module AbfWorker
         @observer_queue = 'rpm_worker_observer'
         @observer_class = 'AbfWorker::RpmWorkerObserver'
         super options
-        @runner = Runners::Rpm.new(
-          self,
-          options['git_project_address'],
-          options['commit_hash'],
-          options['build_requires'],
-          options['include_repos'],
-          options['bplname'],
-          options['user']
-        )
+        @runner = Runners::Rpm.new(self, options)
         initialize_live_inspector options['time_living']
       end
 

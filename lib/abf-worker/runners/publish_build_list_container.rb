@@ -12,13 +12,13 @@ module AbfWorker
       def_delegators :@worker, :logger
 
       def initialize(worker, options)
-        @worker = worker
+        @worker         = worker
         @container_sha1 = options['container_sha1']
-        @platform = options['platform']
-        @repository = options['repository']
-        @can_run = true
-        @packages = options['packages']
-        @type = options['type']
+        @platform       = options['platform']
+        @repository     = options['repository']
+        @packages       = options['packages']
+        @type           = options['type']
+        @can_run        = true
       end
 
       def run_script

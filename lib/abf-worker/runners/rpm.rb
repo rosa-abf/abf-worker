@@ -12,16 +12,16 @@ module AbfWorker
 
       def_delegators :@worker, :logger
 
-      def initialize(worker, git_project_address, commit_hash, build_requires, include_repos, bplname, user)
-        @user = user
-        @worker = worker
-        @git_project_address = git_project_address
-        @commit_hash = commit_hash
-        @build_requires = build_requires
-        @include_repos = include_repos
-        @bplname = bplname
-        @can_run = true
-        @packages = []
+      def initialize(worker, options)
+        @worker               = worker
+        @git_project_address  = options['git_project_address']
+        @commit_hash          = options['commit_hash']
+        @build_requires       = options['build_requires']
+        @include_repos        = options['include_repos']
+        @bplname              = options['bplname']
+        @user                 = options['user']
+        @can_run              = true
+        @packages             = []
       end
 
       def run_script
