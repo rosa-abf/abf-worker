@@ -45,13 +45,14 @@ module AbfWorker
         @live_inspector.run
       end
 
-      def initialize(build_id, os, arch)
+      def initialize(options)
+        @save_results = options['save_results'].nil? ? true : options['save_results']
         @status = BUILD_STARTED
-        @build_id = build_id
+        @build_id = options['id']
         @worker_id = Process.ppid
         init_tmp_folder_and_server_id
         update_build_status_on_abf
-        @vm = Runners::Vm.new(self, os, arch)
+        @vm = Runners::Vm.new(self, options['distrib_type'], options['arch'])
       end
 
       def init_logger(logger_name = nil, redis_outputter = true)
@@ -67,7 +68,7 @@ module AbfWorker
             :filename =>  "log/#{@logger_name}.log",
             :formatter => formatter
           }
-        )
+        ) if @save_results
         @logger.outputters << AbfWorker::Outputters::RedisOutputter.new(
           @logger_name, {:formatter => formatter, :worker => self}
         ) if redis_outputter
@@ -76,13 +77,8 @@ module AbfWorker
 
       def init_tmp_folder_and_server_id
         @server_id = ENV['SERVER_ID'] || '1'
-        @tmp_dir = ''
-        base = ENV['ENV'] == 'production' ? '/mnt/store/tmp/abf-worker-tmp' : "#{Dir.pwd}/abf-worker-tmp"
-        [base, "server-#{@server_id}", name].each do |d|
-          @tmp_dir << '/'
-          @tmp_dir << d
-          Dir.mkdir(@tmp_dir) unless File.exists?(@tmp_dir)
-        end
+        @tmp_dir = "#{APP_CONFIG['tmp_path']}/server-#{@server_id}/#{name}"
+        system "mkdir -p -m 0700 #{@tmp_dir}"
       end
 
       def update_build_status_on_abf(args = {})
@@ -93,7 +89,7 @@ module AbfWorker
             :id => @build_id,
             :status => @status
           }.merge(args)]
-        )
+        ) if @save_results
       end
       
     end

@@ -9,5 +9,7 @@ require 'abf-worker/runners/vm'
 root = File.dirname(__FILE__) + '/..'
 env = ENV['ENV'] || 'development'
 
-resque_config = YAML.load_file(root.to_s + '/config/resque.yml')
+resque_config = YAML.load_file("#{root}/config/resque.yml")
 Resque.redis = resque_config[env]
+
+APP_CONFIG = YAML.load_file("#{root}/config/application.yml")[env]

@@ -16,7 +16,7 @@ module AbfWorker
       def initialize(options)
         @observer_queue = 'rpm_worker_observer'
         @observer_class = 'AbfWorker::RpmWorkerObserver'
-        super options['id'], options['distrib_type'], options['arch']
+        super options
         @runner = Runners::Rpm.new(
           self,
           options['git_project_address'],

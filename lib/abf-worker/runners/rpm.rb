@@ -8,8 +8,6 @@ module AbfWorker
     class Rpm
       extend Forwardable
 
-      RPM_BUILD_SCRIPT_PATH = 'https://abf.rosalinux.ru/avokhmin/rpm-build-script/archive/avokhmin-rpm-build-script-master.tar.gz'
-
       attr_accessor :script_runner,
                     :can_run,
                     :packages
@@ -90,7 +88,7 @@ module AbfWorker
         logger.info '==> Prepare script...'
 
         commands = []
-        commands << "curl -O -L #{RPM_BUILD_SCRIPT_PATH}"
+        commands << "curl -O -L #{APP_CONFIG['scripts']['rpm_build']}"
         file_name = 'avokhmin-rpm-build-script-master.tar.gz'
         commands << "tar -xzf #{file_name}"
         folder_name = file_name.gsub /\.tar\.gz$/, ''

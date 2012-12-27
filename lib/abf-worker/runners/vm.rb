@@ -8,11 +8,7 @@ module AbfWorker
 
       TWO_IN_THE_TWENTIETH = 2**20
 
-      ROOT_PATH = File.dirname(__FILE__).to_s << '/../../../'
-      LOG_FOLDER = ROOT_PATH + 'log'
-      FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores.json'
-      FILE_STORE_CREATE_PATH = 'http://file-store.rosalinux.ru/api/v1/upload'
-      FILE_STORE_CONFIG = ROOT_PATH + 'config/file-store.yml'
+      LOG_FOLDER = File.dirname(__FILE__).to_s << '/../../../log'
 
       attr_accessor :vagrant_env,
                     :vm_name,
@@ -90,8 +86,7 @@ module AbfWorker
           sleep 20
           vm_id = get_vm.id
           # see: #initialize_vagrant_env: 37
-          memory = arch == 'x86_64' ? 8192 : 4096
-          # memory = @arch == 'i586' ? 512 : 1024
+          memory = APP_CONFIG['vm']["#{arch}"]
           # see: http://code.google.com/p/phpvirtualbox/wiki/AdvancedSettings
           ["--memory #{memory}", '--cpus 2', '--hwvirtex on', '--nestedpaging on', '--largepages on'].each do |c|
             system "VBoxManage modifyvm #{vm_id} #{c}"
@@ -249,13 +244,13 @@ module AbfWorker
         sha1 = Digest::SHA1.file(path_to_file).hexdigest
 
         # curl --user myuser@gmail.com:mypass -POST -F "file_store[file]=@files/archive.zip" http://file-store.rosalinux.ru/api/v1/file_stores.json
-        if %x[ curl #{FILE_STORE}?hash=#{sha1} ] == '[]'
+        if %x[ curl #{APP_CONFIG['file_store']['url']}.json?hash=#{sha1} ] == '[]'
           command = 'curl --user '
           command << file_store_token
           command << ': -POST -F "file_store[file]=@'
           command << path_to_file
           command << '" '
-          command << FILE_STORE_CREATE_PATH
+          command << APP_CONFIG['file_store']['create_url']
           logger.info %x[ #{command} ]
         end
 
@@ -272,10 +267,7 @@ module AbfWorker
       end
 
       def file_store_token
-        return @file_store_token if @file_store_token
-        fs_config = YAML.load_file(FILE_STORE_CONFIG)
-        @file_store_token = fs_config["server_#{@worker.server_id}"]
-        @file_store_token
+        @file_store_token ||= APP_CONFIG['file_store']['tokens']["server_#{@worker.server_id}"]
       end
 
       def run_with_vm_inspector

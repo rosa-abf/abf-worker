@@ -1,4 +1,5 @@
 require 'abf-worker/exceptions/script_error'
+require 'abf-worker/models/repository'
 require 'digest/md5'
 require 'forwardable'
 
@@ -7,8 +8,6 @@ module AbfWorker
     class PublishBuildListContainer
       extend Forwardable
 
-      FILE_STORE = 'http://file-store.rosalinux.ru/api/v1/file_stores/'
-      PUBLISH_BUILD_LIST_SCRIPT_PATH = 'https://abf.rosalinux.ru/avokhmin/publish-build-list-script/archive/avokhmin-publish-build-list-script-master.tar.gz'
       attr_accessor :script_runner,
                     :can_run
 
@@ -18,35 +17,102 @@ module AbfWorker
         @worker = worker
         @container_sha1 = options['container_sha1']
         @platform = options['platform']
-        @repository_name = options['repository_name']
+        @repository = options['repository']
         @can_run = true
+        @packages = options['packages']
+        @type = options['type']
       end
 
       def run_script
-        @script_runner = Thread.new{ run_build_script }
+        if publish?
+          @script_runner = Thread.new{ run_build_script }
+        elsif cleanup?
+          @script_runner = Thread.new{ run_cleanup_script }
+        elsif resign?
+          @script_runner = Thread.new{ run_resign_script }
+        end
         @script_runner.join if @can_run
       end
 
       def rollback
-        @worker.vm.rollback_vm
-        run_build_script true
+        if publish?
+          @worker.vm.rollback_vm
+          run_build_script true
+        end
       end
 
       private
 
+      def cleanup?
+        @type == 'cleanup'
+      end
+
+      def resign?
+        @type == 'resign'
+      end
+
+      def publish?
+        @type == 'publish'
+      end
+
+      # TODO: move to VM script
+      def remove_old_packages
+        share_folder = @worker.vm.share_folder
+        rep = @platform['released'] ? 'updates' : 'release'
+
+        to = "#{share_folder}/SRPMS/#{@repository['name']}/#{rep}-backup/"
+        system "mkdir -p #{to}" if publish?
+        @packages['sources'].each{ |s|
+          from = "#{share_folder}/SRPMS/#{@repository['name']}/#{rep}/#{s}"
+          system "cp -f #{from} #{to}" if publish?
+          system "rm -f #{from}"
+        }
+
+        to = "#{share_folder}/#{@worker.vm.arch}/#{@repository['name']}/#{rep}-backup/"
+        system "mkdir -p #{to}" if publish?
+        @packages['binaries'].each{ |s|
+          from = "#{share_folder}/#{@worker.vm.arch}/#{@repository['name']}/#{rep}/#{s}"
+          system "cp -f #{from} #{to}" if publish?
+          system "rm -f #{from}"
+        }
+      end
+
+      def run_cleanup_script
+        remove_old_packages
+        if @worker.vm.communicator.ready?
+          download_main_script
+
+          command = base_command_for_run
+          command << 'rebuild.sh'
+          begin
+            @worker.vm.execute_command command.join(' '), {:sudo => true}
+          rescue => e
+          end
+        end
+      end
+
+      def run_resign_script
+        if @worker.vm.communicator.ready?
+          download_main_script
+          init_gpg_keys
+
+          command = base_command_for_run
+          command << 'resign.sh'
+          begin
+            @worker.vm.execute_command command.join(' '), {:sudo => true}
+          rescue => e
+          end
+        end
+      end
+
       def run_build_script(rollback_activity = false)
+        remove_old_packages unless rollback_activity
         if @worker.vm.communicator.ready?
           prepare_script
+          init_gpg_keys unless rollback_activity
           logger.info "==> Run #{rollback_activity ? 'rollback activity ' : ''}script..."
 
-          command = []
-          command << 'cd publish-build-list-script/;'
-          command << "RELEASED=#{@platform['released']}"
-          command << "REPOSITORY_NAME=#{@repository_name}"
-          command << "ARCH=#{@worker.vm.arch}"
-          command << "TYPE=#{@worker.vm.os}"
-          command << '/bin/bash'
-          # command << "build.#{@worker.vm.os}.sh"
+          command = base_command_for_run
           command << (rollback_activity ? 'rollback.sh' : 'build.sh')
           critical_error = false
           begin
@@ -67,17 +133,34 @@ module AbfWorker
         end
       end
 
+      def base_command_for_run
+        command = []
+        command << 'cd publish-build-list-script/;'
+        command << "RELEASED=#{@platform['released']}"
+        command << "REPOSITORY_NAME=#{@repository['name']}"
+        command << "ARCH=#{@worker.vm.arch}"
+        command << "TYPE=#{@worker.vm.os}"
+        command << '/bin/bash'
+        command
+      end
+
       def prepare_script
         logger.info '==> Prepare script...'
 
         commands = []
         commands << 'mkdir results'
-        commands << "curl -O -L #{FILE_STORE}/#{@container_sha1}"
+        commands << "curl -O -L #{APP_CONFIG['file_store']['url']}/#{@container_sha1}"
         commands << "tar -xzf #{@container_sha1}"
         commands << 'mv archives container'
         commands << "rm #{@container_sha1}"
 
-        commands << "curl -O -L #{PUBLISH_BUILD_LIST_SCRIPT_PATH}"
+        commands.each{ |c| @worker.vm.execute_command(c) }
+        download_main_script
+      end
+
+      def download_main_script
+        commands = []
+        commands << "curl -O -L #{APP_CONFIG['scripts']['publish_build_list']}"
         file_name = 'avokhmin-publish-build-list-script-master.tar.gz'
         commands << "tar -xzf #{file_name}"
         folder_name = file_name.gsub /\.tar\.gz$/, ''
@@ -85,6 +168,27 @@ module AbfWorker
         commands << "rm -rf #{file_name}"
 
         commands.each{ |c| @worker.vm.execute_command(c) }
+      end
+
+      def init_gpg_keys
+        repository = AbfWorker::Models::Repository.find_by_id(options['repository']['id'])
+        return if repository.nil? || repository.key_pair.secret.empty?
+
+        @worker.vm.execute_command 'mkdir -m 700 /home/vagrant/.gnupg'
+        dir = Dir.mktmpdir('keys-', "#{@worker.tmp_dir}")
+        begin
+          port = @worker.vm.get_vm.config.ssh.port
+          [:pubring, :secring].each do |key|
+            open("#{dir}/#{key}.txt", "w") { |f|
+              f.write repository.key_pair.send(key == :secring ? :secret : :public)
+            }
+            system "gpg --homedir #{dir} --dearmor < #{dir}/#{key}.txt > #{dir}/#{key}.gpg"
+            system "scp -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} #{dir}/#{key}.gpg vagrant@127.0.0.1:/home/vagrant/.gnupg/#{key}.gpg"
+          end
+        ensure
+          # remove the directory.
+          FileUtils.remove_entry_secure dir
+        end
       end
 
     end
