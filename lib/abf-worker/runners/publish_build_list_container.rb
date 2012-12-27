@@ -1,7 +1,5 @@
-require 'abf-worker/exceptions/script_error'
-require 'abf-worker/models/repository'
-require 'digest/md5'
 require 'forwardable'
+require 'abf-worker/models/repository'
 
 module AbfWorker
   module Runners
@@ -14,13 +12,13 @@ module AbfWorker
       def_delegators :@worker, :logger
 
       def initialize(worker, options)
-        @worker = worker
+        @worker         = worker
         @container_sha1 = options['container_sha1']
-        @platform = options['platform']
-        @repository = options['repository']
-        @can_run = true
-        @packages = options['packages']
-        @type = options['type']
+        @platform       = options['platform']
+        @repository     = options['repository']
+        @packages       = options['packages']
+        @type           = options['type']
+        @can_run        = true
       end
 
       def run_script
@@ -171,6 +169,7 @@ module AbfWorker
       end
 
       def init_gpg_keys
+        return true # TODO: Remove this line when API will be done.
         repository = AbfWorker::Models::Repository.find_by_id(options['repository']['id'])
         return if repository.nil? || repository.key_pair.secret.empty?
 

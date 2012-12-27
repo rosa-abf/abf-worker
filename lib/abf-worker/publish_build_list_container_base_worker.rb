@@ -1,4 +1,3 @@
-require 'abf-worker/base_worker'
 require 'abf-worker/runners/publish_build_list_container'
 require 'abf-worker/inspectors/live_inspector'
 
@@ -14,10 +13,7 @@ module AbfWorker
         @observer_queue = 'publish_build_list_container_observer'
         @observer_class = 'AbfWorker::PublishBuildListContainerObserver'
         super options
-        @runner = Runners::PublishBuildListContainer.new(
-          self,
-          options
-        )
+        @runner = Runners::PublishBuildListContainer.new(self, options)
         @vm.share_folder = options['platform']['platform_path']
         initialize_live_inspector options['time_living']
       end

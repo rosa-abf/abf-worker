@@ -1,4 +1,3 @@
-require 'abf-worker/base_worker'
 require 'abf-worker/runners/iso'
 require 'abf-worker/inspectors/live_inspector'
 
@@ -24,13 +23,7 @@ module AbfWorker
         @observer_queue = 'iso_worker_observer'
         @observer_class = 'AbfWorker::IsoWorkerObserver'
         super options
-        @runner = Runners::Iso.new(
-          self,
-          options['srcpath'],
-          options['params'],
-          options['main_script'],
-          options['user']
-        )
+        @runner = Runners::Iso.new(self, options)
         initialize_live_inspector options['time_living']
       end
 

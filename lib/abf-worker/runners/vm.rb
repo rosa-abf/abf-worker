@@ -1,4 +1,5 @@
 require 'forwardable'
+require 'digest/md5'
 require 'abf-worker/inspectors/vm_inspector'
 
 module AbfWorker
@@ -82,7 +83,9 @@ module AbfWorker
           sleep 30
           logger.info "==> [#{Time.now.utc}] Configure VM..."
           # Halt, because: The machine 'abf-worker_...' is already locked for a session (or being unlocked)
-          @vagrant_env.cli 'halt', @vm_name
+          run_with_vm_inspector {
+            @vagrant_env.cli 'halt', @vm_name
+          }
           sleep 20
           vm_id = get_vm.id
           # see: #initialize_vagrant_env: 37
@@ -93,7 +96,9 @@ module AbfWorker
           end
 
           sleep 10
-          @vagrant_env.cli 'up', @vm_name
+          run_with_vm_inspector {
+            @vagrant_env.cli 'up', @vm_name
+          }
           sleep 30
           if @os == 'mdv'
             execute_command('urpmi.update -a', {:sudo => true})
