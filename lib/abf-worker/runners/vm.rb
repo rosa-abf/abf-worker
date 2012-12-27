@@ -1,4 +1,5 @@
 require 'forwardable'
+require 'abf-worker/inspectors/vm_inspector'
 
 module AbfWorker
   module Runners
@@ -46,7 +47,7 @@ module AbfWorker
             file.write(str)
             first_run = true
           rescue IOError => e
-            logger.error e.message
+            @worker.print_error e
           ensure
             file.close unless file.nil?
           end
@@ -65,16 +66,21 @@ module AbfWorker
         # on vm_config.vm.customizations << ['modifyvm', :id, '--memory',  '#{memory}']
         # and config.vm.customize ['modifyvm', '#{@vm_name}', '--memory', '#{memory}']
         if first_run
-
-          File.open("#{@worker.tmp_dir}/../vm.synchro", File::RDWR|File::CREAT, 0644) do |f|
-            f.flock(File::LOCK_EX)
-            logger.info '==> Up VM at first time...'
+          synchro_file = "#{@worker.tmp_dir}/../vm.synchro"
+          begin
+            while !system("lockfile -r 0 #{synchro_file}") do
+              sleep rand(10)
+            end
+            logger.info "==> [#{Time.now.utc}] Up VM at first time..."
             @vagrant_env.cli 'up', @vm_name
             sleep 1
+          rescue => e
+            @worker.print_error e
+          ensure
+            system "rm -f #{synchro_file}"
           end
           sleep 30
-
-          logger.info '==> Configure VM...'
+          logger.info "==> [#{Time.now.utc}] Configure VM..."
           # Halt, because: The machine 'abf-worker_...' is already locked for a session (or being unlocked)
           @vagrant_env.cli 'halt', @vm_name
           sleep 20
@@ -96,7 +102,7 @@ module AbfWorker
             execute_command('urpmi genhdlist2', {:sudo => true})
           end
           # VM should be exist before using sandbox
-          logger.info '==> Enable save mode...'
+          logger.info "==> [#{Time.now.utc}] Enable save mode..."
           Sahara::Session.on(@vm_name, @vagrant_env)
         end # first_run
       end
@@ -106,16 +112,21 @@ module AbfWorker
       end
 
       def start_vm
-        logger.info "==> Up VM..."
-        @vagrant_env.cli 'up', @vm_name
+        logger.info "==> [#{Time.now.utc}] Up VM '#{get_vm.id}' ..."
+        run_with_vm_inspector {
+          @vagrant_env.cli 'up', @vm_name
+        }
         rollback_vm
       end
 
       def rollback_and_halt_vm
         rollback_vm
-        logger.info '==> Halt VM...'
-        @vagrant_env.cli 'halt', @vm_name
-        logger.info '==> Done.'
+        logger.info "==> [#{Time.now.utc}] Halt VM..."
+        run_with_vm_inspector {
+          @vagrant_env.cli 'halt', @vm_name
+        }
+        sleep 15
+        logger.info "==> [#{Time.now.utc}] Done."
         yield if block_given?
       end
 
@@ -133,13 +144,13 @@ module AbfWorker
             :cwd => vagrantfiles_folder,
             :ui => false
           )
-          logger.info '==> Halt VM...'
+          logger.info "==> [#{Time.now.utc}] Halt VM..."
           env.cli 'halt', '-f'
 
-          logger.info '==> Disable save mode...'
+          logger.info "==> [#{Time.now.utc}] Disable save mode..."
           Sahara::Session.off(f, env)
 
-          logger.info '==> Destroy VM...'
+          logger.info "==> [#{Time.now.utc}] Destroy VM..."
           env.cli 'destroy', '--force'
 
           File.delete(vagrantfiles_folder + "/#{f}")
@@ -153,7 +164,7 @@ module AbfWorker
           :error_class => AbfWorker::Exceptions::ScriptError
         }.merge(opts || {})
         filtered_command = command.gsub /\:\/\/.*\:\@/, '://[FILTERED]@'
-        logger.info "--> execute command with sudo = #{opts[:sudo]}: #{filtered_command}"
+        logger.info "--> [#{Time.now.utc}] execute command with sudo = #{opts[:sudo]}: #{filtered_command}"
         if communicator.ready?
           communicator.execute command, opts do |channel, data|
             logger.info data.gsub(/\:\/\/.*\:\@/, '://[FILTERED]@')
@@ -192,15 +203,19 @@ module AbfWorker
 
       def rollback_vm
         # machine state should be (Running, Paused or Stuck)
-        logger.info '==> Rollback activity'
-        Sahara::Session.rollback(@vm_name, @vagrant_env)
+        logger.info "==> [#{Time.now.utc}] Rollback activity"
+        sleep 10
+        run_with_vm_inspector {
+          Sahara::Session.rollback(@vm_name, @vagrant_env)
+        }
+        sleep 5
       end
 
       private
 
       def share_folder_config
         if @share_folder
-          logger.info "==> Share folder: #{@share_folder}"
+          logger.info "==> [#{Time.now.utc}] Share folder: #{@share_folder}"
           "vm_config.vm.share_folder('v-root', '/home/vagrant/share_folder', '#{@share_folder}')"
         else
           "vm_config.vm.share_folder('v-root', nil, nil)"
@@ -225,7 +240,7 @@ module AbfWorker
           file_name << '.tar.gz'
         end
 
-        logger.info "==> Uploading file '#{file_name}'...."
+        logger.info "==> [#{Time.now.utc}] Uploading file '#{file_name}'...."
         sha1 = Digest::SHA1.file(path_to_file).hexdigest
 
         # curl --user myuser@gmail.com:mypass -POST -F "file_store[file]=@files/archive.zip" http://file-store.rosalinux.ru/api/v1/file_stores.json
@@ -240,7 +255,7 @@ module AbfWorker
         end
 
         File.delete path_to_file
-        logger.info "Done."
+        logger.info "==> [#{Time.now.utc}] Done."
         {:sha1 => sha1, :file_name => file_name, :size => file_size}
       end
 
@@ -253,6 +268,13 @@ module AbfWorker
 
       def file_store_token
         @file_store_token ||= APP_CONFIG['file_store']['tokens']["server_#{@worker.server_id}"]
+      end
+
+      def run_with_vm_inspector
+        vm_inspector = AbfWorker::Inspectors::VMInspector.new @worker
+        vm_inspector.run
+        yield if block_given?
+        vm_inspector.stop
       end
 
     end
