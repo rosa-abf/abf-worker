@@ -16,7 +16,6 @@ module AbfWorker
           sleep TIME_LIVING
           restart_vm
         end
-        @thread.run
       end
 
       def stop

@@ -23,7 +23,6 @@ module AbfWorker
             end
           end
         end
-        @thread.run
       end
 
       private
