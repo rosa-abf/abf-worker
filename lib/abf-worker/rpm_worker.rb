@@ -1,4 +1,3 @@
-require 'abf-worker/base_worker'
 require 'abf-worker/runners/rpm'
 require 'abf-worker/inspectors/live_inspector'
 

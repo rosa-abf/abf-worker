@@ -1,7 +1,5 @@
-require 'abf-worker/exceptions/script_error'
-require 'abf-worker/models/repository'
-require 'digest/md5'
 require 'forwardable'
+require 'abf-worker/models/repository'
 
 module AbfWorker
   module Runners

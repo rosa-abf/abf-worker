@@ -1,5 +1,3 @@
-require 'abf-worker/exceptions/script_error'
-require 'digest/md5'
 require 'forwardable'
 require 'json'
 

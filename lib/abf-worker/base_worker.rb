@@ -3,6 +3,7 @@ require 'sahara'
 require 'sahara/command/vagrant'
 require 'net/ssh'
 require 'log4r'
+require 'abf-worker/exceptions/script_error'
 require 'abf-worker/runners/vm'
 require 'abf-worker/outputters/redis_outputter'
 

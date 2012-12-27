@@ -1,4 +1,5 @@
 require 'forwardable'
+require 'digest/md5'
 require 'abf-worker/inspectors/vm_inspector'
 
 module AbfWorker
