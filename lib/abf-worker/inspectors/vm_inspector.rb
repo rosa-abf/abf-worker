@@ -8,16 +8,13 @@ module AbfWorker
       def initialize(worker)
         @worker   = worker
         @logger   = @worker.logger
-        @kill_at  = Time.now.utc + TIME_LIVING
         @thread   = nil
       end
 
       def run
         @thread = Thread.new do
-          while true
-            sleep TIME_LIVING
-            restart_vm if @kill_at < Time.now.utc
-          end
+          sleep TIME_LIVING
+          restart_vm
         end
         @thread.run
       end
