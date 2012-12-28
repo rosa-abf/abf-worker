@@ -24,7 +24,7 @@ module AbfWorker
       private
 
       def restart_vm
-        @worker.logger.info "===> [#{Time.now.utc}] Restart VM..."
+        @worker.logger.i 'Restart VM...'
         vm_id = @worker.vm.get_vm.id
         system "VBoxManage controlvm #{vm_id} reset"
       end

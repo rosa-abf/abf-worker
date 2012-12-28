@@ -20,7 +20,7 @@ module AbfWorker
       def instrument_request(method, full_path, options)
         extra_query = options[:extra_query] || {}
         options_str = extra_query.map { |k,v| "#{k}: #{v}" }.join(', ')
-        AbfWorker::BaseWorker.logger.info "==> Rosa-Build API Request: #{method.to_s.upcase} #{full_path} (#{options_str})"
+        AbfWorker::BaseWorker.logger.i "Rosa-Build API Request: #{method.to_s.upcase} #{full_path} (#{options_str})"
         yield if block_given? # this is where the request is sent
       end # instrument_request
 

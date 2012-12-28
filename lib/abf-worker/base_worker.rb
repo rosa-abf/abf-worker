@@ -2,9 +2,9 @@ require 'vagrant'
 require 'sahara'
 require 'sahara/command/vagrant'
 require 'net/ssh'
-require 'log4r'
 require 'abf-worker/exceptions/script_error'
 require 'abf-worker/runners/vm'
+require 'abf-worker/outputters/logger'
 require 'abf-worker/outputters/redis_outputter'
 
 module AbfWorker
@@ -58,7 +58,7 @@ module AbfWorker
 
       def init_logger(logger_name = nil, redis_outputter = true)
         @logger_name = logger_name
-        @logger = Log4r::Logger.new @logger_name, Log4r::ALL
+        @logger = AbfWorker::Outputters::Logger.new @logger_name, Log4r::ALL
         @logger.outputters << Log4r::Outputter.stdout
 
         # see: https://github.com/colbygk/log4r/blob/master/lib/log4r/formatter/patternformatter.rb#L22
