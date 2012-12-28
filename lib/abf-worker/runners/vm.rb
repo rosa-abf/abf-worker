@@ -144,21 +144,25 @@ module AbfWorker
           end
         end
         files.each do |f|
-          env = Vagrant::Environment.new(
-            :vagrantfile_name => f,
-            :cwd => vagrantfiles_folder,
-            :ui => false
-          )
-          logger.info "==> [#{Time.now.utc}] Halt VM..."
-          env.cli 'halt', '-f'
+          begin
+            env = Vagrant::Environment.new(
+              :vagrantfile_name => f,
+              :cwd => vagrantfiles_folder,
+              :ui => false
+            )
+            logger.info "==> [#{Time.now.utc}] Halt VM..."
+            env.cli 'halt', '-f'
 
-          logger.info "==> [#{Time.now.utc}] Disable save mode..."
-          Sahara::Session.off(f, env)
+            logger.info "==> [#{Time.now.utc}] Disable save mode..."
+            Sahara::Session.off(f, env)
 
-          logger.info "==> [#{Time.now.utc}] Destroy VM..."
-          env.cli 'destroy', '--force'
+            logger.info "==> [#{Time.now.utc}] Destroy VM..."
+            env.cli 'destroy', '--force'
 
-          File.delete(vagrantfiles_folder + "/#{f}")
+            File.delete(vagrantfiles_folder + "/#{f}")
+          rescue => e
+            @worker.print_error e
+          end
         end
         yield if block_given?
       end
