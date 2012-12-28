@@ -2,7 +2,7 @@ require 'abf-worker/runners/publish_build_list_container'
 require 'abf-worker/inspectors/live_inspector'
 
 module AbfWorker
-  class PublishBuildListContainerBaseWorker < BaseWorker
+  class PublishBaseWorker < BaseWorker
 
     class << self
       attr_accessor :runner
@@ -10,8 +10,8 @@ module AbfWorker
       protected
 
       def initialize(options)
-        @observer_queue = 'publish_build_list_container_observer'
-        @observer_class = 'AbfWorker::PublishBuildListContainerObserver'
+        @observer_queue = 'publish_observer'
+        @observer_class = 'AbfWorker::PublishObserver'
         super options
         @runner = Runners::PublishBuildListContainer.new(self, options)
         @vm.share_folder = options['platform']['platform_path']
@@ -25,7 +25,7 @@ module AbfWorker
     end
 
     def self.logger
-      @logger || init_logger("abfworker::publish-build-list-container-worker-#{@build_id}", false)
+      @logger || init_logger("abfworker::publish-worker-#{@build_id}", false)
     end
 
     def self.perform(options)

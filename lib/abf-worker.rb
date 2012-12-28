@@ -12,5 +12,5 @@ APP_CONFIG = YAML.load_file("#{root}/config/application.yml")[env]
 require 'abf-worker/base_worker'
 require 'abf-worker/iso_worker'
 require 'abf-worker/rpm_worker'
-require 'abf-worker/publish_build_list_container_mdv_worker'
-require 'abf-worker/publish_build_list_container_rhel_worker'
+require 'abf-worker/publish_mdv_worker'
+require 'abf-worker/publish_rhel_worker'
