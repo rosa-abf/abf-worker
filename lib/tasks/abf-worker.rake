@@ -23,19 +23,18 @@ namespace :abf_worker do
     end
   end
 
-  desc "Destroy ISO worker VM's"
-  task :destroy_iso_worker_vms do
-    AbfWorker::IsoWorker.clean_up
-    AbfWorker::RpmWorker.clean_up
-  end
-
   desc "Destroy ISO worker VM's on production"
   task :destroy_vms do
     ENV['ENV'] = 'production'
+    ps = %x[ ps aux | grep rosa | grep VBox | grep -v grep | awk '{ print $2 }' ]
+    ps.split("\n").each{ |id| system "sudo kill -9 #{id}" }
     AbfWorker::IsoWorker.clean_up
     AbfWorker::RpmWorker.clean_up
+    AbfWorker::RpmWorkerDefault.clean_up
     AbfWorker::PublishBuildListContainerMdvWorker.clean_up
+    AbfWorker::PublishBuildListContainerMdvWorkerDefault.clean_up
     AbfWorker::PublishBuildListContainerRhelWorker.clean_up
+    AbfWorker::PublishBuildListContainerRhelWorkerDefault.clean_up
   end
 
 end

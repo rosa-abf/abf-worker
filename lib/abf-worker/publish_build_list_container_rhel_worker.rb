@@ -4,4 +4,8 @@ module AbfWorker
   class PublishBuildListContainerRhelWorker < PublishBuildListContainerBaseWorker
     @queue = :publish_build_list_container_rhel_worker
   end
+
+  class PublishBuildListContainerRhelWorkerDefault < PublishBuildListContainerRhelWorker
+    @queue = :publish_build_list_container_rhel_worker_default
+  end
 end

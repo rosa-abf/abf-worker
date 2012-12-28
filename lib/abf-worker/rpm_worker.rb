@@ -49,4 +49,8 @@ module AbfWorker
     end
 
   end
+
+  class RpmWorkerDefault < RpmWorker
+    @queue = :rpm_worker_default
+  end
 end
