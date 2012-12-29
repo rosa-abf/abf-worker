@@ -28,7 +28,7 @@ module AbfWorker
         @script_runner = Thread.new do
           if @worker.vm.communicator.ready?
             prepare_script
-            logger.i 'Run script...'
+            logger.log 'Run script...'
 
             command = []
             command << 'cd rpm-build-script;'
@@ -43,10 +43,10 @@ module AbfWorker
             command << '/bin/bash build.sh'
             begin
               @worker.vm.execute_command command.join(' ')
-              logger.i 'Script done with exit_status = 0'
+              logger.log 'Script done with exit_status = 0'
               @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED
             rescue AbfWorker::Exceptions::ScriptError => e
-              logger.i "Script done with exit_status != 0. Error message: #{e.message}"
+              logger.log "Script done with exit_status != 0. Error message: #{e.message}"
               @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
             rescue => e
               @worker.print_error e
@@ -62,7 +62,7 @@ module AbfWorker
 
       def save_results
         # Download ISOs and etc.
-        logger.i 'Saving results....'
+        logger.log 'Saving results....'
         project_name = @git_project_address.
           scan(/\/([^\/]+)\.git/).inject.first
 
@@ -70,7 +70,7 @@ module AbfWorker
           @worker.vm.execute_command command
         end
 
-        logger.i "Downloading results...."
+        logger.log "Downloading results...."
         port = @worker.vm.get_vm.config.ssh.port
         system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@worker.vm.results_folder}"
 
@@ -79,11 +79,11 @@ module AbfWorker
           @packages = JSON.parse(IO.read(container_data)).select{ |p| p['name'] }
           File.delete container_data
         end
-        logger.i "Done."
+        logger.log "Done."
       end
 
       def prepare_script
-        logger.i 'Prepare script...'
+        logger.log 'Prepare script...'
 
         commands = []
         commands << "curl -O -L #{APP_CONFIG['scripts']['rpm_build']}"
@@ -104,7 +104,7 @@ module AbfWorker
         @include_repos.each{ |name, url|
           # Checks that repositoy exist
           if %x[ curl --write-out %{http_code} --silent --output /dev/null #{url} ] == '404'
-            logger.i "Repository does not exist: #{url.gsub(/\:\/\/.*\:\@/, '://[FILTERED]@')}"
+            logger.log "Repository does not exist: #{url.gsub(/\:\/\/.*\:\@/, '://[FILTERED]@')}"
           else
             repos_map["#{name}"] = url
           end

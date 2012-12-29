@@ -108,17 +108,17 @@ module AbfWorker
         if @worker.vm.communicator.ready?
           prepare_script
           init_gpg_keys unless rollback_activity
-          logger.i "Run #{rollback_activity ? 'rollback activity ' : ''}script..."
+          logger.log "Run #{rollback_activity ? 'rollback activity ' : ''}script..."
 
           command = base_command_for_run
           command << (rollback_activity ? 'rollback.sh' : 'build.sh')
           critical_error = false
           begin
             @worker.vm.execute_command command.join(' '), {:sudo => true}
-            logger.i 'Script done with exit_status = 0'
+            logger.log 'Script done with exit_status = 0'
             @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED unless rollback_activity
           rescue AbfWorker::Exceptions::ScriptError => e
-            logger.i "Script done with exit_status != 0. Error message: #{e.message}"
+            logger.log "Script done with exit_status != 0. Error message: #{e.message}"
             @worker.status = AbfWorker::BaseWorker::BUILD_FAILED unless rollback_activity
           rescue => e
             @worker.print_error e
@@ -143,7 +143,7 @@ module AbfWorker
       end
 
       def prepare_script
-        logger.i 'Prepare script...'
+        logger.log 'Prepare script...'
 
         commands = []
         commands << 'mkdir results'

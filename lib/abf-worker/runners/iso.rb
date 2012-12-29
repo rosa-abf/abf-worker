@@ -23,15 +23,15 @@ module AbfWorker
         @script_runner = Thread.new do
           if @worker.vm.communicator.ready?
             prepare_script
-            logger.i 'Run script...'
+            logger.log 'Run script...'
 
             command = "cd iso_builder/; #{@params} /bin/bash #{@main_script}"
             begin
               @worker.vm.execute_command command, {:sudo => true}
-              logger.i 'Script done with exit_status = 0'
+              logger.log 'Script done with exit_status = 0'
               @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED
             rescue AbfWorker::Exceptions::ScriptError => e
-              logger.i "Script done with exit_status != 0. Error message: #{e.message}"
+              logger.log "Script done with exit_status != 0. Error message: #{e.message}"
               @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
             rescue => e
               @worker.print_error e
@@ -47,22 +47,22 @@ module AbfWorker
 
       def save_results
         # Download ISOs and etc.
-        logger.i 'Saving results....'
+        logger.log 'Saving results....'
 
         ['tar -zcvf results/archives.tar.gz archives', 'rm -rf archives'].each do |command|
           @worker.vm.execute_command command
         end
 
-        logger.i 'Downloading results....'
+        logger.log 'Downloading results....'
         port = @worker.vm.get_vm.config.ssh.port
         system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@worker.vm.results_folder}"
         # Umount tmpfs
         @worker.vm.execute_command 'umount /home/vagrant/iso_builder', {:sudo => true}
-        logger.i "Done."
+        logger.log "Done."
       end
 
       def prepare_script
-        logger.i 'Prepare script...'
+        logger.log 'Prepare script...'
         @worker.vm.execute_command 'mkdir /home/vagrant/iso_builder'
         # Create tmpfs
         @worker.vm.execute_command(

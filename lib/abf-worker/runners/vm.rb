@@ -72,7 +72,7 @@ module AbfWorker
             while !system("lockfile -r 0 #{synchro_file}") do
               sleep rand(10)
             end
-            logger.i 'Up VM at first time...'
+            logger.log 'Up VM at first time...'
             @vagrant_env.cli 'up', @vm_name
             sleep 1
           rescue => e
@@ -81,7 +81,7 @@ module AbfWorker
             system "rm -f #{synchro_file}"
           end
           sleep 30
-          logger.i 'Configure VM...'
+          logger.log 'Configure VM...'
           # Halt, because: The machine 'abf-worker_...' is already locked for a session (or being unlocked)
           run_with_vm_inspector {
             @vagrant_env.cli 'halt', @vm_name
@@ -107,7 +107,7 @@ module AbfWorker
             execute_command('urpmi genhdlist2', {:sudo => true})
           end
           # VM should be exist before using sandbox
-          logger.i 'Enable save mode...'
+          logger.log 'Enable save mode...'
           Sahara::Session.on(@vm_name, @vagrant_env)
         end # first_run
       end
@@ -117,7 +117,7 @@ module AbfWorker
       end
 
       def start_vm
-        logger.i 'Up VM "#{get_vm.id}"...'
+        logger.log 'Up VM "#{get_vm.id}"...'
         run_with_vm_inspector {
           @vagrant_env.cli 'up', @vm_name
         }
@@ -126,12 +126,12 @@ module AbfWorker
 
       def rollback_and_halt_vm
         rollback_vm
-        logger.i 'Halt VM...'
+        logger.log 'Halt VM...'
         run_with_vm_inspector {
           @vagrant_env.cli 'halt', @vm_name
         }
         sleep 15
-        logger.i 'Done.'
+        logger.log 'Done.'
         yield if block_given?
       end
 
@@ -150,13 +150,13 @@ module AbfWorker
               :cwd => vagrantfiles_folder,
               :ui => false
             )
-            logger.i 'Halt VM...'
+            logger.log 'Halt VM...'
             env.cli 'halt', '-f'
 
-            logger.i 'Disable save mode...'
+            logger.log 'Disable save mode...'
             Sahara::Session.off(f, env)
 
-            logger.i 'Destroy VM...'
+            logger.log 'Destroy VM...'
             env.cli 'destroy', '--force'
 
             File.delete(vagrantfiles_folder + "/#{f}")
@@ -173,10 +173,10 @@ module AbfWorker
           :error_class => AbfWorker::Exceptions::ScriptError
         }.merge(opts || {})
         filtered_command = command.gsub /\:\/\/.*\:\@/, '://[FILTERED]@'
-        logger.i "Execute command with sudo = #{opts[:sudo]}: #{filtered_command}", '-->', true
+        logger.log "Execute command with sudo = #{opts[:sudo]}: #{filtered_command}", '-->'
         if communicator.ready?
           communicator.execute command, opts do |channel, data|
-            logger.i data.gsub(/\:\/\/.*\:\@/, '://[FILTERED]@'), '', false
+            logger.log data.gsub(/\:\/\/.*\:\@/, '://[FILTERED]@'), '', false
           end
         end
       end
@@ -212,7 +212,7 @@ module AbfWorker
 
       def rollback_vm
         # machine state should be (Running, Paused or Stuck)
-        logger.i 'Rollback activity'
+        logger.log 'Rollback activity'
         sleep 10
         run_with_vm_inspector {
           Sahara::Session.rollback(@vm_name, @vagrant_env)
@@ -224,7 +224,7 @@ module AbfWorker
 
       def share_folder_config
         if @share_folder
-          logger.i "Share folder: #{@share_folder}"
+          logger.log "Share folder: #{@share_folder}"
           "vm_config.vm.share_folder('v-root', '/home/vagrant/share_folder', '#{@share_folder}')"
         else
           "vm_config.vm.share_folder('v-root', nil, nil)"
@@ -249,7 +249,7 @@ module AbfWorker
           file_name << '.tar.gz'
         end
 
-        logger.i "Uploading file '#{file_name}'...."
+        logger.log "Uploading file '#{file_name}'...."
         sha1 = Digest::SHA1.file(path_to_file).hexdigest
 
         # curl --user myuser@gmail.com:mypass -POST -F "file_store[file]=@files/archive.zip" http://file-store.rosalinux.ru/api/v1/file_stores.json
@@ -260,11 +260,11 @@ module AbfWorker
           command << path_to_file
           command << '" '
           command << APP_CONFIG['file_store']['create_url']
-          logger.i %x[ #{command} ]
+          logger.log %x[ #{command} ]
         end
 
         File.delete path_to_file
-        logger.i 'Done.'
+        logger.log 'Done.'
         {:sha1 => sha1, :file_name => file_name, :size => file_size}
       end
 
