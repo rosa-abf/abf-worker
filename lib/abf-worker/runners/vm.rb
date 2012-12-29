@@ -117,7 +117,7 @@ module AbfWorker
       end
 
       def start_vm
-        logger.log 'Up VM "#{get_vm.id}"...'
+        logger.log "Up VM '#{get_vm.id}'..."
         run_with_vm_inspector {
           @vagrant_env.cli 'up', @vm_name
         }
