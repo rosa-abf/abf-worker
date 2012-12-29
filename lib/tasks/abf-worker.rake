@@ -28,7 +28,7 @@ namespace :abf_worker do
     ENV['ENV'] = 'production'
     ps = %x[ ps aux | grep rosa | grep VBox | grep -v grep | awk '{ print $2 }' ].
       split("\n").join(',')
-    system "sudo kill -9 #{ps}"
+    system "sudo kill -9 #{ps}" unless ps.empty?
     AbfWorker::IsoWorker.clean_up
     AbfWorker::RpmWorker.clean_up
     AbfWorker::RpmWorkerDefault.clean_up
