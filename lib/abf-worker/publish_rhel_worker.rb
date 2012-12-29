@@ -5,7 +5,7 @@ module AbfWorker
     @queue = :publish_rhel_worker
   end
 
-  class PublishBuildListContainerRhelWorkerDefault < PublishRhelWorker
+  class PublishRhelWorkerDefault < PublishRhelWorker
     @queue = :publish_rhel_worker_default
   end
 end
