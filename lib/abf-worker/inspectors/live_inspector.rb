@@ -26,11 +26,11 @@ module AbfWorker
 
       def kill_now?
         if @kill_at < Time.now
-          @worker.logger.info "===> [#{Time.now.utc}] Time expired, VM will be stopped..."
+          @worker.logger.log 'Time expired, VM will be stopped...'
           return true
         end
         if status == 'USR1'
-          @worker.logger.info "===> [#{Time.now.utc}] Received signal to stop VM..."
+          @worker.logger.log 'Received signal to stop VM...'
           true
         else
           false
@@ -46,7 +46,7 @@ module AbfWorker
       end
 
       def status
-        return nil if @worker.is_a?(AbfWorker::PublishBuildListContainerBaseWorker)
+        return nil if @worker.is_a?(AbfWorker::PublishBaseWorker)
         q = 'abfworker::'
         q << (@worker.is_a?(AbfWorker::IsoWorker) ? 'iso' : 'rpm')
         q << '-worker-'
