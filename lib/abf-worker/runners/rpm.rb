@@ -66,10 +66,6 @@ module AbfWorker
         project_name = @git_project_address.
           scan(/\/([^\/]+)\.git/).inject.first
 
-        ["tar -zcvf results/#{project_name}-#{@worker.build_id}.tar.gz archives", 'rm -rf archives'].each do |command|
-          @worker.vm.execute_command command
-        end
-
         logger.log "Downloading results...."
         port = @worker.vm.get_vm.config.ssh.port
         system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@worker.vm.results_folder}"
