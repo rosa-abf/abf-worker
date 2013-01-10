@@ -13,10 +13,10 @@ module AbfWorker
 
       def initialize(worker, options)
         @worker         = worker
-        @container_sha1 = options['container_sha1']
         @platform       = options['platform']
         @repository     = options['repository']
         @packages       = options['packages']
+        @old_packages   = options['old_packages']
         @type           = options['type']
         @can_run        = true
       end
@@ -60,7 +60,7 @@ module AbfWorker
 
         to = "#{share_folder}/SRPMS/#{@repository['name']}/#{rep}-backup/"
         system "mkdir -p #{to}" if publish?
-        @packages['sources'].each{ |s|
+        @old_packages['sources'].each{ |s|
           from = "#{share_folder}/SRPMS/#{@repository['name']}/#{rep}/#{s}"
           system "cp -f #{from} #{to}" if publish?
           system "rm -f #{from}"
@@ -68,7 +68,7 @@ module AbfWorker
 
         to = "#{share_folder}/#{@worker.vm.arch}/#{@repository['name']}/#{rep}-backup/"
         system "mkdir -p #{to}" if publish?
-        @packages['binaries'].each{ |s|
+        @old_packages['binaries'].each{ |s|
           from = "#{share_folder}/#{@worker.vm.arch}/#{@repository['name']}/#{rep}/#{s}"
           system "cp -f #{from} #{to}" if publish?
           system "rm -f #{from}"
@@ -106,7 +106,8 @@ module AbfWorker
       def run_build_script(rollback_activity = false)
         remove_old_packages unless rollback_activity
         if @worker.vm.communicator.ready?
-          prepare_script
+          download_packages
+          download_main_script
           init_gpg_keys unless rollback_activity
           logger.log "Run #{rollback_activity ? 'rollback activity ' : ''}script..."
 
@@ -142,18 +143,20 @@ module AbfWorker
         command
       end
 
-      def prepare_script
-        logger.log 'Prepare script...'
+      def download_packages
+        logger.log 'Download packages...'
 
         commands = []
         commands << 'mkdir results'
-        commands << "curl -O -L #{APP_CONFIG['file_store']['url']}/#{@container_sha1}"
-        commands << "tar -xzf #{@container_sha1}"
-        commands << 'mv archives container'
-        commands << "rm #{@container_sha1}"
-
+        commands << 'mkdir -p container/SRC_RPM'
+        commands << 'mkdir -p container/RPM'
+        @packages['sources'].each{ |p|
+          commands << "cd container/SRC_RPM && curl -O -L #{APP_CONFIG['file_store']['url']}/#{p['sha1']}"
+        }
+        @packages['binaries'].each{ |p|
+          commands << "cd container/RPM && curl -O -L #{APP_CONFIG['file_store']['url']}/#{p['sha1']}"
+        }
         commands.each{ |c| @worker.vm.execute_command(c) }
-        download_main_script
       end
 
       def download_main_script
