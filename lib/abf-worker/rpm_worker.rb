@@ -23,7 +23,7 @@ module AbfWorker
       def send_results
         sha1_s  = @runner.packages.map{ |p| p['sha1'] }
         results = @vm.upload_results_to_file_store
-        results = results.select{ |r| !sha1_s.include?(r[:sha1]) } unless sha1_s.empty?
+        results.select!{ |r| !sha1_s.include?(r[:sha1]) } unless sha1_s.empty?
         update_build_status_on_abf({
           :results => results,
           :packages => @runner.packages

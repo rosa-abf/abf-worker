@@ -148,14 +148,14 @@ module AbfWorker
 
         commands = []
         commands << 'mkdir results'
-        commands << 'mkdir -p container/SRC_RPM'
-        commands << 'mkdir -p container/RPM'
-        @packages['sources'].each{ |p|
-          commands << "cd container/SRC_RPM && curl -O -L #{APP_CONFIG['file_store']['url']}/#{p['sha1']}"
-        }
-        @packages['binaries'].each{ |p|
-          commands << "cd container/RPM && curl -O -L #{APP_CONFIG['file_store']['url']}/#{p['sha1']}"
-        }
+        commands << 'mkdir -p container/{SRC_RPM,RPM}'
+        %w(sources binaries).each |kind| do
+          Dir.chdir("container/#{kind == 'sources' ? 'SRC_RPM' : 'PRM'}") do
+            @packages["#{kind}"].each{ |p|
+              commands << "curl -O -L #{APP_CONFIG['file_store']['url']}/#{p['sha1']}"
+            }
+          end
+        end
         commands.each{ |c| @worker.vm.execute_command(c) }
       end
 
