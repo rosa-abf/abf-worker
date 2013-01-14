@@ -2,7 +2,8 @@ require 'abf-worker/runners/publish_build_list_container'
 require 'abf-worker/inspectors/live_inspector'
 
 module AbfWorker
-  class PublishBaseWorker < BaseWorker
+  class PublishWorker < BaseWorker
+    @queue = :publish_worker
 
     class << self
       attr_accessor :runner
@@ -44,4 +45,9 @@ module AbfWorker
     end
 
   end
+
+  class PublishWorkerDefault < PublishWorker
+    @queue = :publish_worker_default
+  end
+
 end
