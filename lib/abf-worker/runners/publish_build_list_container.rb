@@ -129,9 +129,9 @@ module AbfWorker
 
       def add_packages_to_list(packages, list_prefix)
         commands = []
-        (packages['sources'] || []).each{ |el| commands  << "echo #{el} >> container/#{list_prefix}.sources.list" }
+        (packages['sources'] || []).each{ |el| commands  << "echo #{el} >> container/#{list_prefix}.SRPMS.list" }
         (packages['binaries'] || {}).each{ |arch, list|
-          list.each{ |el| commands  << "echo #{el} >> container/#{list_prefix}.binaries.#{arch}.list" }
+          list.each{ |el| commands  << "echo #{el} >> container/#{list_prefix}.#{arch}.list" }
         }
         commands.each{ |c| @worker.vm.execute_command(c) }
       end
