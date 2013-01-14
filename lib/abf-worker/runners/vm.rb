@@ -53,9 +53,12 @@ module AbfWorker
             file.close unless file.nil?
           end
         end
+        system "sudo chown -R rosa:rosa #{@share_folder}" if @share_folder
         if !first_run && update_share_folder
           system "sed \"4s|.*|#{share_folder_config}|\" #{vagrantfile} > #{vagrantfile}_tmp"
           system "mv #{vagrantfile}_tmp #{vagrantfile}"
+          system "VBoxManage sharedfolder remove #{get_vm.id}  --name v-root"
+          system "VBoxManage sharedfolder add #{get_vm.id} --name v-root --hostpath #{@share_folder}"
         end
 
         @vagrant_env = Vagrant::Environment.new(
