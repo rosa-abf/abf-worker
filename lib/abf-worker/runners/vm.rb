@@ -62,7 +62,7 @@ module AbfWorker
           :cwd => vagrantfiles_folder,
           :vagrantfile_name => @vm_name
         )
-        system "sudo chown -R rosa:rosa #{@share_folder}" if update_share_folder
+        system "sudo chown -R rosa:rosa #{@share_folder}/../" if update_share_folder
         # Hook for fix:
         # ERROR warden: Error occurred: uninitialized constant VagrantPlugins::ProviderVirtualBox::Action::Customize::Errors
         # on vm_config.vm.customizations << ['modifyvm', :id, '--memory',  '#{memory}']
