@@ -56,15 +56,19 @@ module AbfWorker
         if !first_run && update_share_folder
           system "sed \"4s|.*|#{share_folder_config}|\" #{vagrantfile} > #{vagrantfile}_tmp"
           system "mv #{vagrantfile}_tmp #{vagrantfile}"
-          system "VBoxManage sharedfolder remove #{get_vm.id}  --name v-root"
-          system "VBoxManage sharedfolder add #{get_vm.id} --name v-root --hostpath #{@share_folder}"
         end
 
         @vagrant_env = Vagrant::Environment.new(
           :cwd => vagrantfiles_folder,
           :vagrantfile_name => @vm_name
         )
-        system "sudo chown -R rosa:rosa #{@share_folder}" if @share_folder
+        if update_share_folder
+          system "sudo chown -R rosa:rosa #{@share_folder}"
+          unless first_run 
+            system "VBoxManage sharedfolder remove #{get_vm.id} --name v-root"
+            system "VBoxManage sharedfolder add #{get_vm.id} --name v-root --hostpath #{@share_folder}"
+          end
+        end
         # Hook for fix:
         # ERROR warden: Error occurred: uninitialized constant VagrantPlugins::ProviderVirtualBox::Action::Customize::Errors
         # on vm_config.vm.customizations << ['modifyvm', :id, '--memory',  '#{memory}']
