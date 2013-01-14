@@ -118,6 +118,7 @@ module AbfWorker
             run_with_vm_inspector {
               @vagrant_env.cli 'up', @vm_name
             }
+            sleep 30
             Sahara::Session.on @vm_name, @vagrant_env
           end
         end # first_run
