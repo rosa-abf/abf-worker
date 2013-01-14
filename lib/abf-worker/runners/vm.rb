@@ -62,13 +62,7 @@ module AbfWorker
           :cwd => vagrantfiles_folder,
           :vagrantfile_name => @vm_name
         )
-        if update_share_folder
-          system "sudo chown -R rosa:rosa #{@share_folder}"
-          unless first_run 
-            system "VBoxManage sharedfolder remove #{get_vm.id} --name v-root"
-            system "VBoxManage sharedfolder add #{get_vm.id} --name v-root --hostpath #{@share_folder}"
-          end
-        end
+        system "sudo chown -R rosa:rosa #{@share_folder}" if update_share_folder
         # Hook for fix:
         # ERROR warden: Error occurred: uninitialized constant VagrantPlugins::ProviderVirtualBox::Action::Customize::Errors
         # on vm_config.vm.customizations << ['modifyvm', :id, '--memory',  '#{memory}']
@@ -225,6 +219,10 @@ module AbfWorker
           Sahara::Session.rollback(@vm_name, @vagrant_env)
         }
         sleep 5
+        if @share_folder 
+          system "VBoxManage sharedfolder remove #{get_vm.id} --name v-root"
+          system "VBoxManage sharedfolder add #{get_vm.id} --name v-root --hostpath #{@share_folder}"
+        end
       end
 
       private
