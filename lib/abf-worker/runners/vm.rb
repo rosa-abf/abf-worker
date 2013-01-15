@@ -62,6 +62,7 @@ module AbfWorker
           :cwd => vagrantfiles_folder,
           :vagrantfile_name => @vm_name
         )
+        `sudo chown -R rosa:rosa #{@share_folder}/../` if update_share_folder
         # Hook for fix:
         # ERROR warden: Error occurred: uninitialized constant VagrantPlugins::ProviderVirtualBox::Action::Customize::Errors
         # on vm_config.vm.customizations << ['modifyvm', :id, '--memory',  '#{memory}']
@@ -108,7 +109,18 @@ module AbfWorker
           end
           # VM should be exist before using sandbox
           logger.log 'Enable save mode...'
-          Sahara::Session.on(@vm_name, @vagrant_env)
+          Sahara::Session.on @vm_name, @vagrant_env
+        else
+          if update_share_folder
+            Sahara::Session.off @vm_name, @vagrant_env
+            system "VBoxManage sharedfolder remove #{get_vm.id} --name v-root"
+            system "VBoxManage sharedfolder add #{get_vm.id} --name v-root --hostpath #{@share_folder}"
+            run_with_vm_inspector {
+              @vagrant_env.cli 'up', @vm_name
+            }
+            sleep 30
+            Sahara::Session.on @vm_name, @vagrant_env
+          end
         end # first_run
       end
 
