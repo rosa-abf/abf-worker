@@ -46,7 +46,7 @@ module AbfWorker
       end
 
       def status
-        return nil if @worker.is_a?(AbfWorker::PublishBaseWorker)
+        return nil if @worker.is_a?(AbfWorker::PublishWorker)
         q = 'abfworker::'
         q << (@worker.is_a?(AbfWorker::IsoWorker) ? 'iso' : 'rpm')
         q << '-worker-'

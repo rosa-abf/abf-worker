@@ -13,10 +13,10 @@ module AbfWorker
 
       def initialize(worker, options)
         @worker         = worker
-        @container_sha1 = options['container_sha1']
         @platform       = options['platform']
         @repository     = options['repository']
         @packages       = options['packages']
+        @old_packages   = options['old_packages']
         @type           = options['type']
         @can_run        = true
       end
@@ -53,31 +53,9 @@ module AbfWorker
         @type == 'publish'
       end
 
-      # TODO: move to VM script
-      def remove_old_packages
-        share_folder = @worker.vm.share_folder
-        rep = @platform['released'] ? 'updates' : 'release'
-
-        to = "#{share_folder}/SRPMS/#{@repository['name']}/#{rep}-backup/"
-        system "mkdir -p #{to}" if publish?
-        @packages['sources'].each{ |s|
-          from = "#{share_folder}/SRPMS/#{@repository['name']}/#{rep}/#{s}"
-          system "cp -f #{from} #{to}" if publish?
-          system "rm -f #{from}"
-        }
-
-        to = "#{share_folder}/#{@worker.vm.arch}/#{@repository['name']}/#{rep}-backup/"
-        system "mkdir -p #{to}" if publish?
-        @packages['binaries'].each{ |s|
-          from = "#{share_folder}/#{@worker.vm.arch}/#{@repository['name']}/#{rep}/#{s}"
-          system "cp -f #{from} #{to}" if publish?
-          system "rm -f #{from}"
-        }
-      end
-
       def run_cleanup_script
-        remove_old_packages
         if @worker.vm.communicator.ready?
+          init_packages_lists
           download_main_script
 
           command = base_command_for_run
@@ -104,9 +82,9 @@ module AbfWorker
       end
 
       def run_build_script(rollback_activity = false)
-        remove_old_packages unless rollback_activity
         if @worker.vm.communicator.ready?
-          prepare_script
+          init_packages_lists
+          download_main_script
           init_gpg_keys unless rollback_activity
           logger.log "Run #{rollback_activity ? 'rollback activity ' : ''}script..."
 
@@ -142,18 +120,20 @@ module AbfWorker
         command
       end
 
-      def prepare_script
-        logger.log 'Prepare script...'
+      def init_packages_lists
+        logger.log 'Initialize lists of new and old packages...'
+        @worker.vm.execute_command 'mkdir container'
+        add_packages_to_list @packages,     'new'
+        add_packages_to_list @old_packages, 'old'
+      end
 
+      def add_packages_to_list(packages, list_prefix)
         commands = []
-        commands << 'mkdir results'
-        commands << "curl -O -L #{APP_CONFIG['file_store']['url']}/#{@container_sha1}"
-        commands << "tar -xzf #{@container_sha1}"
-        commands << 'mv archives container'
-        commands << "rm #{@container_sha1}"
-
+        (packages['sources'] || []).each{ |el| commands  << "echo #{el} >> container/#{list_prefix}.SRPMS.list" }
+        (packages['binaries'] || {}).each{ |arch, list|
+          list.each{ |el| commands  << "echo #{el} >> container/#{list_prefix}.#{arch}.list" }
+        }
         commands.each{ |c| @worker.vm.execute_command(c) }
-        download_main_script
       end
 
       def download_main_script

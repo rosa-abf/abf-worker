@@ -32,10 +32,7 @@ namespace :abf_worker do
     AbfWorker::IsoWorker.clean_up
     AbfWorker::RpmWorker.clean_up
     AbfWorker::RpmWorkerDefault.clean_up
-    AbfWorker::PublishMdvWorker.clean_up
-    AbfWorker::PublishMdvWorkerDefault.clean_up
-    AbfWorker::PublishRhelWorker.clean_up
-    AbfWorker::PublishRhelWorkerDefault.clean_up
+    AbfWorker::PublishWorker.clean_up
   end
 
 end
