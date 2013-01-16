@@ -115,6 +115,7 @@ module AbfWorker
             Sahara::Session.off @vm_name, @vagrant_env
             system "VBoxManage sharedfolder remove #{get_vm.id} --name v-root"
             system "VBoxManage sharedfolder add #{get_vm.id} --name v-root --hostpath #{@share_folder}"
+            sleep 10
             run_with_vm_inspector {
               @vagrant_env.cli 'up', @vm_name
             }
