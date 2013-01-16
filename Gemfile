@@ -11,6 +11,9 @@ gem 'sahara', :git => 'git://github.com/avokhmin/sahara.git',
 gem 'log4r', '1.1.10'
 gem 'api_smith', '1.2.0'
 
+group :production do
+  gem 'airbrake', '~> 3.1.6'
+end
 
 group :development do
   gem 'veewee', '0.3.1', :git => 'git://github.com/avokhmin/veewee.git',

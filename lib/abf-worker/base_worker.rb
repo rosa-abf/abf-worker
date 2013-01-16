@@ -29,9 +29,25 @@ module AbfWorker
                     :logger_name
 
       def print_error(e)
+        begin
+          vm_id = @vm.get_vm.id
+        rescue => e
+          vm_id = nil
+        end
+        Airbrake.notify(
+          e,
+          :parameters => {
+            :hostname   => `hostname`.strip,
+            :worker_id  => @worker_id,
+            :build_id   => @build_id,
+            :vm_id      => vm_id
+          }
+        )
+        
         a = []
         a << '==> ABF-WORKER-ERROR-START'
-        a << 'Please inform us using https://abf.rosalinux.ru/contact'
+        a << 'Something went wrong, report has been sent to ABF team, please try again.'
+        a << 'If this error will be happen again, please inform us using https://abf.rosalinux.ru/contact'
         a << '----------'
         a << e.message
         a << e.backtrace.join("\n")
