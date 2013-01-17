@@ -25,9 +25,7 @@ module AbfWorker
       def run_script
         if publish?
           @script_runner = Thread.new{ run_build_script }
-        elsif cleanup?
-          @script_runner = Thread.new{ run_cleanup_script }
-        elsif resign?
+        else
           @script_runner = Thread.new{ run_resign_script }
         end
         @script_runner.join if @can_run
@@ -42,31 +40,8 @@ module AbfWorker
 
       private
 
-      def cleanup?
-        @type == 'cleanup'
-      end
-
-      def resign?
-        @type == 'resign'
-      end
-
       def publish?
         @type == 'publish'
-      end
-
-      def run_cleanup_script
-        if @worker.vm.communicator.ready?
-          init_packages_lists
-          download_main_script
-
-          command = base_command_for_run
-          command << 'rebuild.sh'
-          begin
-            @worker.vm.execute_command command.join(' '), {:sudo => true}
-          rescue => e
-            @worker.print_error e
-          end
-        end
       end
 
       def run_resign_script
@@ -152,7 +127,6 @@ module AbfWorker
       end
 
       def init_gpg_keys
-        return true # TODO: Remove this line when API will be done.
         repository = AbfWorker::Models::Repository.find_by_id(options['repository']['id'])
         return if repository.nil? || repository.key_pair.secret.empty?
 
