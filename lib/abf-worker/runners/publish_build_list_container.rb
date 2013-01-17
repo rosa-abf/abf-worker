@@ -7,6 +7,7 @@ module AbfWorker
       extend Forwardable
 
       attr_accessor :script_runner,
+                    :type,
                     :can_run
 
       def_delegators :@worker, :logger

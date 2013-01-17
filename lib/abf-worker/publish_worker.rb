@@ -21,16 +21,18 @@ module AbfWorker
       end
 
       def send_results
-        update_build_status_on_abf({
+        options = {:type => @runner.type}
+        options.merge!({
           :results => @vm.upload_results_to_file_store,
           :build_list_ids => @build_list_ids
-        })
+        }) unless @skip_feedback
+        update_build_status_on_abf(options, true)
       end
 
     end
 
     def self.logger
-      @logger || init_logger("abfworker::publish-worker-#{@build_id}", false)
+      @logger || init_logger("abfworker::publish-worker-#{@build_id}")
     end
 
     def self.perform(options)

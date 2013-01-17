@@ -63,7 +63,7 @@ module AbfWorker
       end
 
       def initialize(options)
-        @save_results = options['save_results'].nil? ? true : options['save_results']
+        @skip_feedback = options['skip_feedback'] || false
         @status = BUILD_STARTED
         @build_id = options['id']
         @worker_id = Process.ppid
@@ -72,23 +72,25 @@ module AbfWorker
         @vm = Runners::Vm.new(self, options['distrib_type'], options['arch'])
       end
 
-      def init_logger(logger_name = nil, redis_outputter = true)
+      def init_logger(logger_name = nil)
         @logger_name = logger_name
         @logger = AbfWorker::Outputters::Logger.new @logger_name, Log4r::ALL
         @logger.outputters << Log4r::Outputter.stdout
 
         # see: https://github.com/colbygk/log4r/blob/master/lib/log4r/formatter/patternformatter.rb#L22
         formatter = Log4r::PatternFormatter.new(:pattern => "%m")
-        @logger.outputters << Log4r::FileOutputter.new(
-          @logger_name,
-          {
-            :filename =>  "log/#{@logger_name}.log",
-            :formatter => formatter
-          }
-        ) if @save_results
-        @logger.outputters << AbfWorker::Outputters::RedisOutputter.new(
-          @logger_name, {:formatter => formatter, :worker => self}
-        ) if redis_outputter
+        unless @skip_feedback
+          @logger.outputters << Log4r::FileOutputter.new(
+            @logger_name,
+            {
+              :filename =>  "log/#{@logger_name}.log",
+              :formatter => formatter
+            }
+          )
+          @logger.outputters << AbfWorker::Outputters::RedisOutputter.new(
+            @logger_name, {:formatter => formatter, :worker => self}
+          )
+        end
         @logger
       end
 
@@ -98,7 +100,7 @@ module AbfWorker
         system "mkdir -p -m 0700 #{@tmp_dir}"
       end
 
-      def update_build_status_on_abf(args = {})
+      def update_build_status_on_abf(args = {}, force = false)
         Resque.push(
           @observer_queue,
           'class' => @observer_class,
@@ -106,7 +108,7 @@ module AbfWorker
             :id => @build_id,
             :status => @status
           }.merge(args)]
-        ) if @save_results
+        ) if !@skip_feedback || force
       end
       
     end
