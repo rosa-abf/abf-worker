@@ -63,6 +63,7 @@ module AbfWorker
           begin
             @worker.vm.execute_command command.join(' '), {:sudo => true}
           rescue => e
+            @worker.print_error e
           end
         end
       end
@@ -77,6 +78,7 @@ module AbfWorker
           begin
             @worker.vm.execute_command command.join(' '), {:sudo => true}
           rescue => e
+            @worker.print_error e
           end
         end
       end
