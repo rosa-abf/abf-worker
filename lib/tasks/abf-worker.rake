@@ -33,6 +33,7 @@ namespace :abf_worker do
     AbfWorker::RpmWorker.clean_up
     AbfWorker::RpmWorkerDefault.clean_up
     AbfWorker::PublishWorker.clean_up
+    AbfWorker::PublishWorkerDefault.clean_up
   end
 
 end
