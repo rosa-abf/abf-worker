@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 
 gem 'rake'
-gem 'resque', '1.23.0'
+gem 'resque', :git => 'git://github.com/avokhmin/resque.git', :branch => 'master'
 gem 'redis', :git => 'git://github.com/avokhmin/redis-rb.git',
   :branch => '735-reconnect-on-timeout-error'
 gem 'vagrant', :git => 'git://github.com/avokhmin/vagrant.git',
