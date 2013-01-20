@@ -92,7 +92,14 @@ module AbfWorker
           # see: #initialize_vagrant_env: 37
           memory = APP_CONFIG['vm']["#{arch}"]
           # see: http://code.google.com/p/phpvirtualbox/wiki/AdvancedSettings
-          ["--memory #{memory}", '--cpus 2', '--hwvirtex on', '--nestedpaging on', '--largepages on'].each do |c|
+          [
+            "--memory #{memory}",
+            '--cpus 2',
+            '--hwvirtex on',
+            '--nestedpaging on',
+            '--largepages on',
+            '--nictype1 Am79C973'
+          ].each do |c|
             system "VBoxManage modifyvm #{vm_id} #{c}"
           end
 
