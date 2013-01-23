@@ -165,19 +165,19 @@ module AbfWorker
         end
         files.each do |f|
           begin
-            env = Vagrant::Environment.new(
+            @vagrant_env = Vagrant::Environment.new(
               :vagrantfile_name => f,
               :cwd => vagrantfiles_folder,
               :ui => false
             )
             logger.log 'Halt VM...'
-            env.cli 'halt', '-f'
+            @vagrant_env.cli 'halt', '-f'
 
             logger.log 'Disable save mode...'
-            Sahara::Session.off(f, env)
+            Sahara::Session.off(f, @vagrant_env)
 
             logger.log 'Destroy VM...'
-            env.cli 'destroy', '--force'
+            @vagrant_env.cli 'destroy', '--force'
 
             File.delete(vagrantfiles_folder + "/#{f}")
           rescue => e
