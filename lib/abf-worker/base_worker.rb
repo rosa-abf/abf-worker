@@ -28,7 +28,7 @@ module AbfWorker
                     :live_inspector,
                     :logger_name
 
-      def print_error(e)
+      def print_error(e, notify = true)
         begin
           vm_id = @vm.get_vm.id
         rescue => e
@@ -42,7 +42,7 @@ module AbfWorker
             :build_id   => @build_id,
             :vm_id      => vm_id
           }
-        )
+        ) if notify
         
         a = []
         a << '==> ABF-WORKER-ERROR-START'

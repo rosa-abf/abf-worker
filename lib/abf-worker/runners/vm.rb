@@ -165,23 +165,23 @@ module AbfWorker
         end
         files.each do |f|
           begin
-            @vagrant_env = Vagrant::Environment.new(
+            env = Vagrant::Environment.new(
               :vagrantfile_name => f,
               :cwd => vagrantfiles_folder,
               :ui => false
             )
             logger.log 'Halt VM...'
-            @vagrant_env.cli 'halt', '-f'
+            env.cli 'halt', '-f'
 
             logger.log 'Disable save mode...'
-            Sahara::Session.off(f, @vagrant_env)
+            Sahara::Session.off(f, env)
 
             logger.log 'Destroy VM...'
-            @vagrant_env.cli 'destroy', '--force'
+            env.cli 'destroy', '--force'
 
             File.delete(vagrantfiles_folder + "/#{f}")
           rescue => e
-            @worker.print_error e
+            @worker.print_error e, !destroy_all
           end
         end
         yield if block_given?
