@@ -127,7 +127,7 @@ module AbfWorker
       end
 
       def init_gpg_keys
-        repository = AbfWorker::Models::Repository.find_by_id(options['repository']['id'])
+        repository = AbfWorker::Models::Repository.find_by_id(@repository['id'])
         return if repository.nil? || repository.key_pair.secret.empty?
 
         @worker.vm.execute_command 'mkdir -m 700 /home/vagrant/.gnupg'
