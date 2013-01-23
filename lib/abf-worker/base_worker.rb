@@ -31,7 +31,7 @@ module AbfWorker
       def print_error(e, notify = true)
         begin
           vm_id = @vm.get_vm.id
-        rescue => e
+        rescue => ex
           vm_id = nil
         end
         Airbrake.notify(
