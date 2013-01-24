@@ -113,6 +113,9 @@ module AbfWorker
             execute_command('urpmi  --auto  mock-urpm', {:sudo => true})
             # execute_command('urpmi --update genhdlist2', {:sudo => true})
             execute_command('urpmi genhdlist2', {:sudo => true})
+            execute_command('urpmi expect', {:sudo => true})
+          else
+            execute_command('yum install expect', {:sudo => true})
           end
           # VM should be exist before using sandbox
           logger.log 'Enable save mode...'
