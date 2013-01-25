@@ -63,6 +63,7 @@ module AbfWorker
       end
 
       def initialize(options)
+        @extra = options['extra'] || {}
         @skip_feedback = options['skip_feedback'] || false
         @status = BUILD_STARTED
         @build_id = options['id']
@@ -105,8 +106,9 @@ module AbfWorker
           @observer_queue,
           'class' => @observer_class,
           'args' => [{
-            :id => @build_id,
-            :status => @status
+            :id     => @build_id,
+            :status => @status,
+            :extra  => @extra
           }.merge(args)]
         ) if !@skip_feedback || force
       end
