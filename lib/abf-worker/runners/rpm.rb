@@ -82,12 +82,12 @@ module AbfWorker
         logger.log 'Prepare script...'
 
         commands = []
+        commands << 'rm -rf avokhmin-rpm-build-script-master.tar.gz avokhmin-rpm-build-script-master rpm-build-script'
         commands << "curl -O -L #{APP_CONFIG['scripts']['rpm_build']}"
+        
         file_name = 'avokhmin-rpm-build-script-master.tar.gz'
         commands << "tar -xzf #{file_name}"
-        folder_name = file_name.gsub /\.tar\.gz$/, ''
-
-        commands << "mv #{folder_name} rpm-build-script"
+        commands << "mv avokhmin-rpm-build-script-master rpm-build-script"
         commands << "rm -rf #{file_name}"
 
         commands.each{ |c| @worker.vm.execute_command(c) }
