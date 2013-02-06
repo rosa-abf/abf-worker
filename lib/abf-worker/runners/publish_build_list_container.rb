@@ -118,7 +118,7 @@ module AbfWorker
         commands = []
         treeish = APP_CONFIG['scripts']['publish_build_list']['treeish']
         commands << "rm -rf #{treeish}.tar.gz #{treeish} publish-build-list-script"
-        commands << "curl -O -L #{APP_CONFIG['scripts']['publish_build_list']['path']}#{treeish}"
+        commands << "curl -O -L #{APP_CONFIG['scripts']['publish_build_list']['path']}#{treeish}.tar.gz"
 
         file_name = "#{treeish}.tar.gz"
         commands << "tar -xzf #{file_name}"

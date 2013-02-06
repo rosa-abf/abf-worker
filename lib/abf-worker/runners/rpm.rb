@@ -88,7 +88,7 @@ module AbfWorker
         commands = []
         treeish = APP_CONFIG['scripts']['rpm_build']['treeish']
         commands << "rm -rf #{treeish}.tar.gz #{treeish} rpm-build-script"
-        commands << "curl -O -L #{APP_CONFIG['scripts']['rpm_build']['path']}#{treeish}"
+        commands << "curl -O -L #{APP_CONFIG['scripts']['rpm_build']['path']}#{treeish}.tar.gz"
         
         file_name = "#{treeish}.tar.gz"
         commands << "tar -xzf #{file_name}"
