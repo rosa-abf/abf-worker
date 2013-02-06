@@ -16,7 +16,7 @@ module AbfWorker
     BUILD_PENDING   = 2
     BUILD_STARTED   = 3
     BUILD_CANCELED  = 4
-    BUILD_CANCELING = 5
+    TESTS_FAILED    = 5
 
     class << self
       attr_accessor :status,
