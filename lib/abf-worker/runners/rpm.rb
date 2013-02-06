@@ -47,7 +47,7 @@ module AbfWorker
               @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED
             rescue AbfWorker::Exceptions::ScriptError => e
               logger.log "Script done with exit_status != 0. Error message: #{e.message}"
-              if e.messages[:exit_status] == AbfWorker::BaseWorker::TESTS_FAILED # 5
+              if e.message =~ /exit_status=>#{AbfWorker::BaseWorker::TESTS_FAILED}/ # 5
                 @worker.status = AbfWorker::BaseWorker::TESTS_FAILED
               else
                 @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
