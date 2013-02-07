@@ -116,11 +116,13 @@ module AbfWorker
 
       def download_main_script
         commands = []
-        commands << "curl -O -L #{APP_CONFIG['scripts']['publish_build_list']}"
-        file_name = 'avokhmin-publish-build-list-script-master.tar.gz'
+        treeish = APP_CONFIG['scripts']['publish_build_list']['treeish']
+        commands << "rm -rf #{treeish}.tar.gz #{treeish} publish-build-list-script"
+        commands << "curl -O -L #{APP_CONFIG['scripts']['publish_build_list']['path']}#{treeish}.tar.gz"
+
+        file_name = "#{treeish}.tar.gz"
         commands << "tar -xzf #{file_name}"
-        folder_name = file_name.gsub /\.tar\.gz$/, ''
-        commands << "mv #{folder_name} publish-build-list-script"
+        commands << "mv #{treeish} publish-build-list-script"
         commands << "rm -rf #{file_name}"
 
         commands.each{ |c| @worker.vm.execute_command(c) }

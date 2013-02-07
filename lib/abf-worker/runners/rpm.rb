@@ -47,7 +47,11 @@ module AbfWorker
               @worker.status = AbfWorker::BaseWorker::BUILD_COMPLETED
             rescue AbfWorker::Exceptions::ScriptError => e
               logger.log "Script done with exit_status != 0. Error message: #{e.message}"
-              @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
+              if e.message =~ /exit_status=>#{AbfWorker::BaseWorker::TESTS_FAILED}/ # 5
+                @worker.status = AbfWorker::BaseWorker::TESTS_FAILED
+              else
+                @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
+              end
             rescue => e
               @worker.print_error e
               @worker.status = AbfWorker::BaseWorker::BUILD_FAILED
@@ -82,12 +86,13 @@ module AbfWorker
         logger.log 'Prepare script...'
 
         commands = []
-        commands << 'rm -rf avokhmin-rpm-build-script-master.tar.gz avokhmin-rpm-build-script-master rpm-build-script'
-        commands << "curl -O -L #{APP_CONFIG['scripts']['rpm_build']}"
+        treeish = APP_CONFIG['scripts']['rpm_build']['treeish']
+        commands << "rm -rf #{treeish}.tar.gz #{treeish} rpm-build-script"
+        commands << "curl -O -L #{APP_CONFIG['scripts']['rpm_build']['path']}#{treeish}.tar.gz"
         
-        file_name = 'avokhmin-rpm-build-script-master.tar.gz'
+        file_name = "#{treeish}.tar.gz"
         commands << "tar -xzf #{file_name}"
-        commands << "mv avokhmin-rpm-build-script-master rpm-build-script"
+        commands << "mv #{treeish} rpm-build-script"
         commands << "rm -rf #{file_name}"
 
         commands.each{ |c| @worker.vm.execute_command(c) }
