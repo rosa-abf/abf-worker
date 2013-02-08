@@ -14,12 +14,11 @@ module AbfWorker
 
       def initialize(worker, options)
         @worker       = worker
-        @platform     = options['platform']
+        @cmd_params   = options['cmd_params']
         @repository   = options['repository']
         @packages     = options['packages']
         @old_packages = options['old_packages']
         @type         = options['type']
-        @is_container = (options['extra'] || {})['create_container'] ? true : false
         @can_run      = true
       end
 
@@ -68,11 +67,6 @@ module AbfWorker
           logger.log "Run #{rollback_activity ? 'rollback activity ' : ''}script..."
 
           command = base_command_for_run
-          if @is_container
-            command << "IS_CONTAINER=#{@is_container}"
-            command << "ID=#{@worker.build_id}"
-            command << "PLATFORM_NAME=#{@platform['name']}"
-          end
           command << (rollback_activity ? 'rollback.sh' : 'build.sh')
           critical_error = false
           begin
@@ -96,10 +90,7 @@ module AbfWorker
       def base_command_for_run
         command = []
         command << 'cd publish-build-list-script/;'
-        command << "RELEASED=#{@platform['released']}"
-        command << "REPOSITORY_NAME=#{@repository['name']}"
-        command << "ARCH=#{@worker.vm.arch}"
-        command << "TYPE=#{@worker.vm.os}"
+        command << @cmd_params
         command << '/bin/bash'
         command
       end
