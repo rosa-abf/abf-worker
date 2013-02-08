@@ -13,13 +13,14 @@ module AbfWorker
       def_delegators :@worker, :logger
 
       def initialize(worker, options)
-        @worker         = worker
-        @platform       = options['platform']
-        @repository     = options['repository']
-        @packages       = options['packages']
-        @old_packages   = options['old_packages']
-        @type           = options['type']
-        @can_run        = true
+        @worker           = worker
+        @platform         = options['platform']
+        @repository       = options['repository']
+        @packages         = options['packages']
+        @old_packages     = options['old_packages']
+        @type             = options['type']
+        @create_repo_file = (options['extra'] || {})['create_container'] ? true : false
+        @can_run          = true
       end
 
       def run_script
@@ -67,6 +68,8 @@ module AbfWorker
           logger.log "Run #{rollback_activity ? 'rollback activity ' : ''}script..."
 
           command = base_command_for_run
+          command << "CREATE_REPO_FILE=#{@create_repo_file}"
+          command << "ID=#{@worker.build_id}"
           command << (rollback_activity ? 'rollback.sh' : 'build.sh')
           critical_error = false
           begin
