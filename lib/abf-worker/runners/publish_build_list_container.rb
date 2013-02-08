@@ -70,7 +70,7 @@ module AbfWorker
           command = base_command_for_run
           command << "IS_CONTAINER=#{@is_container}"
           command << "ID=#{@worker.build_id}"
-          command << "PLATFORM_PATH=#{@platform['platform_path']}"
+          command << "PLATFORM_NAME=#{@platform['name']}"
           command << (rollback_activity ? 'rollback.sh' : 'build.sh')
           critical_error = false
           begin
