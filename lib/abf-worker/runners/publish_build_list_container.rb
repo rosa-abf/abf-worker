@@ -68,9 +68,11 @@ module AbfWorker
           logger.log "Run #{rollback_activity ? 'rollback activity ' : ''}script..."
 
           command = base_command_for_run
-          command << "IS_CONTAINER=#{@is_container}"
-          command << "ID=#{@worker.build_id}"
-          command << "PLATFORM_NAME=#{@platform['name']}"
+          if @is_container
+            command << "IS_CONTAINER=#{@is_container}"
+            command << "ID=#{@worker.build_id}"
+            command << "PLATFORM_NAME=#{@platform['name']}"
+          end
           command << (rollback_activity ? 'rollback.sh' : 'build.sh')
           critical_error = false
           begin
