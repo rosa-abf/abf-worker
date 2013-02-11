@@ -13,13 +13,13 @@ module AbfWorker
       def_delegators :@worker, :logger
 
       def initialize(worker, options)
-        @worker         = worker
-        @platform       = options['platform']
-        @repository     = options['repository']
-        @packages       = options['packages']
-        @old_packages   = options['old_packages']
-        @type           = options['type']
-        @can_run        = true
+        @worker       = worker
+        @cmd_params   = options['cmd_params']
+        @repository   = options['repository']
+        @packages     = options['packages']
+        @old_packages = options['old_packages']
+        @type         = options['type']
+        @can_run      = true
       end
 
       def run_script
@@ -90,10 +90,7 @@ module AbfWorker
       def base_command_for_run
         command = []
         command << 'cd publish-build-list-script/;'
-        command << "RELEASED=#{@platform['released']}"
-        command << "REPOSITORY_NAME=#{@repository['name']}"
-        command << "ARCH=#{@worker.vm.arch}"
-        command << "TYPE=#{@worker.vm.os}"
+        command << @cmd_params
         command << '/bin/bash'
         command
       end
