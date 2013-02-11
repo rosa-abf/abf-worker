@@ -108,12 +108,15 @@ module AbfWorker
             @vagrant_env.cli 'up', @vm_name
           }
           sleep 30
-          if @os == 'mdv'
-            execute_command('urpmi.update -a', {:sudo => true})
-            %w(urpmi mock-urpm genhdlist2).each do |p|
-              execute_command "urpmi --auto #{p}", {:sudo => true}
-            end
-          end
+
+          treeish   = APP_CONFIG['scripts']['startup']['treeish']
+          commands  = []
+          commands << "curl -O -L #{APP_CONFIG['scripts']['startup']['path']}#{treeish}.tar.gz"
+          commands << "tar -xzf #{treeish}.tar.gz"
+          commands << "cd #{treeish}; /bin/bash #{@os}.sh"
+          commands << "rm -rf #{treeish}*"
+          commands.each{ |c| @worker.vm.execute_command(c) }
+
           # VM should be exist before using sandbox
           logger.log 'Enable save mode...'
           Sahara::Session.on @vm_name, @vagrant_env
