@@ -92,6 +92,7 @@ module AbfWorker
             @logger_name, {:formatter => formatter, :worker => self}
           )
         end
+        @logger.log "File name: '#{@logger_name}'" if @logger_name
         @logger
       end
 
