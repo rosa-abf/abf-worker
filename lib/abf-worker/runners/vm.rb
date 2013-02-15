@@ -269,8 +269,13 @@ module AbfWorker
         path_to_file = path + '/' + file_name
         return unless File.file?(path_to_file)
         if file_name =~ /.log$/
-          # cat <(echo hello world '123') t1 > t1.new && mv t1.new t1
-          `cat <(echo -e "==> See: '#{url_to_build}'\r\n") #{path_to_file} > #{path_to_file}.tmp && mv #{path_to_file}.tmp #{path_to_file}`
+          tmp_file = "#{path_to_file}.tmp"
+          File.open(tmp_file, 'w') do |f|
+            f.puts "==> See: '#{url_to_build}'"
+            f.puts ''
+            File.foreach(path_to_file){ |li| f.puts li }
+          end
+          File.rename tmp_file, path_to_file
         end
 
         # Compress the log when file size more than 10MB
