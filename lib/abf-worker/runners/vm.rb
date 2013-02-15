@@ -260,7 +260,9 @@ module AbfWorker
       end
 
       def url_to_build
-        @url_to_build ||= "#{APP_CONFIG['abf_url']}/#{@worker.is_a?(AbfWorker::IsoWorker) ? 'product_build_lists' : 'build_lists'}/#{@worker.build_id}"
+        return @url_to_build if @url_to_build
+        path = @worker.is_a?(AbfWorker::IsoWorker) ? 'product_build_lists' : 'build_lists'
+        @url_to_build = "#{APP_CONFIG['abf_url']}/#{path}/#{@worker.build_id}"
       end
 
       def upload_file(path, file_name)
