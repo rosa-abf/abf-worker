@@ -260,10 +260,7 @@ module AbfWorker
       end
 
       def url_to_build
-        return @url_to_build if @url_to_build
-        @url_to_build  = 'https://abf.rosalinux.ru/'
-        @url_to_build << (@worker.is_a?(AbfWorker::IsoWorker) ? 'product_build_lists/' : 'build_lists/')
-        @url_to_build << @worker.build_id
+        @url_to_build ||= "#{APP_CONFIG['abf_url']}/#{@worker.is_a?(AbfWorker::IsoWorker) ? 'product_build_lists' : 'build_lists'}/#{@worker.build_id}"
       end
 
       def upload_file(path, file_name)
