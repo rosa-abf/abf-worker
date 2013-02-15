@@ -259,14 +259,19 @@ module AbfWorker
         true
       end
 
+      def url_to_build
+        return @url_to_build if @url_to_build
+        @url_to_build  = 'https://abf.rosalinux.ru/'
+        @url_to_build << (@worker.is_a?(AbfWorker::IsoWorker) ? 'product_build_lists/' : 'build_lists/')
+        @url_to_build << @worker.build_id
+      end
+
       def upload_file(path, file_name)
         path_to_file = path + '/' + file_name
         return unless File.file?(path_to_file)
         if file_name =~ /.log$/
           # cat <(echo hello world '123') t1 > t1.new && mv t1.new t1
-          info  = @worker.is_a?(AbfWorker::IsoWorker) ? 'product build list with id=' : 'https://abf.rosalinux.ru/build_lists/'
-          info << @worker.build_id
-          `cat <(echo "==> See: '#{info}'") #{path_to_file} > #{path_to_file}.tmp && mv #{path_to_file}.tmp #{path_to_file}`
+          `cat <(echo "==> See: '#{url_to_build}'") #{path_to_file} > #{path_to_file}.tmp && mv #{path_to_file}.tmp #{path_to_file}`
         end
 
         # Compress the log when file size more than 10MB
