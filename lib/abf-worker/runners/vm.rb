@@ -259,9 +259,19 @@ module AbfWorker
         true
       end
 
+      def url_to_build
+        return @url_to_build if @url_to_build
+        path = @worker.is_a?(AbfWorker::IsoWorker) ? 'product_build_lists' : 'build_lists'
+        @url_to_build = "#{APP_CONFIG['abf_url']}/#{path}/#{@worker.build_id}"
+      end
+
       def upload_file(path, file_name)
         path_to_file = path + '/' + file_name
         return unless File.file?(path_to_file)
+        if file_name =~ /.log$/
+          # cat <(echo hello world '123') t1 > t1.new && mv t1.new t1
+          `cat <(echo -e "==> See: '#{url_to_build}'\r\n") #{path_to_file} > #{path_to_file}.tmp && mv #{path_to_file}.tmp #{path_to_file}`
+        end
 
         # Compress the log when file size more than 10MB
         file_size = (File.size(path_to_file).to_f / TWO_IN_THE_TWENTIETH).round(2)
