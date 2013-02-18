@@ -311,7 +311,7 @@ module AbfWorker
       end
 
       def file_store_token
-        @file_store_token ||= APP_CONFIG['file_store']['tokens']['server_1']
+        @file_store_token ||= APP_CONFIG['file_store']['token']
       end
 
       def run_with_vm_inspector
