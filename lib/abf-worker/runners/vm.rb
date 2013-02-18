@@ -258,7 +258,7 @@ module AbfWorker
 
       def url_to_build
         return @url_to_build if @url_to_build
-        path = @worker.is_a?(AbfWorker::IsoWorker) ? 'product_build_lists' : 'build_lists'
+        path = @worker.runner.is_a?(Runners::Iso) ? 'product_build_lists' : 'build_lists'
         @url_to_build = "#{APP_CONFIG['abf_url']}/#{path}/#{@worker.build_id}"
       end
 
