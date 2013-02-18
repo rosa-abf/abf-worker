@@ -23,7 +23,6 @@ module AbfWorker
                     :build_id,
                     :worker_id,
                     :tmp_dir,
-                    :server_id,
                     :vm,
                     :live_inspector,
                     :logger_name
@@ -68,7 +67,7 @@ module AbfWorker
         @status = BUILD_STARTED
         @build_id = options['id']
         @worker_id = Process.ppid
-        init_tmp_folder_and_server_id
+        init_tmp_folder
         update_build_status_on_abf
         @vm = Runners::Vm.new(self, options['distrib_type'], options['arch'])
       end
@@ -95,9 +94,8 @@ module AbfWorker
         @logger
       end
 
-      def init_tmp_folder_and_server_id
-        @server_id = ENV['SERVER_ID'] || '1'
-        @tmp_dir = "#{APP_CONFIG['tmp_path']}/server-#{@server_id}/#{name}"
+      def init_tmp_folder
+        @tmp_dir = "#{APP_CONFIG['tmp_path']}/#{name}"
         system "mkdir -p -m 0700 #{@tmp_dir}"
       end
 
@@ -116,7 +114,7 @@ module AbfWorker
     end
 
     def self.clean_up
-      init_tmp_folder_and_server_id
+      init_tmp_folder
       @vm = Runners::Vm.new(self, nil, nil)
       @vm.clean true
     end

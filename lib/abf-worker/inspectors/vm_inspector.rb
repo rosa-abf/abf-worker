@@ -26,7 +26,9 @@ module AbfWorker
       def restart_vm
         @worker.logger.log 'Restart VM...'
         vm_id = @worker.vm.get_vm.id
-        system "VBoxManage controlvm #{vm_id} reset"
+        ps = %x[ ps aux | grep VBoxHeadless | grep #{vm_id} | grep -v grep | awk '{ print $2 }' ].split("\n").join(',')
+        system "sudo kill -9 #{ps}" unless ps.empty?
+        system "VBoxManage startvm #{vm_id}"
       end
 
     end
