@@ -36,7 +36,7 @@ module AbfWorker
     end
 
     def self.logger
-      @logger || init_logger("abfworker::publish-worker-#{@build_id}")
+      @logger || init_logger("abfworker::publish-#{@extra['create_container'] ? 'container-' : ''}worker-#{@build_id}")
     end
 
     def self.perform(options)
