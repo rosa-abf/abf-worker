@@ -23,17 +23,17 @@ namespace :abf_worker do
     end
   end
 
-  desc "Destroy ISO worker VM's on production"
-  task :destroy_vms do
-    ENV['ENV'] = 'production'
-    ps = %x[ ps aux | grep rosa | grep VBox | grep -v grep | awk '{ print $2 }' ].
+  desc "Destroy worker VM's, logs and etc."
+  task :clean_up do
+    ps = %x[ ps aux | grep rosa | grep VBoxHeadless | grep -v grep | awk '{ print $2 }' ].
       split("\n").join(',')
     system "sudo kill -9 #{ps}" unless ps.empty?
-    AbfWorker::IsoWorker.clean_up
-    AbfWorker::RpmWorker.clean_up
-    AbfWorker::RpmWorkerDefault.clean_up
-    AbfWorker::PublishWorker.clean_up
-    AbfWorker::PublishWorkerDefault.clean_up
+    
+    vms = %x[ VBoxManage list vms | awk '{ print $1 }' | sed -e 's/\"//g' ].split("\n")
+    vms.each{ |vm_id| system "VBoxManage unregistervm #{vm_id} --delete" } unless vms.empty?
+
+    system "rm -f logs/*.log"
+    system "rm -rf #{APP_CONFIG['tmp_path']}"
   end
 
 end

@@ -225,11 +225,8 @@ module AbfWorker
 
       def results_folder
         return @results_folder if @results_folder
-        @results_folder = @worker.tmp_dir + '/results'
-        Dir.mkdir(@results_folder) unless File.exists?(@results_folder)
-        @results_folder << "/build-#{@worker.build_id}"
-        Dir.rmdir(@results_folder) if File.exists?(@results_folder)
-        Dir.mkdir(@results_folder)
+        @results_folder = "#{@worker.tmp_dir}/results/build-#{@worker.build_id}"
+        system "rm -rf #{@results_folder} && mkdir -p #{@results_folder}"
         @results_folder
       end
 
@@ -261,7 +258,7 @@ module AbfWorker
 
       def url_to_build
         return @url_to_build if @url_to_build
-        path = @worker.is_a?(AbfWorker::IsoWorker) ? 'product_build_lists' : 'build_lists'
+        path = @worker.runner.is_a?(Runners::Iso) ? 'product_build_lists' : 'build_lists'
         @url_to_build = "#{APP_CONFIG['abf_url']}/#{path}/#{@worker.build_id}"
       end
 
@@ -314,7 +311,7 @@ module AbfWorker
       end
 
       def file_store_token
-        @file_store_token ||= APP_CONFIG['file_store']['tokens']["server_#{@worker.server_id}"]
+        @file_store_token ||= APP_CONFIG['file_store']['token']
       end
 
       def run_with_vm_inspector
