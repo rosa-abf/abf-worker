@@ -38,8 +38,8 @@ module AbfWorker
           :parameters => {
             :hostname   => `hostname`.strip,
             :worker_id  => @worker_id,
-            :build_id   => @build_id,
-            :vm_id      => vm_id
+            :vm_id      => vm_id,
+            :options    => @options
           }
         ) if notify
         
@@ -62,6 +62,7 @@ module AbfWorker
       end
 
       def initialize(options)
+        @options = options
         @extra = options['extra'] || {}
         @skip_feedback = options['skip_feedback'] || false
         @status = BUILD_STARTED
