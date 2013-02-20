@@ -218,12 +218,12 @@ module AbfWorker
           # Dir.new(results_folder).entries.each do |f|
           Dir[results_folder + '/**/'].each do |folder|
             Dir.new(folder).entries.each do |f|
-              uploaded << upload_file(folder, f)
+              uploaded << upload_file_to_file_store(folder, f)
             end
           end
           system "rm -rf #{results_folder}"
         end
-        uploaded << upload_file(LOG_FOLDER, "#{@worker.logger_name}.log")
+        uploaded << upload_file_to_file_store(LOG_FOLDER, "#{@worker.logger_name}.log")
         uploaded.compact
       end
 
@@ -270,7 +270,7 @@ module AbfWorker
         @url_to_build = "#{APP_CONFIG['abf_url']}/#{path}/#{@worker.build_id}"
       end
 
-      def upload_file(path, file_name)
+      def upload_file_to_file_store(path, file_name)
         path_to_file = path + '/' + file_name
         return unless File.file?(path_to_file)
         if file_name =~ /.log$/
