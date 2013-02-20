@@ -72,8 +72,7 @@ module AbfWorker
           scan(/\/([^\/]+)\.git/).inject.first
 
         logger.log "Downloading results...."
-        port = @worker.vm.get_vm.config.ssh.port
-        system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@worker.vm.results_folder}"
+        @worker.vm.download_folder '/home/vagrant/results', @worker.vm.results_folder
 
         container_data = "#{@worker.vm.results_folder}/results/container_data.json"
         if File.exists?(container_data)
@@ -113,8 +112,7 @@ module AbfWorker
             end
           end
           file.close
-          port = @worker.vm.get_vm.config.ssh.port
-          system "scp -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} #{file.path} vagrant@127.0.0.1:/home/vagrant/container/media.list"
+          @worker.vm.upload_file file.path, '/home/vagrant/container/media.list'
         ensure
           file.close
           file.unlink

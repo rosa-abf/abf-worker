@@ -135,6 +135,14 @@ module AbfWorker
         end # first_run
       end
 
+      def upload_file(from, to)
+        system "scp -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{ssh_port} #{from} vagrant@127.0.0.1:#{to}"
+      end
+
+      def download_folder(from, to)
+        system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{ssh_port} vagrant@127.0.0.1:#{from} #{to}"
+      end
+
       def get_vm
         @vagrant_env.vms[@vm_name.to_sym]
       end
@@ -319,6 +327,10 @@ module AbfWorker
         vm_inspector.run
         yield if block_given?
         vm_inspector.stop
+      end
+
+      def ssh_port
+        @ssh_port ||= get_vm.config.ssh.port 
       end
 
     end

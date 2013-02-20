@@ -54,8 +54,7 @@ module AbfWorker
         end
 
         logger.log 'Downloading results....'
-        port = @worker.vm.get_vm.config.ssh.port
-        system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@worker.vm.results_folder}"
+        @worker.vm.download_folder '/home/vagrant/results', @worker.vm.results_folder
         # Umount tmpfs
         @worker.vm.execute_command 'umount /home/vagrant/iso_builder', {:sudo => true}
         logger.log "Done."
