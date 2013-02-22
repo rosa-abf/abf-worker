@@ -16,8 +16,8 @@ module AbfWorker
         @worker       = worker
         @cmd_params   = options['cmd_params']
         @repository   = options['repository']
-        @packages     = options['packages']
-        @old_packages = options['old_packages']
+        @packages     = options['packages'] || {}
+        @old_packages = options['old_packages'] || {}
         @type         = options['type']
         @can_run      = true
       end
@@ -97,18 +97,28 @@ module AbfWorker
 
       def init_packages_lists
         logger.log 'Initialize lists of new and old packages...'
-        @worker.vm.execute_command 'mkdir container'
-        add_packages_to_list @packages,     'new'
-        add_packages_to_list @old_packages, 'old'
+        @worker.vm.execute_command 'rm -rf container && mkdir container'
+
+        [@packages, @old_packages].each_with_index do |packages, index|
+          prefix = index == 0 ? 'new' : 'old'
+          add_packages_to_list packages['sources'], "#{prefix}.SRPMS.list"
+          (packages['binaries'] || {}).each do |arch, list|
+            add_packages_to_list list, "#{prefix}.#{arch}.list"
+          end
+        end
       end
 
-      def add_packages_to_list(packages, list_prefix)
-        commands = []
-        (packages['sources'] || []).each{ |el| commands  << "echo #{el} >> container/#{list_prefix}.SRPMS.list" }
-        (packages['binaries'] || {}).each{ |arch, list|
-          list.each{ |el| commands  << "echo #{el} >> container/#{list_prefix}.#{arch}.list" }
-        }
-        commands.each{ |c| @worker.vm.execute_command(c) }
+      def add_packages_to_list(packages = [], list_name)
+        return if packages.empty?
+        file = Tempfile.new("#{list_name}-#{@worker.build_id}", @worker.tmp_dir)
+        begin
+          packages.each{ |p| file.puts p }
+          file.close
+          @worker.vm.upload_file file.path, "/home/vagrant/container/#{list_name}"
+        ensure
+          file.close
+          file.unlink
+        end
       end
 
       def download_main_script
@@ -132,13 +142,12 @@ module AbfWorker
         @worker.vm.execute_command 'mkdir -m 700 /home/vagrant/.gnupg'
         dir = Dir.mktmpdir('keys-', "#{@worker.tmp_dir}")
         begin
-          port = @worker.vm.get_vm.config.ssh.port
           [:pubring, :secring].each do |key|
             open("#{dir}/#{key}.txt", "w") { |f|
               f.write repository.key_pair.send(key == :secring ? :secret : :public)
             }
             system "gpg --homedir #{dir} --dearmor < #{dir}/#{key}.txt > #{dir}/#{key}.gpg"
-            system "scp -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} #{dir}/#{key}.gpg vagrant@127.0.0.1:/home/vagrant/.gnupg/#{key}.gpg"
+            @worker.vm.upload_file "#{dir}/#{key}.gpg", "/home/vagrant/.gnupg/#{key}.gpg"
           end
         ensure
           # remove the directory.

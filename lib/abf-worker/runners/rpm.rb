@@ -34,8 +34,9 @@ module AbfWorker
             command << 'cd rpm-build-script;'
             command << "GIT_PROJECT_ADDRESS=#{@git_project_address}"
             command << "COMMIT_HASH=#{@commit_hash}"
-            # command << "ARCH=#{@worker.vm.arch}"
+            command << "ARCH=#{@worker.vm.arch}"
             command << "DISTRIB_TYPE=#{@worker.vm.os}"
+            command << "PLATFORM_NAME=#{@bplname}"
             command << "UNAME=#{@user['uname']}"
             command << "EMAIL=#{@user['email']}"
             # command << "BUILD_REQUIRES=#{@build_requires}"
@@ -71,8 +72,7 @@ module AbfWorker
           scan(/\/([^\/]+)\.git/).inject.first
 
         logger.log "Downloading results...."
-        port = @worker.vm.get_vm.config.ssh.port
-        system "scp -r -o 'StrictHostKeyChecking no' -i keys/vagrant -P #{port} vagrant@127.0.0.1:/home/vagrant/results #{@worker.vm.results_folder}"
+        @worker.vm.download_folder '/home/vagrant/results', @worker.vm.results_folder
 
         container_data = "#{@worker.vm.results_folder}/results/container_data.json"
         if File.exists?(container_data)
@@ -100,82 +100,23 @@ module AbfWorker
       end
 
       def init_mock_configs
-        lines = []
-        repos_map = {}
-        @include_repos.each{ |name, url|
-          # Checks that repositoy exist
-          if %x[ curl --write-out %{http_code} --silent --output /dev/null #{url} ] == '404'
-            logger.log "Repository does not exist: #{url.gsub(/\:\/\/.*\:\@/, '://[FILTERED]@')}"
-          else
-            repos_map["#{name}"] = url
+        @worker.vm.execute_command 'rm -rf container && mkdir container'
+        file = Tempfile.new("media-#{@worker.build_id}.list", @worker.tmp_dir)
+        begin
+          @include_repos.each do |name, url|
+            # Checks that repositoy exist
+            if %x[ curl --write-out %{http_code} --silent --output /dev/null #{url} ] == '404'
+              logger.log "Repository does not exist: #{url.gsub(/\:\/\/.*\:\@/, '://[FILTERED]@')}"
+            else
+              file.puts "#{name} #{url}"
+            end
           end
-        }
-        if @worker.vm.os == 'mdv'
-          # config_opts['urpmi_media'] = {
-          #   'name_1': 'url_1', 'name_2': 'url_2'
-          # }
-          lines << 'config_opts["urpmi_media"] = {'
-          lines << repos_map.map do |name, url|
-            "\"#{name}\": \"#{url}\""
-          end.join(', ')
-          lines << '}'
-        else
-          # config_opts['yum.conf'] = """
-          #   [main]
-          #   cachedir=/var/cache/yum
-          #   debuglevel=1
-          #   reposdir=/dev/null
-          #   logfile=/var/log/yum.log
-          #   retries=20
-          #   obsoletes=1
-          #   gpgcheck=0
-          #   assumeyes=1
-          #   syslog_ident=mock
-          #   syslog_device=
-
-          #   # repos
-          #   [base]
-          #   name=BaseOS
-          #   enabled=1
-          #   mirrorlist=http://mirrorlist.centos.org/?release=6&arch=i386&repo=os
-          #   failovermethod=priority
-          # """
-          '
-          config_opts["yum.conf"] = """
-            [main]
-            cachedir=/var/cache/yum
-            debuglevel=1
-            reposdir=/dev/null
-            logfile=/var/log/yum.log
-            retries=20
-            obsoletes=1
-            gpgcheck=0
-            assumeyes=1
-            syslog_ident=mock
-            syslog_device=
-
-            # repos
-          '.split("\n").each{ |l| lines << l }
-          repos_map.each do |name, url|
-            "
-            [#{name}]
-            name=#{name}
-            enabled=1
-            baseurl=#{url}
-            failovermethod=priority
-
-            ".split("\n").each{ |l| lines << l }
-          end
-
-          lines << '"""'
+          file.close
+          @worker.vm.upload_file file.path, '/home/vagrant/container/media.list'
+        ensure
+          file.close
+          file.unlink
         end
-
-        config_name = "#{@worker.vm.os}#{@worker.vm.os == 'mdv' && @bplname =~ /lts/ ? '-lts' : ''}-#{@worker.vm.arch}.cfg"
-        @worker.vm.execute_command "cp /home/vagrant/rpm-build-script/configs/#{config_name} /home/vagrant/rpm-build-script/configs/default.cfg"
-        lines.each{ |line|
-          command = "echo '#{line.strip}' >> /home/vagrant/rpm-build-script/configs/default.cfg"
-          @worker.vm.execute_command(command)
-        }
       end
 
     end
