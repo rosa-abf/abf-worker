@@ -109,7 +109,7 @@ module AbfWorker
       end
 
       def add_packages_to_list(packages = [], list_name)
-        return if packages.empty?
+        return if packages.nil? || packages.empty?
         file = Tempfile.new("#{list_name}-#{@worker.build_id}", @worker.tmp_dir)
         begin
           packages.each{ |p| file.puts p }
