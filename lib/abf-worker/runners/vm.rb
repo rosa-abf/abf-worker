@@ -212,7 +212,7 @@ module AbfWorker
           end
         end
       rescue => e
-        raise AbfWorker::Exceptions::ScriptError, command
+        raise AbfWorker::Exceptions::ScriptError, filtered_command
       end
 
       def upload_results_to_file_store
