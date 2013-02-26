@@ -93,7 +93,6 @@ module AbfWorker
       end
 
       def initialize(options)
-        @task_already_restarted = false
         @options = options
         @extra = options['extra'] || {}
         @task_restarted = @extra['task_restarted'] ? true : false
@@ -134,7 +133,6 @@ module AbfWorker
       end
 
       def update_build_status_on_abf(args = {}, force = false)
-        return if @task_already_restarted
         Resque.push(
           @observer_queue,
           'class' => @observer_class,
