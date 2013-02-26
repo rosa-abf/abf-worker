@@ -33,8 +33,9 @@ module AbfWorker
         @vm.start_vm
         @runner.run_script
         @vm.rollback_and_halt_vm { send_results }
-      rescue Resque::TermException, AbfWorker::Exceptions::ScriptError, Vagrant::Errors::VagrantError
+      rescue Resque::TermException, AbfWorker::Exceptions::ScriptError, Vagrant::Errors::VagrantError => e
         if @task_restarted
+          print_error(e)
           @status = BUILD_FAILED if @status != BUILD_CANCELED
           @vm.clean { send_results }
         else
