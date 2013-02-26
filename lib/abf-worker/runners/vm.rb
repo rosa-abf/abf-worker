@@ -191,9 +191,9 @@ module AbfWorker
             logger.log 'Destroy VM...'
             env.cli 'destroy', '--force'
 
-            File.delete(vagrantfiles_folder + "/#{f}")
           rescue => e
-            @worker.print_error e
+          ensure
+            File.delete(vagrantfiles_folder + "/#{f}")
           end
         end
         yield if block_given?
@@ -211,6 +211,8 @@ module AbfWorker
             logger.log data.gsub(/\:\/\/.*\:\@/, '://[FILTERED]@'), '', false
           end
         end
+      rescue => e
+        raise AbfWorker::Exceptions::ScriptError, command
       end
 
       def upload_results_to_file_store

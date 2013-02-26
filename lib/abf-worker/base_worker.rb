@@ -27,7 +27,27 @@ module AbfWorker
                     :live_inspector,
                     :logger_name
 
-      def print_error(e, notify = true)
+      def perform(options)
+        initialize options
+        @vm.initialize_vagrant_env
+        @vm.start_vm
+        @runner.run_script
+        @vm.rollback_and_halt_vm { send_results }
+      rescue Resque::TermException, AbfWorker::Exceptions::ScriptError
+        if @task_restarted
+          @status = BUILD_FAILED if @status != BUILD_CANCELED
+          @vm.clean { send_results }
+        else
+          @vm.clean
+          restart_task
+        end
+      rescue => e
+        @status = BUILD_FAILED if @status != BUILD_CANCELED
+        print_error(e, force)
+        @vm.rollback_and_halt_vm { send_results }
+      end
+
+      def print_error(e, force = false)
         begin
           vm_id = @vm.get_vm.id
         rescue => ex
@@ -42,9 +62,8 @@ module AbfWorker
             :vm_id      => vm_id,
             :options    => @options
           }
-        ) if notify && @error_counter == 1
+        ) if @task_restarted || force
 
-        @error_counter += 1
         a = []
         a << '==> ABF-WORKER-ERROR-START'
         a << 'Something went wrong, report has been sent to ABF team, please try again.'
@@ -58,15 +77,26 @@ module AbfWorker
 
       protected
 
+      def restart_task
+        redis = Resque.redis
+        @options['extra'] ||= {}
+        @options['extra']['task_restarted'] = true
+        redis.lpush "queue:#{@queue}", {
+          :class => name,
+          :args  => [@options]
+        }.to_json
+      end
+
       def initialize_live_inspector(time_living)
         @live_inspector = AbfWorker::Inspectors::LiveInspector.new(self, time_living)
         @live_inspector.run
       end
 
       def initialize(options)
+        @task_already_restarted = false
         @options = options
-        @error_counter ||= 0
         @extra = options['extra'] || {}
+        @task_restarted = @extra['task_restarted'] ? true : false
         @skip_feedback = options['skip_feedback'] || false
         @status = BUILD_STARTED
         @build_id = options['id']
@@ -104,6 +134,7 @@ module AbfWorker
       end
 
       def update_build_status_on_abf(args = {}, force = false)
+        return if @task_already_restarted
         Resque.push(
           @observer_queue,
           'class' => @observer_class,
