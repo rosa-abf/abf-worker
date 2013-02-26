@@ -33,7 +33,7 @@ module AbfWorker
         @vm.start_vm
         @runner.run_script
         @vm.rollback_and_halt_vm { send_results }
-      rescue Resque::TermException, AbfWorker::Exceptions::ScriptError
+      rescue Resque::TermException, AbfWorker::Exceptions::ScriptError, Vagrant::Errors::VagrantError
         if @task_restarted
           @status = BUILD_FAILED if @status != BUILD_CANCELED
           @vm.clean { send_results }
