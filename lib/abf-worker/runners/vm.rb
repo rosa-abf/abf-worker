@@ -166,14 +166,14 @@ module AbfWorker
         yield if block_given?
       end
 
-      def clean(destroy_all = false)
+      def clean
         files = []
         Dir.new(vagrantfiles_folder).entries.each do |f|
-          if File.file?(vagrantfiles_folder + "/#{f}") &&
-              (f =~ /#{@worker.worker_id}/ || destroy_all) && !(f =~ /^\./)
+          if File.file?(vagrantfiles_folder + "/#{f}") && f =~ /#{@worker.worker_id}/
             files << f
           end
         end
+
         files.each do |f|
           begin
             env = Vagrant::Environment.new(
@@ -181,18 +181,19 @@ module AbfWorker
               :cwd => vagrantfiles_folder,
               :ui => false
             )
-            logger.log 'Halt VM...'
-            env.cli 'halt', '-f'
 
-            logger.log 'Disable save mode...'
-            Sahara::Session.off(f, env)
+            id = env.vms[f.to_sym].id
+
+            ps = %x[ ps aux | grep rosa | grep VBoxHeadless | grep #{id} | grep -v grep | awk '{ print $2 }' ].
+              split("\n").join(' ')
+            system "sudo kill -9 #{ps}" unless ps.empty?
 
             logger.log 'Destroy VM...'
             env.cli 'destroy', '--force'
 
             File.delete(vagrantfiles_folder + "/#{f}")
           rescue => e
-            @worker.print_error e, !destroy_all
+            @worker.print_error e
           end
         end
         yield if block_given?

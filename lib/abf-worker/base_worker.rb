@@ -33,6 +33,7 @@ module AbfWorker
         rescue => ex
           vm_id = nil
         end
+
         Airbrake.notify(
           e,
           :parameters => {
@@ -41,8 +42,9 @@ module AbfWorker
             :vm_id      => vm_id,
             :options    => @options
           }
-        ) if notify
-        
+        ) if notify && @error_counter == 1
+
+        @error_counter += 1
         a = []
         a << '==> ABF-WORKER-ERROR-START'
         a << 'Something went wrong, report has been sent to ABF team, please try again.'
@@ -63,6 +65,7 @@ module AbfWorker
 
       def initialize(options)
         @options = options
+        @error_counter ||= 0
         @extra = options['extra'] || {}
         @skip_feedback = options['skip_feedback'] || false
         @status = BUILD_STARTED
@@ -112,12 +115,6 @@ module AbfWorker
         ) if !@skip_feedback || force
       end
       
-    end
-
-    def self.clean_up
-      init_tmp_folder
-      @vm = Runners::Vm.new(self, nil, nil)
-      @vm.clean true
     end
 
     def self.logger
