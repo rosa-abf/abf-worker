@@ -27,12 +27,36 @@ module AbfWorker
                     :live_inspector,
                     :logger_name
 
-      def print_error(e, notify = true)
+      def perform(options)
+        initialize options
+        @vm.initialize_vagrant_env
+        @vm.start_vm
+        @runner.run_script
+        @vm.rollback_and_halt_vm { send_results }
+      rescue Resque::TermException, AbfWorker::Exceptions::ScriptError, Vagrant::Errors::VagrantError => e
+        if @task_restarted
+          print_error(e)
+          @status = BUILD_FAILED if @status != BUILD_CANCELED
+          @vm.clean { send_results }
+        else
+          @vm.clean
+          system "rm -rf #{@vm.results_folder}"
+          system "rm -f #{ROOT}/log/#{@logger_name}.log" if @logger_name
+          restart_task
+        end
+      rescue => e
+        @status = BUILD_FAILED if @status != BUILD_CANCELED
+        print_error(e, force)
+        @vm.rollback_and_halt_vm { send_results }
+      end
+
+      def print_error(e, force = false)
         begin
           vm_id = @vm.get_vm.id
         rescue => ex
           vm_id = nil
         end
+
         Airbrake.notify(
           e,
           :parameters => {
@@ -41,8 +65,8 @@ module AbfWorker
             :vm_id      => vm_id,
             :options    => @options
           }
-        ) if notify
-        
+        ) if @task_restarted || force
+
         a = []
         a << '==> ABF-WORKER-ERROR-START'
         a << 'Something went wrong, report has been sent to ABF team, please try again.'
@@ -56,6 +80,16 @@ module AbfWorker
 
       protected
 
+      def restart_task
+        redis = Resque.redis
+        @options['extra'] ||= {}
+        @options['extra']['task_restarted'] = true
+        redis.lpush "queue:#{@queue}", {
+          :class => name,
+          :args  => [@options]
+        }.to_json
+      end
+
       def initialize_live_inspector(time_living)
         @live_inspector = AbfWorker::Inspectors::LiveInspector.new(self, time_living)
         @live_inspector.run
@@ -64,6 +98,7 @@ module AbfWorker
       def initialize(options)
         @options = options
         @extra = options['extra'] || {}
+        @task_restarted = @extra['task_restarted'] ? true : false
         @skip_feedback = options['skip_feedback'] || false
         @status = BUILD_STARTED
         @build_id = options['id']
@@ -112,12 +147,6 @@ module AbfWorker
         ) if !@skip_feedback || force
       end
       
-    end
-
-    def self.clean_up
-      init_tmp_folder
-      @vm = Runners::Vm.new(self, nil, nil)
-      @vm.clean true
     end
 
     def self.logger

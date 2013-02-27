@@ -8,6 +8,10 @@ module AbfWorker
     class << self
       attr_accessor :runner
 
+      def logger
+        @logger || init_logger("abfworker::iso-worker-#{@build_id}")
+      end
+
       protected
 
       # Initialize a new ISO worker.
@@ -31,25 +35,6 @@ module AbfWorker
         update_build_status_on_abf({:results => @vm.upload_results_to_file_store})
       end
 
-    end
-
-    def self.logger
-      @logger || init_logger("abfworker::iso-worker-#{@build_id}")
-    end
-
-    def self.perform(options)
-      initialize options
-      @vm.initialize_vagrant_env
-      @vm.start_vm
-      @runner.run_script
-      @vm.rollback_and_halt_vm { send_results }
-    rescue Resque::TermException
-      @status = BUILD_FAILED if @status != BUILD_CANCELED
-      @vm.clean { send_results }
-    rescue => e
-      @status = BUILD_FAILED if @status != BUILD_CANCELED
-      print_error(e)
-      @vm.rollback_and_halt_vm { send_results }
     end
 
   end

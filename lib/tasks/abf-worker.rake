@@ -25,7 +25,7 @@ namespace :abf_worker do
 
   desc "Destroy worker VM's, logs and etc."
   task :clean_up do
-    ps = %x[ ps aux | grep rosa | grep VBoxHeadless | grep -v grep | awk '{ print $2 }' ].
+    ps = %x[ ps aux | grep VBox | grep -v grep | awk '{ print $2 }' ].
       split("\n").join(' ')
     system "sudo kill -9 #{ps}" unless ps.empty?
     
