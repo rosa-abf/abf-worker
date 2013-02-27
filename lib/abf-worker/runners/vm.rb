@@ -28,7 +28,7 @@ module AbfWorker
         # @vm_name = "#{@os}.#{@arch}_#{@worker.worker_id}"
       end
 
-      def initialize_vagrant_env(update_share_folder = false)
+      def initialize_vagrant_env
         vagrantfile = "#{vagrantfiles_folder}/#{@vm_name}"
         first_run = false
         unless File.exist?(vagrantfile)
@@ -53,7 +53,7 @@ module AbfWorker
             file.close unless file.nil?
           end
         end
-        if !first_run && update_share_folder
+        if !first_run && @share_folder
           system "sed \"4s|.*|#{share_folder_config}|\" #{vagrantfile} > #{vagrantfile}_tmp"
           system "mv #{vagrantfile}_tmp #{vagrantfile}"
         end
@@ -62,7 +62,7 @@ module AbfWorker
           :cwd => vagrantfiles_folder,
           :vagrantfile_name => @vm_name
         )
-        `sudo chown -R rosa:rosa #{@share_folder}/../` if update_share_folder
+        `sudo chown -R rosa:rosa #{@share_folder}/../` if @share_folder
         # Hook for fix:
         # ERROR warden: Error occurred: uninitialized constant VagrantPlugins::ProviderVirtualBox::Action::Customize::Errors
         # on vm_config.vm.customizations << ['modifyvm', :id, '--memory',  '#{memory}']
@@ -121,7 +121,7 @@ module AbfWorker
           logger.log 'Enable save mode...'
           Sahara::Session.on @vm_name, @vagrant_env
         else
-          if update_share_folder
+          if @share_folder
             Sahara::Session.off @vm_name, @vagrant_env
             system "VBoxManage sharedfolder remove #{get_vm.id} --name v-root"
             system "VBoxManage sharedfolder add #{get_vm.id} --name v-root --hostpath #{@share_folder}"
