@@ -40,6 +40,8 @@ module AbfWorker
           @vm.clean { send_results }
         else
           @vm.clean
+          system "rm -rf #{@vm.results_folder}"
+          system "rm -f #{ROOT}/log/#{@logger_name}.log" if @logger_name
           restart_task
         end
       rescue => e

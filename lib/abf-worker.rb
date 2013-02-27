@@ -2,13 +2,13 @@ require 'resque'
 require 'airbrake'
 
 
-root = File.dirname(__FILE__) + '/..'
+ROOT = File.dirname(__FILE__) + '/..'
 env = ENV['ENV'] || 'development'
 
-resque_config = YAML.load_file("#{root}/config/resque.yml")
+resque_config = YAML.load_file("#{ROOT}/config/resque.yml")
 Resque.redis = resque_config[env]
 
-APP_CONFIG = YAML.load_file("#{root}/config/application.yml")[env]
+APP_CONFIG = YAML.load_file("#{ROOT}/config/application.yml")[env]
 
 Airbrake.configure do |config|
   config.api_key = APP_CONFIG['airbrake_api_key']
