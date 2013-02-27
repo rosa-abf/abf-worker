@@ -46,7 +46,7 @@ module AbfWorker
         end
       rescue => e
         @status = BUILD_FAILED if @status != BUILD_CANCELED
-        print_error(e, force)
+        print_error(e, true)
         @vm.rollback_and_halt_vm { send_results }
       end
 
