@@ -184,7 +184,7 @@ module AbfWorker
 
             id = env.vms[f.to_sym].id
 
-            ps = %x[ ps aux | grep rosa | grep VBoxHeadless | grep #{id} | grep -v grep | awk '{ print $2 }' ].
+            ps = %x[ ps aux | grep VBox | grep #{id} | grep -v grep | awk '{ print $2 }' ].
               split("\n").join(' ')
             system "sudo kill -9 #{ps}" unless ps.empty?
 
