@@ -211,6 +211,8 @@ module AbfWorker
             logger.log data.gsub(/\:\/\/.*\:\@/, '://[FILTERED]@'), '', false
           end
         end
+      rescue AbfWorker::Exceptions::ScriptError => e
+        raise e
       rescue => e
         raise AbfWorker::Exceptions::ScriptError, filtered_command
       end
