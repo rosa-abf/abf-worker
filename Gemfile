@@ -4,7 +4,7 @@ gem 'rake'
 gem 'resque', :git => 'git://github.com/avokhmin/resque.git', :branch => 'master'
 gem 'redis', :git => 'git://github.com/avokhmin/redis-rb.git',
   :branch => '735-reconnect-on-timeout-error'
-gem 'vagrant', :git => 'git://github.com/avokhmin/vagrant.git',
+gem 'vagrant', :git => 'git://github.com/warpc/vagrant.git',
   :branch => 'abf-worker'
 gem 'sahara', :git => 'git://github.com/avokhmin/sahara.git',
   :branch => 'update-to-vagrant-1.1.0'
