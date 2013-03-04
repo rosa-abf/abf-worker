@@ -1,0 +1,37 @@
+common: &common
+  airbrake_api_key: 'airbrake_api_key'
+  abf_url: 'https://abf.rosalinux.ru'
+  file_store:
+    url: 'http://file-store.rosalinux.ru/api/v1/file_stores'
+    create_url: 'http://file-store.rosalinux.ru/api/v1/upload'
+    token: 'token'
+  scripts:
+    publish_build_list:
+      path: 'https://abf.rosalinux.ru/abf/publish-build-list-script/archive/'
+      treeish: publish-build-list-script-master
+    rpm_build:
+      path: 'https://abf.rosalinux.ru/abf/rpm-build-script/archive/'
+      treeish: rpm-build-script-master
+    startup:
+      path: 'https://abf.rosalinux.ru/abf/startup-script/archive/'
+      treeish: startup-script-master
+
+development:
+  <<: *common
+  tmp_path: /Users/avokhmin/workspace/warpc/abf-worker/abf-worker-tmp
+  abf_api:
+    url: 'http://0.0.0.0:3000/api/v1'
+    token: 'token'
+  vm:
+    x86_64: 1024
+    i586: 512
+
+production:
+  <<: *common
+  tmp_path: /mnt/store/tmp/abf-worker-tmp
+  abf_api:
+    url: 'https://abf.rosalinux.ru/api/v1'
+    token: 'token'
+  vm:
+    x86_64: 8192
+    i586: 4096
