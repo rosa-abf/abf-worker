@@ -1,0 +1,121 @@
+# -*- encoding : utf-8 -*-
+require 'cape'
+require 'capistrano_colors'
+
+#set :default_environment, 'staging'
+
+#set :rake, "#{rake} --trace"
+set :rvm_ruby_string, 'ruby-1.9.3-p374@abf-worker'
+require 'rvm/capistrano'
+require 'bundler/capistrano'
+#require 'airbrake/capistrano'
+
+require 'capistrano/ext/multistage'
+set :stages, %w(production) # auto readed
+set :default_stage, "production"
+
+# main details
+ssh_options[:forward_agent] = true
+default_run_options[:pty] = true
+
+set :env, ENV['ENV'] || 'production'
+
+set :application, "abf-worker"
+set(:deploy_to) { "/home/rosa/#{application}" }
+set :user, "rosa"
+set :use_sudo, false
+set :keep_releases, 3
+
+set :scm, :git
+set :repository,  "git@github.com:uname/repository.git"
+set :deploy_via,  :remote_cache
+
+set :workers_count, 2
+
+
+set :rvm_install_ruby_threads, 1
+#before 'deploy:setup', 'rvm:install_rvm'
+#before 'deploy:setup', 'rvm:install_ruby'
+
+# Resque
+after "deploy:update",        "deploy:init_keys"
+after "deploy:update",        "deploy:symlink_all"
+after "deploy:stop",          "resque:stop_workers"
+after "resque:stop_workers",  "rake_tasks:abf_worker:clean_up"
+after "deploy:restart",       "deploy:cleanup"
+# after "deploy:restart", "resque:restart"
+# after "deploy:start",   "resque:start"
+# after "resque:start",   "resque:init_keys"
+
+namespace :deploy do
+
+  task :init_keys do
+    run "cd #{fetch :current_path} && chmod 600 keys/vagrant"
+  end
+
+  task :symlink_all do
+    run "mkdir -p #{fetch :shared_path}/config"
+
+    # Setup DB, application, newrelic
+    %w(resque application).each do |config|
+      run "cp -n #{fetch :release_path}/config/#{config}.yml.sample #{fetch :shared_path}/config/#{config}.yml"
+      run "ln -nfs #{fetch :shared_path}/config/#{config}.yml #{fetch :release_path}/config/#{config}.yml"
+    end
+
+  end
+
+  task :iso, :roles => :iso do
+    run_worker_with_params({
+      :INTERVAL => 60,
+      :COUNT    => 4,
+      :QUEUE    => 'iso_worker'
+    })
+  end
+
+  task :publish, :roles => :publish do 
+    queue = 'publish_worker'
+    run_worker_with_params({
+      :INTERVAL => 5,
+      :COUNT    => 4,
+      :QUEUE    => "#{queue}_default,#{queue}"
+    })
+  end
+
+  task :rpm_9, :roles => :rpm_9 do
+    queue = 'rpm_worker'
+    run_worker_with_params({
+      :INTERVAL => 5,
+      :COUNT    => 9,
+      :QUEUE    => "#{queue}_default,#{queue}"
+    })
+  end
+
+end
+
+namespace :resque do
+  task :stop_workers do
+    ps = 'ps aux | grep resque | grep -v grep'
+    run "#{ps} && kill -QUIT `#{ps} | awk '{ print $2 }'` || echo 'Workers already stopped!'"
+    #run "cd #{fetch :current_path} && #{current_env} bundle exec rake resque:stop_workers"
+  end
+end
+
+namespace :rake_tasks do
+  Cape do
+    mirror_rake_tasks "abf_worker:clean_up" do |env|
+      env['ENV'] = fetch(:env) if fetch(:env, false)
+    end
+    mirror_rake_tasks "abf_worker:init"
+  end
+end
+
+def run_worker_with_params(params)
+  p = {
+    :VVERBOSE             => 1,
+    :RESQUE_TERM_TIMEOUT  => 600,
+    :TERM_CHILD           => 1,
+    :ENV                  => (fetch(:env, false) ? fetch(:env) : ''),
+    :BACKGROUND           => 'yes'
+  }.merge(params).map{ |k, v| "#{k}=#{v}" }.join(' ')
+  run "cd #{fetch :current_path} && #{p} bundle exec rake resque:workers"
+end
