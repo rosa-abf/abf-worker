@@ -27,5 +27,5 @@ coverage.data
 
 .vagrant
 dump.rdb
-resque.yml
+config/resque.yml
 config/application.yml
