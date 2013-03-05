@@ -50,7 +50,7 @@ GIT
 
 GIT
   remote: git://github.com/warpc/vagrant.git
-  revision: 3dce6ad9e73ff83898004f315ec1c7d98a1a794c
+  revision: 6b123590e18611bfe9bfbfe7e1c537aeb305c596
   branch: abf-worker
   specs:
     vagrant (1.1.0.dev)
