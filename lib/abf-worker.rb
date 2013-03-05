@@ -1,5 +1,6 @@
 require 'resque'
 require 'airbrake'
+require 'yaml'
 
 
 ROOT = File.dirname(__FILE__) + '/..'
