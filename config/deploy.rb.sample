@@ -105,7 +105,9 @@ namespace :rake_tasks do
     mirror_rake_tasks "abf_worker:clean_up" do |env|
       env['ENV'] = fetch(:env) if fetch(:env, false)
     end
-    mirror_rake_tasks "abf_worker:init"
+    mirror_rake_tasks "abf_worker:init" do |env|
+      env['ENV'] = fetch(:env) if fetch(:env, false)
+    end
   end
 end
 
