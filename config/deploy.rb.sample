@@ -81,11 +81,11 @@ namespace :deploy do
     })
   end
 
-  task :rpm_9, :roles => :rpm_9 do
+  task :rpm, :roles => :rpm do
     queue = 'rpm_worker'
     run_worker_with_params({
       :INTERVAL => 5,
-      :COUNT    => 9,
+      :COUNT    => 10,
       :QUEUE    => "#{queue}_default,#{queue}"
     })
   end

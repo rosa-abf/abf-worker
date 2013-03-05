@@ -7,4 +7,4 @@ set :bs0, "0.0.0.0"
 
 role :publish,  bs0, :primary => true
 role :iso,      bs0
-role :rpm_9,    bs0
+role :rpm,      bs0
