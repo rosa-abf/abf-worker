@@ -35,13 +35,12 @@ module AbfWorker
             command << "GIT_PROJECT_ADDRESS=#{@git_project_address}"
             command << "COMMIT_HASH=#{@commit_hash}"
             command << "ARCH=#{@worker.vm.arch}"
-            command << "DISTRIB_TYPE=#{@worker.vm.os}"
             command << "PLATFORM_NAME=#{@bplname}"
             command << "UNAME=#{@user['uname']}"
             command << "EMAIL=#{@user['email']}"
             # command << "BUILD_REQUIRES=#{@build_requires}"
             # command << "INCLUDE_REPOS='#{@include_repos}'"
-            command << '/bin/bash build.sh'
+            command << "/bin/bash #{@worker.vm.os}.sh"
             begin
               @worker.vm.execute_command command.join(' ')
               logger.log 'Script done with exit_status = 0'

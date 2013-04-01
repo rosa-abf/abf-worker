@@ -7,8 +7,12 @@ common: &common
     token: 'token'
   scripts:
     publish_build_list:
-      path: 'https://abf.rosalinux.ru/abf/publish-build-list-script/archive/'
-      treeish: publish-build-list-script-master
+      mdv:
+        path: 'https://abf.rosalinux.ru/abf/publish-script-mdv/archive/'
+        treeish: publish-script-mdv-master
+      rhel:
+        path: 'https://abf.rosalinux.ru/abf/publish-script-rhel/archive/'
+        treeish: publish-script-rhel-master
     rpm_build:
       path: 'https://abf.rosalinux.ru/abf/rpm-build-script/archive/'
       treeish: rpm-build-script-master

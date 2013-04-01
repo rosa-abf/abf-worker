@@ -123,9 +123,10 @@ module AbfWorker
 
       def download_main_script
         commands = []
-        treeish = APP_CONFIG['scripts']['publish_build_list']['treeish']
+        script  = APP_CONFIG['scripts']['publish_build_list']["#{@worker.vm.os}"]
+        treeish = script['treeish']
         commands << "rm -rf #{treeish}.tar.gz #{treeish} publish-build-list-script"
-        commands << "curl -O -L #{APP_CONFIG['scripts']['publish_build_list']['path']}#{treeish}.tar.gz"
+        commands << "curl -O -L #{script['path']}#{treeish}.tar.gz"
 
         file_name = "#{treeish}.tar.gz"
         commands << "tar -xzf #{file_name}"
