@@ -31,17 +31,18 @@ module AbfWorker
             init_mock_configs
             logger.log 'Run script...'
 
-            command = []
-            command << 'cd scripts/build-packages/;'
-            command << "GIT_PROJECT_ADDRESS=#{@git_project_address}"
-            command << "COMMIT_HASH=#{@commit_hash}"
-            command << "ARCH=#{@worker.vm.arch}"
-            command << "PLATFORM_NAME=#{@bplname}"
-            command << "UNAME=#{@user['uname']}"
-            command << "EMAIL=#{@user['email']}"
-            # command << "BUILD_REQUIRES=#{@build_requires}"
-            # command << "INCLUDE_REPOS='#{@include_repos}'"
-            command << '/bin/bash build.sh'
+            command = [
+              'cd scripts/build-packages/;',
+              "GIT_PROJECT_ADDRESS=#{@git_project_address}",
+              "COMMIT_HASH=#{@commit_hash}",
+              "ARCH=#{@worker.vm.arch}",
+              "PLATFORM_NAME=#{@bplname}",
+              "UNAME=#{@user['uname']}",
+              "EMAIL=#{@user['email']}",
+              '/bin/bash build.sh'
+            ]
+            # "BUILD_REQUIRES=#{@build_requires}"
+            # "INCLUDE_REPOS='#{@include_repos}'"
             begin
               @worker.vm.execute_command command.join(' ')
               logger.log 'Script done with exit_status = 0'

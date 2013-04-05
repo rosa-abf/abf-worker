@@ -110,9 +110,10 @@ module AbfWorker
           sleep 30
 
           download_scripts
-          commands << 'cd scripts/startup-vm/; /bin/bash startup.sh'
-          commands << "rm -rf scripts"
-          commands.each{ |c| execute_command(c) }
+          [
+            'cd scripts/startup-vm/; /bin/bash startup.sh',
+            'rm -rf scripts'
+          ].each{ |c| execute_command(c) }
 
           # VM should be exist before using sandbox
           logger.log 'Enable save mode...'
@@ -252,18 +253,16 @@ module AbfWorker
 
       def download_scripts
         logger.log 'Prepare script...'
-        commands = []
+
         script  = APP_CONFIG['scripts']["#{@os}"]
         treeish = script['treeish']
-        commands << "rm -rf #{treeish}.tar.gz #{treeish} scripts"
-        commands << "curl -O -L #{script['path']}#{treeish}.tar.gz"
-
-        file_name = "#{treeish}.tar.gz"
-        commands << "tar -xzf #{file_name}"
-        commands << "mv #{treeish} scripts"
-        commands << "rm -rf #{file_name}"
-
-        commands.each{ |c| execute_command(c) }
+        [
+          "rm -rf #{treeish}.tar.gz #{treeish} scripts",
+          "curl -O -L #{script['path']}#{treeish}.tar.gz",
+          "tar -xzf #{treeish}.tar.gz",
+          "mv #{treeish} scripts",
+          "rm -rf #{treeish}.tar.gz"
+        ].each{ |c| execute_command(c) }
       end
 
       private

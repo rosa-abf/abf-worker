@@ -88,11 +88,11 @@ module AbfWorker
       end
 
       def base_command_for_run
-        command = []
-        command << 'cd scripts/publish-packages/;'
-        command << @cmd_params
-        command << '/bin/bash'
-        command
+        [
+          'cd scripts/publish-packages/;',
+          @cmd_params,
+          '/bin/bash'
+        ]
       end
 
       def init_packages_lists
