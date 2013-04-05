@@ -46,7 +46,7 @@ module AbfWorker
 
       def run_resign_script
         if @worker.vm.communicator.ready?
-          download_main_script
+          @worker.vm.download_scripts
           init_gpg_keys
 
           command = base_command_for_run
@@ -62,7 +62,7 @@ module AbfWorker
       def run_build_script(rollback_activity = false)
         if @worker.vm.communicator.ready?
           init_packages_lists
-          download_main_script
+          @worker.vm.download_scripts
           init_gpg_keys unless rollback_activity
           logger.log "Run #{rollback_activity ? 'rollback activity ' : ''}script..."
 
@@ -89,7 +89,7 @@ module AbfWorker
 
       def base_command_for_run
         command = []
-        command << 'cd publish-build-list-script/;'
+        command << 'cd scripts/publish-packages/;'
         command << @cmd_params
         command << '/bin/bash'
         command
@@ -119,21 +119,6 @@ module AbfWorker
           file.close
           file.unlink
         end
-      end
-
-      def download_main_script
-        commands = []
-        script  = APP_CONFIG['scripts']['publish_build_list']["#{@worker.vm.os}"]
-        treeish = script['treeish']
-        commands << "rm -rf #{treeish}.tar.gz #{treeish} publish-build-list-script"
-        commands << "curl -O -L #{script['path']}#{treeish}.tar.gz"
-
-        file_name = "#{treeish}.tar.gz"
-        commands << "tar -xzf #{file_name}"
-        commands << "mv #{treeish} publish-build-list-script"
-        commands << "rm -rf #{file_name}"
-
-        commands.each{ |c| @worker.vm.execute_command(c) }
       end
 
       def init_gpg_keys
