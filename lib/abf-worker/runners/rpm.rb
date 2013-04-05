@@ -27,21 +27,22 @@ module AbfWorker
       def run_script
         @script_runner = Thread.new do
           if @worker.vm.communicator.ready?
-            prepare_script
+            @worker.vm.download_scripts
+            init_mock_configs
             logger.log 'Run script...'
 
-            command = []
-            command << 'cd rpm-build-script;'
-            command << "GIT_PROJECT_ADDRESS=#{@git_project_address}"
-            command << "COMMIT_HASH=#{@commit_hash}"
-            command << "ARCH=#{@worker.vm.arch}"
-            command << "DISTRIB_TYPE=#{@worker.vm.os}"
-            command << "PLATFORM_NAME=#{@bplname}"
-            command << "UNAME=#{@user['uname']}"
-            command << "EMAIL=#{@user['email']}"
-            # command << "BUILD_REQUIRES=#{@build_requires}"
-            # command << "INCLUDE_REPOS='#{@include_repos}'"
-            command << '/bin/bash build.sh'
+            command = [
+              'cd scripts/build-packages/;',
+              "GIT_PROJECT_ADDRESS=#{@git_project_address}",
+              "COMMIT_HASH=#{@commit_hash}",
+              "ARCH=#{@worker.vm.arch}",
+              "PLATFORM_NAME=#{@bplname}",
+              "UNAME=#{@user['uname']}",
+              "EMAIL=#{@user['email']}",
+              '/bin/bash build.sh'
+            ]
+            # "BUILD_REQUIRES=#{@build_requires}"
+            # "INCLUDE_REPOS='#{@include_repos}'"
             begin
               @worker.vm.execute_command command.join(' ')
               logger.log 'Script done with exit_status = 0'
@@ -80,23 +81,6 @@ module AbfWorker
           File.delete container_data
         end
         logger.log "Done."
-      end
-
-      def prepare_script
-        logger.log 'Prepare script...'
-
-        commands = []
-        treeish = APP_CONFIG['scripts']['rpm_build']['treeish']
-        commands << "rm -rf #{treeish}.tar.gz #{treeish} rpm-build-script"
-        commands << "curl -O -L #{APP_CONFIG['scripts']['rpm_build']['path']}#{treeish}.tar.gz"
-        
-        file_name = "#{treeish}.tar.gz"
-        commands << "tar -xzf #{file_name}"
-        commands << "mv #{treeish} rpm-build-script"
-        commands << "rm -rf #{file_name}"
-
-        commands.each{ |c| @worker.vm.execute_command(c) }
-        init_mock_configs
       end
 
       def init_mock_configs

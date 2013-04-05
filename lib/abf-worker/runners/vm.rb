@@ -109,13 +109,11 @@ module AbfWorker
           }
           sleep 30
 
-          treeish   = APP_CONFIG['scripts']['startup']['treeish']
-          commands  = []
-          commands << "curl -O -L #{APP_CONFIG['scripts']['startup']['path']}#{treeish}.tar.gz"
-          commands << "tar -xzf #{treeish}.tar.gz"
-          commands << "cd #{treeish}; /bin/bash #{@os}.sh"
-          commands << "rm -rf #{treeish}*"
-          commands.each{ |c| @worker.vm.execute_command(c) }
+          download_scripts
+          [
+            'cd scripts/startup-vm/; /bin/bash startup.sh',
+            'rm -rf scripts'
+          ].each{ |c| execute_command(c) }
 
           # VM should be exist before using sandbox
           logger.log 'Enable save mode...'
@@ -251,6 +249,20 @@ module AbfWorker
           Sahara::Session.rollback(@vm_name, @vagrant_env)
         }
         sleep 5
+      end
+
+      def download_scripts
+        logger.log 'Prepare script...'
+
+        script  = APP_CONFIG['scripts']["#{@os}"]
+        treeish = script['treeish']
+        [
+          "rm -rf #{treeish}.tar.gz #{treeish} scripts",
+          "curl -O -L #{script['path']}#{treeish}.tar.gz",
+          "tar -xzf #{treeish}.tar.gz",
+          "mv #{treeish} scripts",
+          "rm -rf #{treeish}.tar.gz"
+        ].each{ |c| execute_command(c) }
       end
 
       private

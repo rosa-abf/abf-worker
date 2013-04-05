@@ -6,15 +6,12 @@ common: &common
     create_url: 'http://file-store.rosalinux.ru/api/v1/upload'
     token: 'token'
   scripts:
-    publish_build_list:
-      path: 'https://abf.rosalinux.ru/abf/publish-build-list-script/archive/'
-      treeish: publish-build-list-script-master
-    rpm_build:
-      path: 'https://abf.rosalinux.ru/abf/rpm-build-script/archive/'
-      treeish: rpm-build-script-master
-    startup:
-      path: 'https://abf.rosalinux.ru/abf/startup-script/archive/'
-      treeish: startup-script-master
+    mdv:
+      path: 'https://abf.rosalinux.ru/abf/mdv-scripts/archive/'
+      treeish: mdv-scripts-master
+    rhel:
+      path: 'https://abf.rosalinux.ru/abf/rhel-scripts/archive/'
+      treeish: rhel-scripts-master
 
 development:
   <<: *common
