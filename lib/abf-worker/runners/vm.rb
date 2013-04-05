@@ -112,7 +112,7 @@ module AbfWorker
           download_scripts
           commands << 'cd scripts/startup-vm/; /bin/bash startup.sh'
           commands << "rm -rf scripts"
-          commands.each{ |c| @worker.vm.execute_command(c) }
+          commands.each{ |c| execute_command(c) }
 
           # VM should be exist before using sandbox
           logger.log 'Enable save mode...'
