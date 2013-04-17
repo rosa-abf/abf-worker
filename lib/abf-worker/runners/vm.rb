@@ -94,11 +94,11 @@ module AbfWorker
           # see: http://code.google.com/p/phpvirtualbox/wiki/AdvancedSettings
           [
             "--memory #{memory}",
-            '--cpus 2',
+            '--cpus 3',
             '--hwvirtex on',
             '--nestedpaging on',
             '--largepages on',
-            '--nictype1 Am79C973'
+            '--nictype1 virtio'
           ].each do |c|
             system "VBoxManage modifyvm #{vm_id} #{c}"
           end
