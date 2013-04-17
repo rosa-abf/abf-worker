@@ -11,6 +11,7 @@ gem 'sahara', :git => 'git://github.com/avokhmin/sahara.git',
 gem 'log4r', '1.1.10'
 gem 'api_smith', '1.2.0'
 
+gem 'newrelic_rpm', '~> 3.5.5.38', :platforms => [:mri, :rbx]
 group :production do
   gem 'airbrake', '~> 3.1.6'
 end
