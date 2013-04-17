@@ -94,7 +94,7 @@ module AbfWorker
           # see: http://code.google.com/p/phpvirtualbox/wiki/AdvancedSettings
           [
             "--memory #{memory}",
-            '--cpus 4',
+            '--cpus 3',
             '--hwvirtex on',
             '--nestedpaging on',
             '--largepages on',
