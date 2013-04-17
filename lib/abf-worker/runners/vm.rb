@@ -81,20 +81,20 @@ module AbfWorker
           ensure
             system "rm -f #{synchro_file}"
           end
-          sleep 30
+          sleep 10
           logger.log 'Configure VM...'
           # Halt, because: The machine 'abf-worker_...' is already locked for a session (or being unlocked)
           run_with_vm_inspector {
             @vagrant_env.cli 'halt', @vm_name
           }
-          sleep 20
+          sleep 10
           vm_id = get_vm.id
           # see: #initialize_vagrant_env: 37
           memory = APP_CONFIG['vm']["#{arch}"]
           # see: http://code.google.com/p/phpvirtualbox/wiki/AdvancedSettings
           [
             "--memory #{memory}",
-            '--cpus 3',
+            '--cpus 4',
             '--hwvirtex on',
             '--nestedpaging on',
             '--largepages on',
@@ -107,7 +107,7 @@ module AbfWorker
           run_with_vm_inspector {
             @vagrant_env.cli 'up', @vm_name
           }
-          sleep 30
+          sleep 10
 
           download_scripts
           [
@@ -127,7 +127,7 @@ module AbfWorker
             run_with_vm_inspector {
               @vagrant_env.cli 'up', @vm_name
             }
-            sleep 30
+            sleep 10
             Sahara::Session.on @vm_name, @vagrant_env
           end
         end # first_run
@@ -159,7 +159,7 @@ module AbfWorker
         run_with_vm_inspector {
           @vagrant_env.cli 'halt', @vm_name
         }
-        sleep 15
+        sleep 10
         logger.log 'Done.'
         yield if block_given?
       end
