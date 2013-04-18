@@ -98,7 +98,8 @@ module AbfWorker
             '--hwvirtex on',
             '--nestedpaging on',
             '--largepages on',
-            '--nictype1 virtio'
+            '--nictype1 virtio',
+            '--chipset ich9'
           ].each do |c|
             system "VBoxManage modifyvm #{vm_id} #{c}"
           end
