@@ -40,6 +40,7 @@ set :rvm_install_ruby_threads, 1
 # Resque
 after "deploy:update",        "deploy:init_keys"
 after "deploy:update",        "deploy:symlink_all"
+after "deploy:update",        "airbrake:deploy"
 after "deploy:stop",          "resque:stop_workers"
 after "resque:stop_workers",  "rake_tasks:abf_worker:clean_up"
 after "deploy:restart",       "deploy:cleanup"
@@ -85,7 +86,7 @@ namespace :deploy do
     queue = 'rpm_worker'
     run_worker_with_params({
       :INTERVAL => 5,
-      :COUNT    => 10,
+      :COUNT    => 8,
       :QUEUE    => "#{queue}_default,#{queue}"
     })
   end
