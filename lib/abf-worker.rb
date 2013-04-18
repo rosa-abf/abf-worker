@@ -4,7 +4,7 @@ require 'yaml'
 
 
 ROOT = File.dirname(__FILE__) + '/..'
-env = ENV['ENV'] || 'development'
+env = ENV['RAILS_ENV'] || ENV['ENV'] || 'development'
 
 resque_config = YAML.load_file("#{ROOT}/config/resque.yml")
 Resque.redis = resque_config[env]
