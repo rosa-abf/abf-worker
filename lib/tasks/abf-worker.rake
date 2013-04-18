@@ -1,6 +1,7 @@
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../../lib'
 require 'abf-worker'
 require 'resque/tasks'
+require 'airbrake/tasks'
 
 namespace :abf_worker do
   desc 'Init dev env'
