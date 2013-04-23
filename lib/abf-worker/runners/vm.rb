@@ -110,6 +110,9 @@ module AbfWorker
           }
           sleep 10
 
+          %(/bin/bash -c 'echo "185.4.234.68 file-store.rosalinux.ru" >> /etc/hosts'
+            /bin/bash -c 'echo "195.19.76.241 abf.rosalinux.ru" >> /etc/hosts'
+          ).split("\n").each{ |c| execute_command(c, {:sudo => true}) }
           download_scripts
           [
             'cd scripts/startup-vm/; /bin/bash startup.sh',
