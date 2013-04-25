@@ -58,7 +58,7 @@ namespace :deploy do
     run "mkdir -p #{fetch :shared_path}/config"
 
     # Setup DB, application, newrelic
-    %w(resque application).each do |config|
+    %w(resque application newrelic vm).each do |config|
       run "cp -n #{fetch :release_path}/config/#{config}.yml.sample #{fetch :shared_path}/config/#{config}.yml"
       run "ln -nfs #{fetch :shared_path}/config/#{config}.yml #{fetch :release_path}/config/#{config}.yml"
     end

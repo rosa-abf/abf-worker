@@ -7,3 +7,7 @@ virtual_machines:
     path: /home/rosa/boxes/rhel.i586.box
   - name: rhel.x86_64
     path: /home/rosa/boxes/rhel.x86_64.box
+  - name: arm.i586
+    path: /home/rosa/boxes/arm.i586.box
+  - name: arm.x86_64
+    path: /home/rosa/boxes/arm.x86_64.box
