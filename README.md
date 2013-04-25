@@ -1,8 +1,5 @@
----
-title: RosaLab ABF workers
----
-
-# RosaLab ABF workers
+RosaLab ABF workers
+===================
 
 **Workers for building packages, processing repositories and etc.**
 
