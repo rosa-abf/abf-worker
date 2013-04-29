@@ -6,6 +6,7 @@ require 'abf-worker/exceptions/script_error'
 require 'abf-worker/runners/vm'
 require 'abf-worker/outputters/logger'
 require 'abf-worker/outputters/redis_outputter'
+require 'socket'
 
 module AbfWorker
   class BaseWorker
@@ -60,7 +61,7 @@ module AbfWorker
         Airbrake.notify(
           e,
           :parameters => {
-            :hostname   => `hostname`.strip,
+            :hostname   => Socket.gethostname,
             :worker_id  => @worker_id,
             :vm_id      => vm_id,
             :options    => @options

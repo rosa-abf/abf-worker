@@ -1,6 +1,7 @@
 require 'forwardable'
 require 'digest/md5'
 require 'abf-worker/inspectors/vm_inspector'
+require 'socket'
 
 module AbfWorker
   module Runners
@@ -150,6 +151,7 @@ module AbfWorker
       end
 
       def start_vm
+        logger.log "Host name '#{Socket.gethostname}'"
         logger.log "Up VM '#{get_vm.id}'..."
         run_with_vm_inspector {
           @vagrant_env.cli 'up', @vm_name
