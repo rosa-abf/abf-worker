@@ -12,6 +12,10 @@ common: &common
     rhel:
       path: 'https://abf.rosalinux.ru/abf/rhel-scripts/archive/'
       treeish: rhel-scripts-master
+    arm:
+      path: 'https://abf.rosalinux.ru/abf/arm-scripts/archive/'
+      treeish: arm-scripts-master
+
 
 development:
   <<: *common
