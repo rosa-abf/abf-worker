@@ -90,7 +90,7 @@ module AbfWorker
           @include_repos.each do |name, url|
             # Checks that repositoy exist
             if %x[ curl --write-out %{http_code} --silent --output /dev/null #{url} ] == '404'
-              logger.log "Repository does not exist: #{url.gsub(/\:\/\/.*\:\@/, '://[FILTERED]@')}"
+              logger.log "Repository does not exist: #{url}"
             else
               file.puts "#{name} #{url}"
             end
