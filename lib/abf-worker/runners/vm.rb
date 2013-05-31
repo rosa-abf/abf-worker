@@ -208,17 +208,14 @@ module AbfWorker
           :sudo => false,
           :error_class => AbfWorker::Exceptions::ScriptError
         }.merge(opts || {})
-        filtered_command = command.gsub /\:\/\/.*\:\@/, '://[FILTERED]@'
-        logger.log "Execute command with sudo = #{opts[:sudo]}: #{filtered_command}", '-->'
+        logger.log "Execute command with sudo = #{opts[:sudo]}: #{command}", '-->'
         if communicator.ready?
           communicator.execute command, opts do |channel, data|
-            logger.log data.gsub(/\:\/\/.*\:\@/, '://[FILTERED]@'), '', false
+            logger.log data, '', false
           end
         end
-      rescue AbfWorker::Exceptions::ScriptError => e
-        raise e
       rescue => e
-        raise AbfWorker::Exceptions::ScriptError, filtered_command
+        raise AbfWorker::Exceptions::ScriptError, command
       end
 
       def upload_results_to_file_store

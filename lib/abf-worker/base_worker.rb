@@ -73,7 +73,7 @@ module AbfWorker
         a << 'Something went wrong, report has been sent to ABF team, please try again.'
         a << 'If this error will be happen again, please inform us using https://abf.rosalinux.ru/contact'
         a << '----------'
-        a << e.message
+        a << e.message.gsub(*AbfWorker::Outputters::Logger::FILTER)
         a << e.backtrace.join("\n")
         a << '<== ABF-WORKER-ERROR-END'
         logger.error a.join("\n")
