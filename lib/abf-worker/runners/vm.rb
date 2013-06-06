@@ -214,6 +214,8 @@ module AbfWorker
             logger.log data, '', false
           end
         end
+      rescue AbfWorker::Exceptions::ScriptError => e
+        raise e # Throws ScriptError with exit_status
       rescue => e
         raise AbfWorker::Exceptions::ScriptError, command
       end
