@@ -1,6 +1,6 @@
 require 'vagrant'
 require 'sahara'
-require 'sahara/command/vagrant'
+# require 'sahara/command/vagrant'
 require 'net/ssh'
 require 'abf-worker/exceptions/script_error'
 require 'abf-worker/runners/vm'
@@ -66,7 +66,7 @@ module AbfWorker
             :vm_id      => vm_id,
             :options    => @options
           }
-        ) if @task_restarted || force
+        ) if (@task_restarted || force) && ENV['ENV'] == 'production'
 
         a = []
         a << '==> ABF-WORKER-ERROR-START'

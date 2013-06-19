@@ -122,10 +122,12 @@ module AbfWorker
 
           # VM should be exist before using sandbox
           logger.log 'Enable save mode...'
-          Sahara::Session.on @vm_name, @vagrant_env
+          # ::Sahara::Session.on @vm_name, @vagrant_env
+          @vagrant_env.cli 'sandbox', 'on'
         else
           if @share_folder
-            Sahara::Session.off @vm_name, @vagrant_env
+            @vagrant_env.cli 'sandbox', 'off'
+            # ::Sahara::Session.off @vm_name, @vagrant_env
             system "VBoxManage sharedfolder remove #{get_vm.id} --name v-root"
             system "VBoxManage sharedfolder add #{get_vm.id} --name v-root --hostpath #{@share_folder}"
             sleep 10
@@ -133,7 +135,8 @@ module AbfWorker
               @vagrant_env.cli 'up', @vm_name
             }
             sleep 10
-            Sahara::Session.on @vm_name, @vagrant_env
+            @vagrant_env.cli 'sandbox', 'on'
+            # ::Sahara::Session.on @vm_name, @vagrant_env
           end
         end # first_run
       end
@@ -251,7 +254,8 @@ module AbfWorker
         logger.log 'Rollback activity'
         sleep 10
         run_with_vm_inspector {
-          Sahara::Session.rollback(@vm_name, @vagrant_env)
+          # ::Sahara::Session.rollback(@vm_name, @vagrant_env)
+          @vagrant_env.cli 'sandbox', 'rollback'
         }
         sleep 5
       end

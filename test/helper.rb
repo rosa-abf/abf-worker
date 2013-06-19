@@ -9,10 +9,20 @@ rescue Bundler::BundlerError => e
 end
 require 'test/unit'
 require 'shoulda'
+require 'rspec'
+require 'rr'
+require 'mock_redis'
+
+class Test::Unit::TestCase
+
+  def stub_redis
+    @redis_instance = MockRedis.new
+    stub(Redis).new { @redis_instance }
+    stub(Resque).redis { @redis_instance }
+  end
+
+end
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'abf-worker'
-
-class Test::Unit::TestCase
-end

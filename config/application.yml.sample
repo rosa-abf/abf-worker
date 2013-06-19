@@ -36,3 +36,13 @@ production:
   vm:
     x86_64: 8192
     i586: 4096
+
+test:
+  <<: *common
+  tmp_path: /Users/avokhmin/workspace/warpc/abf-worker/abf-worker-tmp
+  abf_api:
+    url: 'http://0.0.0.0:3000/api/v1'
+    token: 'token'
+  vm:
+    x86_64: 512
+    i586: 512
