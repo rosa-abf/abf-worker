@@ -55,7 +55,6 @@ GEM
     ffi (1.9.0)
     hashie (1.2.0)
     highline (1.6.19)
-    hiredis (0.4.5)
     httparty (0.11.0)
       multi_json (~> 1.0)
       multi_xml (>= 0.5.2)
@@ -127,7 +126,6 @@ DEPENDENCIES
   cape
   capistrano
   capistrano_colors
-  hiredis (~> 0.4.5)
   log4r (= 1.1.10)
   mock_redis
   newrelic_rpm
