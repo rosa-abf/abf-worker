@@ -103,11 +103,11 @@ end
 
 namespace :rake_tasks do
   Cape do
-    mirror_rake_tasks "abf_worker:clean_up" do |env|
-      env['ENV'] = fetch(:env) if fetch(:env, false)
+    mirror_rake_tasks "abf_worker:clean_up" do |recipes|
+      recipes.env['ENV'] = fetch(:env) if fetch(:env, false)
     end
-    mirror_rake_tasks "abf_worker:init" do |env|
-      env['ENV'] = fetch(:env) if fetch(:env, false)
+    mirror_rake_tasks "abf_worker:init" do |recipes|
+      recipes.env['ENV'] = fetch(:env) if fetch(:env, false)
     end
   end
 end
