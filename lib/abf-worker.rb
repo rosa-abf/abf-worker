@@ -1,6 +1,7 @@
 require 'resque'
 require 'airbrake'
 require 'yaml'
+require 'newrelic_rpm'
 
 
 ROOT = File.dirname(__FILE__) + '/..'
