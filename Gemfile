@@ -4,14 +4,11 @@ gem 'rake'
 gem 'resque', '1.24.1'
 gem 'redis', '3.0.4'
 gem 'hiredis', '~> 0.4.5'
-# gem 'vagrant', git: 'git://github.com/mitchellh/vagrant.git', tag: 'v1.2.2'
+
+# errors: MAC adress, SSH, sahara gem
 # gem 'vagrant', git: 'git://github.com/mitchellh/vagrant.git', tag: 'v1.2.2'
 gem 'vagrant', git: 'git://github.com/warpc/vagrant.git', branch: 'abf-worker'
-gem 'sahara', :git => 'git://github.com/avokhmin/sahara.git',
-  :branch => 'update-to-vagrant-1.1.0'
-# gem 'vagrant', '1.0.7'
-# gem 'sahara', '0.0.13'
-# gem 'sahara', '0.0.13'
+gem 'sahara', git: 'git://github.com/avokhmin/sahara.git', branch: 'update-to-vagrant-1.1.0'
 gem 'log4r', '1.1.10'
 gem 'api_smith', '1.2.0'
 
