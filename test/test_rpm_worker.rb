@@ -2,7 +2,7 @@ require 'helper'
 
 class TestRpmWorker < Test::Unit::TestCase
 
-  context 'build RHEL package' do
+  context 'RHEL package' do
     setup do
       stub_redis
       @options = {
@@ -29,8 +29,8 @@ class TestRpmWorker < Test::Unit::TestCase
       assert_equal 1, @redis_instance.llen('queue:rpm_worker_default')
     end
 
-    should 'up VM' do
-      expect{ AbfWorker::RpmWorkerDefault.perform @options }.to_not raise_error 
+    should 'build package' do
+      expect{ AbfWorker::RpmWorkerDefault.perform @options }.to_not raise_error
     end
 
   end

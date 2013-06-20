@@ -13,6 +13,8 @@ require 'rspec'
 require 'rr'
 require 'mock_redis'
 
+ENV['ENV'] = 'test'
+
 class Test::Unit::TestCase
 
   def stub_redis
