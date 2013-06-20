@@ -7,12 +7,21 @@ require 'newrelic_rpm'
 ROOT = File.dirname(__FILE__) + '/..'
 env = ENV['RAILS_ENV'] || ENV['ENV'] || 'development'
 
-Resque.redis = YAML.load_file("#{ROOT}/config/resque.yml")[env]
-# resque_config = YAML.load_file("#{ROOT}/config/resque.yml")[env]
-# Resque.redis = Redis.new(host:        resque_config.gsub(/\:.*$/, ''),
-#                          port:        resque_config.gsub(/.*\:/, ''),
-#                          # thread_safe: true,
-#                          timeout:     30)
+
+require 'logger'
+logger = Logger.new(STDOUT)
+logger.formatter = proc do |severity, datetime, progname, msg|
+  "#{severity} #{datetime.strftime("%Y-%m-%d %H:%M:%S")}: #{msg}\n"
+end
+Resque.logger = logger
+Resque.logger.level = Logger::INFO
+
+# Resque.redis = YAML.load_file("#{ROOT}/config/resque.yml")[env]
+resque_config = YAML.load_file("#{ROOT}/config/resque.yml")[env]
+Resque.redis = Redis.new(host:        resque_config.gsub(/\:.*$/, ''),
+                         port:        resque_config.gsub(/.*\:/, ''),
+                         driver:      :hiredis,
+                         timeout:     30)
 
 APP_CONFIG = YAML.load_file("#{ROOT}/config/application.yml")[env]
 
@@ -20,20 +29,20 @@ Airbrake.configure do |config|
   config.api_key = APP_CONFIG['airbrake_api_key']
 end
 
-Resque.before_first_fork do
-  NewRelic::Agent.manual_start(dispatcher:              :resque,
-                               sync_startup:            true,
-                               start_channel_listener:  true,
-                               report_instance_busy:    false)
-end
+# Resque.before_first_fork do
+#   NewRelic::Agent.manual_start(dispatcher:              :resque,
+#                                sync_startup:            true,
+#                                start_channel_listener:  true,
+#                                report_instance_busy:    false)
+# end
 
-Resque.before_fork do |job|
-  NewRelic::Agent.register_report_channel(job.object_id)
-end
+# Resque.before_fork do |job|
+#   NewRelic::Agent.register_report_channel(job.object_id)
+# end
 
-Resque.after_fork do |job|
-  NewRelic::Agent.after_fork(report_to_channel: job.object_id)
-end
+# Resque.after_fork do |job|
+#   NewRelic::Agent.after_fork(report_to_channel: job.object_id)
+# end
 
 require 'abf-worker/base_worker'
 require 'abf-worker/iso_worker'
