@@ -26,15 +26,13 @@ class TestRpmWorker < Test::Unit::TestCase
       )
     end
 
-
     should 'adds an entry to the RpmWorkerDefault queue' do
       assert_equal 1, @redis_instance.llen('queue:rpm_worker_default')
     end
 
     should 'build package' do
       expect{ AbfWorker::RpmWorkerDefault.perform @options }.to_not raise_error
-    end
-
+    end 
   end
 
 
@@ -62,15 +60,13 @@ class TestRpmWorker < Test::Unit::TestCase
       )
     end
 
-
     should 'adds an entry to the RpmWorkerDefault queue' do
       assert_equal 1, @redis_instance.llen('queue:rpm_worker_default')
     end
 
     should 'build package' do
       expect{ AbfWorker::RpmWorkerDefault.perform @options }.to_not raise_error
-    end
-
+    end 
   end
 
 end
