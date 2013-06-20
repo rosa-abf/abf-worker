@@ -1,6 +1,6 @@
 require 'vagrant'
 require 'sahara'
-# require 'sahara/command/vagrant'
+require 'sahara/command/vagrant'
 require 'net/ssh'
 require 'abf-worker/exceptions/script_error'
 require 'abf-worker/runners/vm'

@@ -2,7 +2,7 @@ require 'helper'
 
 class TestRpmWorker < Test::Unit::TestCase
 
-  context 'build MDV package' do
+  context 'build RHEL package' do
     setup do
       stub_redis
       @options = {
