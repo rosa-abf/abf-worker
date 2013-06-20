@@ -19,7 +19,7 @@ common: &common
 
 development:
   <<: *common
-  tmp_path: /Users/avokhmin/workspace/warpc/abf-worker/abf-worker-tmp
+  tmp_path: 'tmp_path'
   abf_api:
     url: 'http://0.0.0.0:3000/api/v1'
     token: 'token'
@@ -29,7 +29,7 @@ development:
 
 production:
   <<: *common
-  tmp_path: /mnt/store/tmp/abf-worker-tmp
+  tmp_path: 'tmp_path'
   abf_api:
     url: 'https://abf.rosalinux.ru/api/v1'
     token: 'token'
@@ -39,7 +39,7 @@ production:
 
 test:
   <<: *common
-  tmp_path: /Users/avokhmin/workspace/warpc/abf-worker/abf-worker-tmp
+  tmp_path: 'tmp_path'
   abf_api:
     url: 'http://0.0.0.0:3000/api/v1'
     token: 'token'
