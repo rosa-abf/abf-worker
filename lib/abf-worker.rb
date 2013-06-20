@@ -7,12 +7,12 @@ require 'newrelic_rpm'
 ROOT = File.dirname(__FILE__) + '/..'
 env = ENV['RAILS_ENV'] || ENV['ENV'] || 'development'
 
-resque_config = YAML.load_file("#{ROOT}/config/resque.yml")[env]
-
-Resque.redis = Redis.new(host:        resque_config.gsub(/\:.*$/, ''),
-                         port:        resque_config.gsub(/.*\:/, ''),
-                         thread_safe: true,
-                         timeout:     30)
+# resque_config = YAML.load_file("#{ROOT}/config/resque.yml")[env]
+Resque.redis = YAML.load_file("#{ROOT}/config/resque.yml")[env]
+# Resque.redis = Redis.new(host:        resque_config.gsub(/\:.*$/, ''),
+#                          port:        resque_config.gsub(/.*\:/, ''),
+#                          thread_safe: true,
+#                          timeout:     30)
 
 APP_CONFIG = YAML.load_file("#{ROOT}/config/application.yml")[env]
 
