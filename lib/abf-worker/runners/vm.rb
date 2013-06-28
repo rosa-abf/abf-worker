@@ -2,6 +2,7 @@ require 'forwardable'
 require 'digest/md5'
 require 'abf-worker/inspectors/vm_inspector'
 require 'socket'
+require 'fileutils'
 
 module AbfWorker
   module Runners
@@ -313,10 +314,7 @@ module AbfWorker
       end
 
       def vagrantfiles_folder
-        return @vagrantfiles_folder if @vagrantfiles_folder
-        @vagrantfiles_folder = @worker.tmp_dir + '/vagrantfiles'
-        Dir.mkdir(@vagrantfiles_folder) unless File.exists?(@vagrantfiles_folder)
-        @vagrantfiles_folder 
+        @vagrantfiles_folder ||= FileUtils.mkdir_p(@worker.tmp_dir + '/vagrantfiles').first
       end
 
       def file_store_token
