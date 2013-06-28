@@ -44,6 +44,13 @@ module AbfWorker
                   vm_config.vm.box = '#{@os}.#{arch}'
                   vm_config.vm.forward_port 22, #{port}
                   vm_config.ssh.port = #{port}
+                  vm_config.vm.customize  ['modifyvm', :id, '--memory', #{APP_CONFIG['vm']["#{arch}"]}]
+                  vm_config.vm.customize  ['modifyvm', :id, '--cpus', 3]
+                  vm_config.vm.customize  ['modifyvm', :id, '--hwvirtex', 'on']
+                  vm_config.vm.customize  ['modifyvm', :id, '--largepages', 'on']
+                  vm_config.vm.customize  ['modifyvm', :id, '--nestedpaging', 'on']
+                  vm_config.vm.customize  ['modifyvm', :id, '--nictype1', 'virtio']
+                  vm_config.vm.customize  ['modifyvm', :id, '--chipset', 'ich9']
                 end
               end"
             file.write(str)
@@ -64,11 +71,9 @@ module AbfWorker
           :vagrantfile_name => @vm_name
         )
         `sudo chown -R rosa:rosa #{@share_folder}/../` if @share_folder
-        # Hook for fix:
-        # ERROR warden: Error occurred: uninitialized constant VagrantPlugins::ProviderVirtualBox::Action::Customize::Errors
-        # on vm_config.vm.customizations << ['modifyvm', :id, '--memory',  '#{memory}']
-        # and config.vm.customize ['modifyvm', '#{@vm_name}', '--memory', '#{memory}']
+
         if first_run
+          # First startup of VMs one by one
           synchro_file = "#{@worker.tmp_dir}/../vm.synchro"
           begin
             while !system("lockfile -r 0 #{synchro_file}") do
@@ -84,33 +89,7 @@ module AbfWorker
           end
           sleep 10
           logger.log 'Configure VM...'
-          # Halt, because: The machine 'abf-worker_...' is already locked for a session (or being unlocked)
-          run_with_vm_inspector {
-            @vagrant_env.cli 'halt', @vm_name
-          }
-          sleep 10
-          vm_id = get_vm.id
-          # see: #initialize_vagrant_env: 37
-          memory = APP_CONFIG['vm']["#{arch}"]
-          # see: http://code.google.com/p/phpvirtualbox/wiki/AdvancedSettings
-          [
-            "--memory #{memory}",
-            '--cpus 3',
-            '--hwvirtex on',
-            '--nestedpaging on',
-            '--largepages on',
-            '--nictype1 virtio',
-            '--chipset ich9'
-          ].each do |c|
-            system "VBoxManage modifyvm #{vm_id} #{c}"
-          end
-
-          sleep 10
-          run_with_vm_inspector {
-            @vagrant_env.cli 'up', @vm_name
-          }
-          sleep 10
-
+          # Fix for DNS problems
           %(/bin/bash -c 'echo "185.4.234.68 file-store.rosalinux.ru" >> /etc/hosts'
             /bin/bash -c 'echo "195.19.76.241 abf.rosalinux.ru" >> /etc/hosts'
           ).split("\n").each{ |c| execute_command(c, {:sudo => true}) }

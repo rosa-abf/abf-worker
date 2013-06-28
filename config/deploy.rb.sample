@@ -5,7 +5,7 @@ require 'capistrano_colors'
 #set :default_environment, 'staging'
 
 #set :rake, "#{rake} --trace"
-set :rvm_ruby_string, 'ruby-1.9.3-p374@abf-worker'
+set :rvm_ruby_string, 'ruby-2.0.0-p247@abf-worker'
 require 'rvm/capistrano'
 require 'bundler/capistrano'
 #require 'airbrake/capistrano'
@@ -103,18 +103,18 @@ end
 
 namespace :rake_tasks do
   Cape do
-    mirror_rake_tasks "abf_worker:clean_up" do |env|
-      env['ENV'] = fetch(:env) if fetch(:env, false)
+    mirror_rake_tasks "abf_worker:clean_up" do |recipes|
+      recipes.env['ENV'] = fetch(:env) if fetch(:env, false)
     end
-    mirror_rake_tasks "abf_worker:init" do |env|
-      env['ENV'] = fetch(:env) if fetch(:env, false)
+    mirror_rake_tasks "abf_worker:init" do |recipes|
+      recipes.env['ENV'] = fetch(:env) if fetch(:env, false)
     end
   end
 end
 
 def run_worker_with_params(params)
   p = {
-    :VVERBOSE             => 1,
+    # :VVERBOSE             => 1,
     :RESQUE_TERM_TIMEOUT  => 600,
     :TERM_CHILD           => 1,
     :ENV                  => (fetch(:env, false) ? fetch(:env) : ''),

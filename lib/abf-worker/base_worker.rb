@@ -66,7 +66,7 @@ module AbfWorker
             :vm_id      => vm_id,
             :options    => @options
           }
-        ) if @task_restarted || force
+        ) if (@task_restarted || force) && ENV['ENV'] == 'production'
 
         a = []
         a << '==> ABF-WORKER-ERROR-START'
