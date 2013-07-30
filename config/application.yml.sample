@@ -15,6 +15,9 @@ common: &common
     arm:
       path: 'https://abf.rosalinux.ru/abf/arm-scripts/archive/'
       treeish: arm-scripts-master
+  log_server:
+    host: 127.0.0.1
+    port: 6379
 
 
 development:
