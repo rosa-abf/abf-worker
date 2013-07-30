@@ -15,7 +15,9 @@ common: &common
     arm:
       path: 'https://abf.rosalinux.ru/abf/arm-scripts/archive/'
       treeish: arm-scripts-master
-  redis_outputter_server: 127.0.0.1:6379
+  log_server:
+    host: 127.0.0.1
+    port: 6379
 
 
 development:

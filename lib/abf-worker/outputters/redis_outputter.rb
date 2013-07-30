@@ -2,8 +2,6 @@ require 'log4r/outputter/outputter'
 
 module AbfWorker::Outputters
   class RedisOutputter < Log4r::Outputter
-    REDIS_HOST = APP_CONFIG['redis_outputter_server'].gsub(/\:.*$/, '')
-    REDIS_PORT = APP_CONFIG['redis_outputter_server'].gsub(/.*\:/, '')
 
     def initialize(name, hash={})
       super(name, hash)
@@ -44,7 +42,11 @@ module AbfWorker::Outputters
     end
 
     def redis
-      @redis ||= Redis.new host: REDIS_HOST, port: REDIS_PORT, driver: :hiredis
+      @redis ||= Redis.new(
+        host:   APP_CONFIG['log_server']['host'],
+        port:   APP_CONFIG['log_server']['port'],
+        driver: :hiredis
+      )
     end
 
   end
