@@ -33,7 +33,7 @@ ENV['COUNT'].to_i.times do |num|
 
       # failsafe
       on.condition(:tries) do |c|
-        c.times = 5
+        c.times = 1_000_000
         c.transition = :start
         c.interval = 60.seconds
       end
