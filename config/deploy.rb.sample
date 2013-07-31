@@ -54,7 +54,7 @@ namespace :god do
   end
 
   def god_command
-    "cd #{fetch :current_path} && bundle exec god"
+    "cd #{fetch :current_path} && rvm #{fetch :rvm_ruby_string} exec bundle exec god"
   end
 
   desc "Stop god"
@@ -70,7 +70,8 @@ namespace :god do
       :INTERVAL => 5,
       :COUNT    => 8,
       :QUEUE    => 'rpm_worker_default,rpm_worker',
-      :ABF_ROOT => fetch(:current_path)
+      :ABF_ROOT => fetch(:current_path),
+      :RVM_RUBY_STRING => fetch(:rvm_ruby_string)
     })
     config_file = "#{fetch :current_path}/config/rpm.god"
     run "#{god_command} -c #{config_file}", :env => env
