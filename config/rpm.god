@@ -15,10 +15,11 @@ ENV['COUNT'].to_i.times do |num|
     w.interval = 60.seconds
     w.pid_file = "#{abf_root}/tmp/pids/#{w.name}.pid"
     w.env      = env.merge('PIDFILE' => w.pid_file)
-    w.start    = "rvm #{rvm_ruby_string} exec bundle exec rake abf_worker:safe_clean_up && #{w.env.map{|k, v| "#{k}=#{v}"}.join(' ')} rvm #{rvm_ruby_string} exec bundle exec rake resque:work &"
-    w.restart  = "rvm #{rvm_ruby_string} exec bundle exec rake abf_worker:safe_clean_up && #{w.env.map{|k, v| "#{k}=#{v}"}.join(' ')} rvm #{rvm_ruby_string} exec bundle exec rake resque:work &"
-    w.log      = "#{abf_root}/log/#{w.name}.log"
-    w.log_cmd  = "#{abf_root}/log/#{w.name}.cmd.log"
+    w.start    = "bundle exec rake abf_worker:safe_clean_up && #{w.env.map{|k, v| "#{k}=#{v}"}.join(' ')} bundle exec rake resque:work &"
+    # w.start    = "rvm #{rvm_ruby_string} exec bundle exec rake abf_worker:safe_clean_up && #{w.env.map{|k, v| "#{k}=#{v}"}.join(' ')} rvm #{rvm_ruby_string} exec bundle exec rake resque:work &"
+    # w.restart  = "rvm #{rvm_ruby_string} exec bundle exec rake abf_worker:safe_clean_up && #{w.env.map{|k, v| "#{k}=#{v}"}.join(' ')} rvm #{rvm_ruby_string} exec bundle exec rake resque:work &"
+    # w.log      = "#{abf_root}/log/#{w.name}.log"
+    # w.log_cmd  = "#{abf_root}/log/#{w.name}.cmd.log"
 
     # determine the state on startup
     w.transition(:init, { true => :up, false => :start }) do |on|
@@ -36,9 +37,9 @@ ENV['COUNT'].to_i.times do |num|
 
       # failsafe
       on.condition(:tries) do |c|
-        c.times = 1_000_000
+        c.times = 5
         c.transition = :start
-        c.interval = 60.seconds
+        c.interval = 10.seconds
       end
     end
 
