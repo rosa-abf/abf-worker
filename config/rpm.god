@@ -1,4 +1,5 @@
 abf_root  = ENV['ABF_ROOT'] or raise "ABF_ROOT not set"
+rvm_ruby_string = ENV['RVM_RUBY_STRING'] or raise "RVM_RUBY_STRING not set"
 
 env = {}
 %w(RESQUE_TERM_TIMEOUT TERM_CHILD ENV BACKGROUND INTERVAL QUEUE).each do |key|
@@ -15,7 +16,7 @@ ENV['COUNT'].to_i.times do |num|
     w.pid_file = "#{abf_root}/tmp/pids/#{w.name}.pid"
     w.env      = env.merge('PIDFILE' => w.pid_file)
     # w.start    = "bundle exec rake resque:work &"
-    w.start    = "bundle exec rake abf_worker:safe_clean_up && #{w.env.map{|k, v| "#{k}=#{v}"}.join(' ')} bundle exec rake resque:work &"
+    w.start    = "rvm #{rvm_ruby_string} exec bundle exec rake abf_worker:safe_clean_up && #{w.env.map{|k, v| "#{k}=#{v}"}.join(' ')} rvm #{rvm_ruby_string} exec bundle exec rake resque:work &"
 
     # determine the state on startup
     w.transition(:init, { true => :up, false => :start }) do |on|
