@@ -16,6 +16,7 @@ ENV['COUNT'].to_i.times do |num|
     w.env      = env.merge('PIDFILE' => w.pid_file)
     # w.start    = "bundle exec rake resque:work &"
     w.start    = "bundle exec rake abf_worker:safe_clean_up && #{w.env.map{|k, v| "#{k}=#{v}"}.join(' ')} bundle exec rake resque:work &"
+    w.log_level = :debug
 
     # determine the state on startup
     w.transition(:init, { true => :up, false => :start }) do |on|
