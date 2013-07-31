@@ -32,7 +32,7 @@ ENV['COUNT'].to_i.times do |num|
     w.transition([:start, :restart], :up) do |on|
       on.condition(:process_running) do |c|
         c.running = true
-        c.interval = 60.seconds
+        c.interval = 5.seconds
       end
 
       # failsafe
