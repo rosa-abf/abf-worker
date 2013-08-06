@@ -55,7 +55,7 @@ namespace :god do
   end
 
   desc "Stop god"
-  task :terminate_if_running, :roles => [:rpm, :zurich, :msk] do
+  task :terminate_if_running, :roles => :rpm do
     if god_is_running
       run "#{god_command} terminate"
     end
