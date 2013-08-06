@@ -132,7 +132,8 @@ module AbfWorker
       end
 
       def init_tmp_folder
-        @tmp_dir = "#{APP_CONFIG['tmp_path']}/#{name}"
+        base_name = name.gsub(/^AbfWorker\:\:/, '').gsub(/Worker(Default)?$/, '').downcase
+        @tmp_dir = "#{APP_CONFIG['tmp_path']}/#{base_name}"
         system "mkdir -p -m 0700 #{@tmp_dir}"
       end
 

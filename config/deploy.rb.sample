@@ -41,12 +41,24 @@ set :rvm_install_ruby_threads, 1
 after "deploy:update",        "deploy:init_keys"
 after "deploy:update",        "deploy:symlink_all"
 after "deploy:update",        "airbrake:deploy"
+
+before "deploy:stop",         "god:terminate_if_running"
+
 after "deploy:stop",          "resque:stop_workers"
 after "resque:stop_workers",  "rake_tasks:abf_worker:clean_up"
 after "deploy:restart",       "deploy:cleanup"
-# after "deploy:restart", "resque:restart"
-# after "deploy:start",   "resque:start"
-# after "resque:start",   "resque:init_keys"
+
+
+namespace :god do
+  def god_is_running
+    !capture("#{god_command} status >/dev/null 2>/dev/null || echo 'not running'").start_with?('not running')
+  end
+
+  desc "Stop god"
+  task :terminate_if_running do
+    run "#{god_command} terminate" if god_is_running
+  end
+end
 
 namespace :deploy do
 
@@ -69,7 +81,8 @@ namespace :deploy do
     run_worker_with_params({
       :INTERVAL => 60,
       :COUNT    => 4,
-      :QUEUE    => 'iso_worker'
+      :QUEUE    => 'iso_worker',
+      :GROUP    => 'iso'
     })
   end
 
@@ -78,7 +91,8 @@ namespace :deploy do
     run_worker_with_params({
       :INTERVAL => 5,
       :COUNT    => 4,
-      :QUEUE    => "#{queue}_default,#{queue}"
+      :QUEUE    => "#{queue}_default,#{queue}",
+      :GROUP    => 'publish'
     })
   end
 
@@ -87,7 +101,8 @@ namespace :deploy do
     run_worker_with_params({
       :INTERVAL => 5,
       :COUNT    => 8,
-      :QUEUE    => "#{queue}_default,#{queue}"
+      :QUEUE    => "#{queue}_default,#{queue}",
+      :GROUP    => 'rpm'
     })
   end
 
@@ -97,7 +112,8 @@ namespace :resque do
   task :stop_workers do
     ps = 'ps aux | grep resque | grep -v grep'
     run "#{ps} && kill -QUIT `#{ps} | awk '{ print $2 }'` || echo 'Workers already stopped!'"
-    #run "cd #{fetch :current_path} && #{current_env} bundle exec rake resque:stop_workers"
+    # run "#{ps} && kill -9 `#{ps} | awk '{ print $2 }'` || echo 'Workers already stopped!'"
+    # run "cd #{fetch :current_path} && #{current_env} bundle exec rake resque:stop_workers"
   end
 end
 
@@ -113,12 +129,20 @@ namespace :rake_tasks do
 end
 
 def run_worker_with_params(params)
-  p = {
-    # :VVERBOSE             => 1,
+  config_file = "#{fetch :current_path}/config/resque.god"
+  run "#{god_command} -c #{config_file}", :env => worker_params(params)
+end
+
+def worker_params(params)
+  {
     :RESQUE_TERM_TIMEOUT  => 600,
     :TERM_CHILD           => 1,
-    :ENV                  => (fetch(:env, false) ? fetch(:env) : ''),
+    :ENV                  => fetch(:env),
+    :CURRENT_PATH         => fetch(:current_path),
     :BACKGROUND           => 'yes'
-  }.merge(params).map{ |k, v| "#{k}=#{v}" }.join(' ')
-  run "cd #{fetch :current_path} && #{p} bundle exec rake resque:workers"
+  }.merge(params)
+end
+
+def god_command
+  "cd #{fetch :current_path} && rvm #{fetch :rvm_ruby_string} exec bundle exec god"
 end

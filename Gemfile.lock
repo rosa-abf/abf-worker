@@ -53,6 +53,7 @@ GEM
     diff-lcs (1.2.4)
     erubis (2.7.0)
     ffi (1.9.0)
+    god (0.13.2)
     hashie (1.2.0)
     highline (1.6.19)
     hiredis (0.4.5)
@@ -127,6 +128,7 @@ DEPENDENCIES
   cape
   capistrano
   capistrano_colors
+  god
   hiredis (~> 0.4.5)
   log4r (= 1.1.10)
   mock_redis
