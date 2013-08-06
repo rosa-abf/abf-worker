@@ -1,25 +1,20 @@
-abf_root  = ENV['ABF_ROOT'] or raise "ABF_ROOT not set"
-rvm_ruby_string = ENV['RVM_RUBY_STRING'] or raise "RVM_RUBY_STRING not set"
+current_path  = ENV['CURRENT_PATH'] or raise "CURRENT_PATH not set"
+group         = ENV['GROUP'] or raise "GROUP not set"
 
 env = {}
 %w(RESQUE_TERM_TIMEOUT TERM_CHILD ENV BACKGROUND INTERVAL QUEUE).each do |key|
   env[key] = ENV[key] or raise "#{key} not set"
 end
 
-
 ENV['COUNT'].to_i.times do |num|
   God.watch do |w|
-    w.dir      = "#{abf_root}"
-    w.name     = "resque-#{num}"
-    w.group    = 'resque'
+    w.dir      = "#{current_path}"
+    w.group    = group
+    w.name     = "#{w.group}-#{num}"
     w.interval = 60.seconds
-    w.pid_file = "#{abf_root}/tmp/pids/#{w.name}.pid"
+    w.pid_file = "#{current_path}/tmp/pids/#{w.name}.pid"
     w.env      = env.merge('PIDFILE' => w.pid_file)
     w.start    = "bundle exec rake abf_worker:safe_clean_up && #{w.env.map{|k, v| "#{k}=#{v}"}.join(' ')} bundle exec rake resque:work &"
-    # w.start    = "rvm #{rvm_ruby_string} exec bundle exec rake abf_worker:safe_clean_up && #{w.env.map{|k, v| "#{k}=#{v}"}.join(' ')} rvm #{rvm_ruby_string} exec bundle exec rake resque:work &"
-    # w.restart  = "rvm #{rvm_ruby_string} exec bundle exec rake abf_worker:safe_clean_up && #{w.env.map{|k, v| "#{k}=#{v}"}.join(' ')} rvm #{rvm_ruby_string} exec bundle exec rake resque:work &"
-    # w.log      = "#{abf_root}/log/#{w.name}.log"
-    # w.log_cmd  = "#{abf_root}/log/#{w.name}.cmd.log"
 
     # determine the state on startup
     w.transition(:init, { true => :up, false => :start }) do |on|
