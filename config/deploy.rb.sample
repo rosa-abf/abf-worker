@@ -77,22 +77,22 @@ namespace :deploy do
 
   end
 
-  task :iso, :roles => :iso do
-    run_worker_with_params({
-      :INTERVAL => 60,
-      :COUNT    => 4,
-      :QUEUE    => 'iso_worker',
-      :GROUP    => 'iso'
-    })
-  end
+  # task :iso, :roles => :iso do
+  #   run_worker_with_params({
+  #     :INTERVAL => 60,
+  #     :COUNT    => 4,
+  #     :QUEUE    => 'iso_worker',
+  #     :GROUP    => 'iso'
+  #   })
+  # end
 
   task :publish, :roles => :publish do 
     queue = 'publish_worker'
     run_worker_with_params({
       :INTERVAL => 5,
-      :COUNT    => 4,
-      :QUEUE    => "#{queue}_default,#{queue}",
-      :GROUP    => 'publish'
+      :COUNT    => 8,
+      :QUEUE    => "#{queue}_default,#{queue},iso_worker",
+      :GROUP    => 'iso-and-publish'
     })
   end
 
