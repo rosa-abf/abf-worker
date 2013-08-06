@@ -55,7 +55,7 @@ namespace :god do
   end
 
   desc "Stop god"
-  task :terminate_if_running, :roles => :rpm do
+  task :terminate_if_running do
     if god_is_running
       run "#{god_command} terminate"
     end
@@ -98,7 +98,7 @@ namespace :deploy do
     })
   end
 
-  task :rpm, :roles => [:rpm, :zurich, :msk] do
+  task :rpm, :roles => :rpm do
     queue = 'rpm_worker'
     run_worker_with_params({
       :INTERVAL => 5,
