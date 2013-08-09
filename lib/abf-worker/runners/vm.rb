@@ -271,7 +271,7 @@ module AbfWorker::Runners
       vm_yml = YAML.load_file(CONFIG_FOLDER + '/vm.yml')
 
       configs = vm_yml[@type]
-      if platform = configs['platforms'][@platform]
+      if platform = configs.fetch('platforms', {})[@platform]
         @vm_box = platform[@arch]
         @vm_box ||= platform['noarch']
       else
