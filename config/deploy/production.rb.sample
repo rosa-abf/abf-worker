@@ -3,6 +3,9 @@
 
 set :branch, "master"
 
+# Update 'vm.yml' config file at deploy
+set :update_vm_yml, true
+
 set :bs0, "0.0.0.0"
 
 role :publish,  bs0, :primary => true
