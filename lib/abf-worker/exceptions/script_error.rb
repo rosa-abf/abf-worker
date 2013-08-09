@@ -1,5 +1,3 @@
-module AbfWorker
-  module Exceptions
-    class ScriptError < StandardError; end
-  end
+module AbfWorker::Exceptions
+  class ScriptError < StandardError; end
 end
