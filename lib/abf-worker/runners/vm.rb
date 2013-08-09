@@ -14,17 +14,17 @@ module AbfWorker::Runners
     CONFIG_FOLDER = File.dirname(__FILE__).to_s << '/../../../config'
 
     attr_accessor :vagrant_env,
+                  :platform,
                   :arch,
                   :share_folder
 
     def_delegators :@worker, :logger
 
     def initialize(worker, options)
-      @worker = worker
-      @platform_type = options['type']
-      @platform_name = options['name']
-
-      @arch = options['arch']
+      @worker   = worker
+      @type     = options['type']
+      @platform = options['name']
+      @arch     = options['arch']
       # @vm_name = "#{@os}.#{can_use_x86_64_for_x86? ? 'x86_64' : @arch}_#{@worker.worker_id}"
       @vm_name = "#{vm_box}_#{@worker.worker_id}"
       @share_folder = nil
@@ -239,7 +239,7 @@ module AbfWorker::Runners
     def download_scripts
       logger.log 'Prepare script...'
 
-      script  = APP_CONFIG['scripts']["#{@platform_type}"]
+      script  = APP_CONFIG['scripts']["#{@type}"]
       treeish = script['treeish']
       [
         "rm -rf #{treeish}.tar.gz #{treeish} scripts",
@@ -270,8 +270,8 @@ module AbfWorker::Runners
       return @vm_box if @vm_box
       vm_yml = YAML.load_file(CONFIG_FOLDER + '/vm.yml')
 
-      configs = vm_yml[@platform_type]
-      if platform = configs['platforms'][@platform_name]
+      configs = vm_yml[@type]
+      if platform = configs['platforms'][@platform]
         @vm_box = platform[@arch]
         @vm_box ||= platform['noarch']
       else

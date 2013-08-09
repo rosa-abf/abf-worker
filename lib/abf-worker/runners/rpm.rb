@@ -18,7 +18,6 @@ module AbfWorker
         @commit_hash          = options['commit_hash']
         @build_requires       = options['build_requires']
         @include_repos        = options['include_repos']
-        @bplname              = options['bplname']
         @user                 = options['user']
         @can_run              = true
         @packages             = []
@@ -36,7 +35,7 @@ module AbfWorker
               "GIT_PROJECT_ADDRESS=#{@git_project_address}",
               "COMMIT_HASH=#{@commit_hash}",
               "ARCH=#{@worker.vm.arch}",
-              "PLATFORM_NAME=#{@bplname}",
+              "PLATFORM_NAME=#{@worker.vm.platform}",
               "UNAME=#{@user['uname']}",
               "EMAIL=#{@user['email']}",
               '/bin/bash build.sh'
