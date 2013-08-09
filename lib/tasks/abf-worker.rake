@@ -39,6 +39,7 @@ namespace :abf_worker do
       end
     end
 
+    all_boxes.flatten!
     %x[ vagrant box list | awk '{ print $1 }' ].split("\n").each do |box|
       next if all_boxes.include?(box)
       system "vagrant box remove #{box} virtualbox"
