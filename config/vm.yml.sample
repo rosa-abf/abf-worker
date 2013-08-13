@@ -1,13 +1,19 @@
-virtual_machines:
-  - name: mdv.i586
-    path: /home/rosa/boxes/rosa.i586.box
-  - name: mdv.x86_64
-    path: /home/rosa/boxes/rosa.x86_64.box
-  - name: rhel.i586
-    path: /home/rosa/boxes/rhel.i586.box
-  - name: rhel.x86_64
-    path: /home/rosa/boxes/rhel.x86_64.box
-  - name: arm.i586
-    path: /home/rosa/boxes/arm.i586.box
-  - name: arm.x86_64
-    path: /home/rosa/boxes/arm.x86_64.box
+mdv:
+  default:
+    noarch: 60fe76919127188489b997a5c4eb3129dd373081
+
+  platforms:
+    cooker: 
+      noarch: 60fe76919127188489b997a5c4eb3129dd373081
+
+rhel:
+  default:
+    noarch: f5ecd579a3e310495153f8c8bf6aa2ab66d44457
+
+arm:
+  default:
+    noarch: 8449a0b390b9262eb46e7c1b791319d4268311e9
+
+
+
+

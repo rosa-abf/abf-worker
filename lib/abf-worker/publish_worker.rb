@@ -20,7 +20,7 @@ module AbfWorker
         @build_list_ids = options['build_list_ids']
         @projects_for_cleanup = options['projects_for_cleanup']
         super options
-        @runner = Runners::PublishBuildListContainer.new(self, options)
+        @runner = AbfWorker::Runners::PublishBuildListContainer.new(self, options)
         @vm.share_folder = options['platform']['platform_path']
         initialize_live_inspector options['time_living']
       end

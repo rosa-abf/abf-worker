@@ -10,17 +10,39 @@ namespace :abf_worker do
     Dir.mkdir path + 'log'
   end
 
-  desc 'Init VM'
-  task :init do
-    vm_config = YAML.load_file(File.dirname(__FILE__).to_s + '/../../config/vm.yml')
-    vm_config['virtual_machines'].each do |config|
-      name, path = config['name'], config['path']
-      puts 'Adding and initializing VM...'
-      puts "- name: #{name}"
-      puts "- path: #{path}"
-      puts '-- adding VM...'
-      system "vagrant box add #{name} #{path}"
-      puts 'Done.'
+  desc 'Init Vagrant boxes'
+  task :init_boxes do
+    vm_yml = YAML.load_file(File.dirname(__FILE__).to_s + '/../../config/vm.yml')
+
+    all_boxes = []
+    vm_yml.each do |distrib_type, configs|
+      boxes = configs['default'].values | (configs['platforms'] || {}).map{ |name, arches| arches.values }.flatten
+      all_boxes << boxes
+      boxes.each do |sha1|
+        puts "Checking #{distrib_type} - #{sha1} ..."
+        unless system "vagrant box list | grep #{sha1}"
+          puts '- box does not exist'
+          path = "#{APP_CONFIG['vms_path']}/#{sha1}.box"
+          unless File.exist?(path)
+            puts '- downloading box...'
+            if system "curl -o #{path} -L #{APP_CONFIG['file_store']['url']}/#{sha1}"
+              puts '- box has been downloaded successfully'
+            else
+              raise "Box '#{sha1}' does not exist on File-Store"
+            end
+          end
+          unless system "vagrant box add #{sha1} #{path}"
+            raise "Something wrong on adding a new box '#{sha1}'"
+          end
+        end
+        puts 'Done.'
+      end
+    end
+
+    all_boxes.flatten!
+    %x[ vagrant box list | awk '{ print $1 }' ].split("\n").each do |box|
+      next if all_boxes.include?(box)
+      system "vagrant box remove #{box} virtualbox"
     end
   end
 

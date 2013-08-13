@@ -41,6 +41,7 @@ set :rvm_install_ruby_threads, 1
 after "deploy:update",        "deploy:init_keys"
 after "deploy:update",        "deploy:symlink_all"
 after "deploy:update",        "airbrake:deploy"
+after "deploy:update",        "rake_tasks:abf_worker:init_boxes"
 
 before "deploy:stop",         "god:terminate_if_running"
 
@@ -73,6 +74,10 @@ namespace :deploy do
     %w(resque application newrelic vm).each do |config|
       run "cp -n #{fetch :release_path}/config/#{config}.yml.sample #{fetch :shared_path}/config/#{config}.yml"
       run "ln -nfs #{fetch :shared_path}/config/#{config}.yml #{fetch :release_path}/config/#{config}.yml"
+    end
+
+    if fetch(:update_vm_yml)
+      run "cp -f #{fetch :release_path}/config/vm.yml.sample #{fetch :shared_path}/config/vm.yml"
     end
 
   end
@@ -120,10 +125,10 @@ end
 namespace :rake_tasks do
   Cape do
     mirror_rake_tasks "abf_worker:clean_up" do |recipes|
-      recipes.env['ENV'] = fetch(:env) if fetch(:env, false)
+      recipes.env['ENV'] = fetch(:env)
     end
-    mirror_rake_tasks "abf_worker:init" do |recipes|
-      recipes.env['ENV'] = fetch(:env) if fetch(:env, false)
+    mirror_rake_tasks "abf_worker:init_boxes" do |recipes|
+      recipes.env['ENV'] = fetch(:env)
     end
   end
 end

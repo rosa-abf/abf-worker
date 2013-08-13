@@ -106,7 +106,13 @@ module AbfWorker
         @worker_id = Process.ppid
         init_tmp_folder
         update_build_status_on_abf
-        @vm = Runners::Vm.new(self, options['distrib_type'], options['arch'])
+
+        # TODO: remove, when all tasks will be use new structure
+        platform_options = options['platform'] || {}
+        platform_options['type'] ||= options['distrib_type']
+        platform_options['arch'] ||= options['arch']
+        platform_options['name'] ||= 'def'
+        @vm = AbfWorker::Runners::Vm.new(self, platform_options)
       end
 
       def init_logger(logger_name = nil)
