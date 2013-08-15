@@ -1,3 +1,13 @@
+# <platform_type>:
+#   default:
+#     noarch: <sha1 of default box on File-Store>
+#     <arch_name>: <sha1 of box on File-Store>
+#
+#   platforms:
+#     <platform_name>: 
+#       noarch: <sha1 of default box on File-Store>
+#       <arch_name>: <sha1 of box on File-Store>
+
 mdv:
   default:
     noarch: 60fe76919127188489b997a5c4eb3129dd373081
