@@ -143,7 +143,7 @@ module AbfWorker::Runners
       rollback_vm
       logger.log 'Halt VM...'
       run_with_vm_inspector {
-        @vagrant_env.cli 'halt', @vm_name
+        @vagrant_env.cli 'halt', @vm_name, '-f'
       }
       sleep 10
       logger.log 'Done.'
