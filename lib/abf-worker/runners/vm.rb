@@ -143,8 +143,7 @@ module AbfWorker::Runners
       rollback_vm
       logger.log 'Halt VM...'
       run_with_vm_inspector {
-        # @vagrant_env.cli 'halt', @vm_name
-        system "VBoxManage controlvm #{@vm_name} poweroff"
+        @vagrant_env.cli 'halt', @vm_name
       }
       sleep 10
       logger.log 'Done.'

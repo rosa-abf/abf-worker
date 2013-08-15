@@ -12,11 +12,11 @@ mdv:
   default:
     noarch: 60fe76919127188489b997a5c4eb3129dd373081
 
-  platforms:
-    cooker: 
-      noarch: 696ddad0a43c364e406388f7538af130d602d7fa
-    openmandriva2013.0: 
-      noarch: 696ddad0a43c364e406388f7538af130d602d7fa
+  # platforms:
+  #   cooker: 
+  #     noarch: 696ddad0a43c364e406388f7538af130d602d7fa
+  #   openmandriva2013.0: 
+  #     noarch: 696ddad0a43c364e406388f7538af130d602d7fa
 
 rhel:
   default:
