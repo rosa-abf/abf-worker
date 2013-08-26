@@ -6,57 +6,34 @@ module AbfWorker::Runners
     extend Forwardable
 
     attr_accessor :script_runner,
-                  :type,
                   :can_run
 
     def_delegators :@worker, :logger
 
     def initialize(worker, options)
       @worker       = worker
-      @cmd_params   = options['cmd_params']
+      @cmd_params       = options['cmd_params']
+      @main_script      = options['main_script']
+      @rollback_script  = options['rollback_script']
       @repository   = options['repository']
       @packages     = options['packages'] || {}
       @old_packages = options['old_packages'] || {}
-      @type         = options['type']
       @can_run      = true
     end
 
     def run_script
-      if publish?
-        @script_runner = Thread.new{ run_build_script }
-      else
-        @script_runner = Thread.new{ run_resign_script }
-      end
+      @script_runner = Thread.new{ run_build_script }
       @script_runner.join if @can_run
     end
 
     def rollback
-      if publish?
+      if @rollback_script
         @worker.vm.rollback_vm
         run_build_script true
       end
     end
 
     private
-
-    def publish?
-      @type == 'publish'
-    end
-
-    def run_resign_script
-      if @worker.vm.communicator.ready?
-        @worker.vm.download_scripts
-        init_gpg_keys
-
-        command = base_command_for_run
-        command << 'resign.sh'
-        begin
-          @worker.vm.execute_command command.join(' '), {:sudo => true}
-        rescue => e
-          @worker.print_error e
-        end
-      end
-    end
 
     def run_build_script(rollback_activity = false)
       if @worker.vm.communicator.ready?
@@ -66,7 +43,7 @@ module AbfWorker::Runners
         logger.log "Run #{rollback_activity ? 'rollback activity ' : ''}script..."
 
         command = base_command_for_run
-        command << (rollback_activity ? 'rollback.sh' : 'build.sh')
+        command << (rollback_activity ? @rollback_script : @main_script)
         critical_error = false
         begin
           @worker.vm.execute_command command.join(' '), {:sudo => true}
@@ -121,7 +98,7 @@ module AbfWorker::Runners
     end
 
     def init_gpg_keys
-      repository = AbfWorker::Models::Repository.find_by_id(@repository['id'])
+      repository = AbfWorker::Models::Repository.find_by_id(@repository['id']) if @repository
       return if repository.nil? || repository.key_pair.secret.empty?
 
       @worker.vm.execute_command 'mkdir -m 700 /home/vagrant/.gnupg'

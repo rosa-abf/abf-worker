@@ -26,10 +26,7 @@ module AbfWorker
       end
 
       def send_results
-        options = {
-          :type => @runner.type,
-          :projects_for_cleanup => @projects_for_cleanup
-        }
+        options = {:projects_for_cleanup => @projects_for_cleanup}
         options.merge!({
           :results => @vm.upload_results_to_file_store,
           :build_list_ids => @build_list_ids
